@@ -836,6 +836,11 @@ body{margin:0}
 .intro-ver{margin:6px 0 0;font-size:13px;color:#b9b1c4;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .iv-dot{width:9px;height:9px;border-radius:50%;background:#b9b1c4;flex:none}
 .iv-dot[data-s=ok]{background:#87c62d}.iv-dot[data-s=off]{background:#ff8a6b}.iv-dot[data-s=wait]{background:#e3c726}
+
+/* v17 */
+.sync-chip[data-s=err]{background:var(--bad-soft);color:var(--bad);cursor:pointer}
+.sync-chip{cursor:pointer}
+.bad-t{color:var(--bad);font-weight:600}
 </style>
 
 <header class="top">
@@ -913,7 +918,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-10-26b';
+  const BUILD='2026-10-27a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -968,7 +973,8 @@ const App=(()=>{
   function persistBase(){clearTimeout(CL.pb);CL.pb=setTimeout(()=>{try{localStorage.setItem(KEY+'-cloud',JSON.stringify({base:CL.base,revs:CL.revs}))}catch(e){}},400)}
   function saveTokens(){try{sessionStorage.setItem(KEY+'-tok',JSON.stringify({staff:CL.tok.staff,role:CL.staffRole,player:CL.tok.player}))}catch(e){}}
   function appErr(e){return e&&e.code?Object.assign(new Error(e.message||'error'),{app:true}):Object.assign(new Error((e&&e.message)||'offline'),{net:true})}
-  async function rpc(fn,args){const {data,error}=await CL.sb.rpc(fn,args);if(error)throw appErr(error);CL.offline=false;return data}
+  const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(Object.assign(new Error('The connection timed out'),{net:true})),ms||15000))]);
+  async function rpc(fn,args){const {data,error}=await withTimeout(CL.sb.rpc(fn,args));if(error)throw appErr(error);CL.offline=false;return data}
   function applyRemote(id,data,rev){
     if((CL.revs[id]||0)>=rev&&CL.base[id]!==undefined){dbg('skip',id,rev,'have',CL.revs[id]);return false}
     const local=docOf(id),base=CL.base[id];let next=data;dbg('applyRemote',id,'rev',rev,'had',CL.revs[id],'localDiff',local!==undefined&&base!==undefined&&stable(local)!==stable(base));
@@ -977,10 +983,10 @@ const App=(()=>{
     if(stable(next)!==stable(data))schedulePush();
     return true}
   function remoteDeleted(id){delete CL.base[id];delete CL.revs[id];dropDoc(id);persistBase()}
-  async function pull(id){dbg('pull',id);const {data,error}=await CL.sb.from('np_docs').select('id,data,rev').eq('id',id).maybeSingle();dbg('pulled',id,data&&data.rev,error&&error.message);if(error)throw appErr(error);
+  async function pull(id){dbg('pull',id);const {data,error}=await withTimeout(CL.sb.from('np_docs').select('id,data,rev').eq('id',id).maybeSingle());dbg('pulled',id,data&&data.rev,error&&error.message);if(error)throw appErr(error);
     CL.offline=false;if(!data){if(id in CL.revs)remoteDeleted(id);return true}return applyRemote(id,data.data,data.rev)}
   async function pullAll(){
-    const {data,error}=await CL.sb.from('np_docs').select('id,data,rev');if(error)throw appErr(error);CL.offline=false;
+    const {data,error}=await withTimeout(CL.sb.from('np_docs').select('id,data,rev'),25000);if(error)throw appErr(error);CL.offline=false;
     if(!Object.keys(CL.revs).length&&data.length){db.events=[];db.players.length=0;db.officials.length=0}   // new device: the cloud copy wins
     const seen=new Set();for(const r of data){seen.add(r.id);applyRemote(r.id,r.data,r.rev)}
     for(const id of Object.keys(CL.revs))if(!seen.has(id))remoteDeleted(id)}
@@ -988,7 +994,7 @@ const App=(()=>{
     for(const x of ids){try{if(await pull(x))ch=true}catch(e){CL.offline=!!e.net;CL.pullQ.add(x)}}
     if(CL.pullQ.size)CL.pullT=setTimeout(()=>queuePull([...CL.pullQ][0]),3000);if(ch)scheduleRender();setState()},120)}
   function onRev(id,rev,del){if(!id)return;if(del){if(id in CL.revs||docOf(id)){remoteDeleted(id);scheduleRender()}return}if((CL.revs[id]||0)<rev)queuePull(id)}
-  async function poll(){try{const {data,error}=await CL.sb.from('np_rev').select('id,rev,deleted');if(error)throw appErr(error);CL.offline=false;(data||[]).forEach(r=>onRev(r.id,r.rev,r.deleted))}catch(e){CL.offline=!!e.net}setState()}
+  async function poll(){try{const {data,error}=await withTimeout(CL.sb.from('np_rev').select('id,rev,deleted'));if(error)throw appErr(error);CL.offline=false;(data||[]).forEach(r=>onRev(r.id,r.rev,r.deleted))}catch(e){CL.offline=!!e.net}setState()}
   async function loadSecrets(){if(!CL.tok.staff||CL.staffRole!=='admin')return;try{const r=await rpc('np_secrets_get',{p_token:CL.tok.staff});if(!r||!r.rows)return;
     CL.pins={};r.rows.forEach(x=>{CL.pins[x.id]=x});[...db.players,...db.officials].forEach(x=>{if(CL.pins[x.id])x.pin=CL.pins[x.id].pin});save(true);scheduleRender()}catch(e){}}
   async function pushSecrets(){
@@ -1018,17 +1024,19 @@ const App=(()=>{
         if(r&&r.rev&&!r.error){CL.base[id]=d;CL.revs[id]=r.rev}
         else if(r&&r.error==='conflict'){await pull(id);CL.again=true;scheduleRender()}
         else if(r&&(r.error==='auth'||r.error==='forbidden')){if(r.error==='auth')authLost();revertDoc(id);reverted=true}
+        else throw Object.assign(new Error('The database answered: '+JSON.stringify(r)),{app:true});
       }
-      CL.fail=0;CL.dirty=CL.again;persistBase();
-    }catch(e){if(e.net){CL.offline=true;CL.fail++}else{CL.fail++;console.warn('sync',e.message)}}
+      CL.fail=0;CL.err=null;CL.dirty=CL.again;persistBase();
+    }catch(e){if(e.net){CL.offline=true;CL.fail++}else{CL.fail++;const first=!CL.err;CL.err=e.message||String(e);console.warn('sync',e);if(first)toast('Not saved yet: '+CL.err+'. Retrying\u2026')}}
     finally{CL.busy=false;if(reverted){save(true);scheduleRender();if(Date.now()-CL.warned>8000){CL.warned=Date.now();toast('That change needs a staff sign-in, so it was undone.')}}
       setState();if(CL.again||CL.offline||CL.fail)schedulePush(CL.again&&!CL.offline&&!CL.fail?30:Math.min(30000,1500*Math.max(1,CL.fail)))}}
   function authLost(){if(CL.tok.staff){CL.tok.staff=null;CL.staffRole=null;CL.pins=null;saveTokens();if(mode&&mode.id){mode=null;saveMode();view='intro';gate='signin';gateErr='Your sign-in expired. Please sign in again.'}}else{CL.tok.player=null;saveTokens()}}
   function setState(){const iv=document.querySelector('.intro-ver');if(iv){const want=CL.on?(CL.ready?'ok':CL.offline?'off':'wait'):'x';const d=iv.querySelector('.iv-dot');if(d&&CL.on&&d.dataset.s!==want&&!document.querySelector('.intro input:focus'))setTimeout(render,0)}
     const c=document.getElementById('syncChip');if(!c)return;if(!CL.on){c.hidden=true;return}
-    const st=!CL.ready?(CL.offline?'off':'wait'):CL.offline?'off':(CL.busy||CL.dirty)?'save':'live';
-    c.hidden=view==='intro';c.dataset.s=st;c.textContent={wait:'Connecting…',off:'Offline · saved here',save:'Saving…',live:CL.live?'Live':'Online'}[st];
-    c.title=st==='off'?'No connection. Changes stay on this device and upload when the connection is back.':''}
+    const st=!CL.ready?(CL.offline?'off':'wait'):CL.offline?'off':CL.err?'err':(CL.busy||CL.dirty)?'save':'live';
+    c.hidden=view==='intro';c.dataset.s=st;c.textContent={wait:'Connecting…',off:'Offline · saved here',save:'Saving…',err:'Not saved · tap',live:CL.live?'Live':'Online'}[st];
+    c.title=st==='off'?'No connection. Changes stay on this device and upload when the connection is back.':st==='err'?'Not saved: '+CL.err:''}
+  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#syncChip')&&CL.on){toast(CL.err?'Not saved: '+CL.err+'. Trying again now.':CL.offline?'Offline. Changes are kept on this device.':'Everything is saved.');if(CL.err||CL.offline){CL.fail=0;schedulePush(0)}}});
   let lastType=0;document.addEventListener('input',()=>{lastType=Date.now()},true);
   function scheduleRender(){clearTimeout(CL.rT);CL.rT=setTimeout(function go(){const a=document.activeElement;
     if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#app,#modalRoot,#appModal')&&Date.now()-lastType<2500){CL.rT=setTimeout(go,700);return}render()},40)}
@@ -1056,11 +1064,12 @@ const App=(()=>{
     if(!CL.on){const x=(kind==='player'?db.players:db.officials).find(o=>o.id===id);return sync1({ok:!!x&&x.pin===pin})}
     if(!CL.ready)return Promise.resolve({ok:false,err:'offline'});
     return rpc('np_login',{p_kind:kind,p_id:id,p_pin:pin}).then(r=>r&&r.token?{ok:true,token:r.token,role:r.role}:{ok:false,err:r&&r.error}).catch(e=>({ok:false,err:e.net?'offline':'wrong'}))}
-  function playerLogin(id,pin){return verifyPin('player',id,pin).then(r=>{if(r.ok&&CL.on){CL.tok.player=r.token;saveTokens()}return r})}
+  let lastMe=null;
+  function playerLogin(id,pin){return verifyPin('player',id,pin).then(r=>{if(r.ok){lastMe=id;if(CL.on){CL.tok.player=r.token;saveTokens()}}return r})}
   function registerPlayer(o){
-    if(!CL.on)return sync1(addPlayer(o));
+    if(!CL.on){const nid=addPlayer(o);lastMe=nid;return sync1(nid)}
     if(!CL.ready)return Promise.resolve(null);
-    const id=uid('p');return rpc('np_register',{p_id:id,p_pin:o.pin}).then(r=>{if(!r||!r.token)return null;CL.tok.player=r.token;saveTokens();return addPlayer({...o,id})}).catch(()=>null)}
+    const id=uid('p');return rpc('np_register',{p_id:id,p_pin:o.pin}).then(r=>{if(!r||!r.token)return null;CL.tok.player=r.token;saveTokens();lastMe=id;return addPlayer({...o,id})}).catch(()=>null)}
   const canAuto=()=>!CL.on||cloudRole()==='admin';
   const needSetup=()=>CL.on?!(CL.base.club&&(CL.base.club.officials||[]).some(o=>o.role==='admin')):!admins().length;
 
@@ -1224,7 +1233,7 @@ const App=(()=>{
         ${temp.length?`<details style="margin-top:14px"><summary>Tournament players (${temp.length})</summary><p class="muted" style="margin:8px 0">Only kept while their tournament exists. They don't appear in open play or on the club leaderboard.</p>${Object.entries(groups).map(([id,ps])=>`<h3 style="margin:12px 0 4px;font-size:15px">${esc(evName(id))} <small class="muted">${ps.length}</small></h3><ul class="list roster plT">${ps.sort((a,b)=>a.name.localeCompare(b.name)).map(row).join('')}</ul>`).join('')}</details>`:''}
       </section>
       <section class="panel"><h2>Staff <small>sign in with their PIN</small></h2>
-        <ul class="list">${[...db.officials].sort((a,b)=>(roleOf(b)==='admin')-(roleOf(a)==='admin')).map(o=>`<li><div class="li-main"><span class="li-t">${esc(o.name)} <span class="pill ${roleOf(o)==='admin'?'p-live':'p-open'}">${roleOf(o)==='admin'?'Admin':'Referee'}</span>${mode&&mode.id===o.id?' <span class="muted">(you)</span>':''}</span><div class="li-m">PIN <b class="num">${esc(o.pin)}</b></div></div><button class="btn sm danger" data-app="delRef" data-id="${o.id}">Remove</button></li>`).join('')||'<li><span class="muted">No staff yet. Tournaments need at least one referee for referee scoring.</span></li>'}</ul>
+        <ul class="list">${[...db.officials].sort((a,b)=>(roleOf(b)==='admin')-(roleOf(a)==='admin')).map(o=>`<li><div class="li-main"><span class="li-t">${esc(o.name)} <span class="pill ${roleOf(o)==='admin'?'p-live':'p-open'}">${roleOf(o)==='admin'?'Admin':'Referee'}</span>${mode&&mode.id===o.id?' <span class="muted">(you)</span>':''}</span><div class="li-m">${o.pin?`PIN <b class="num">${esc(o.pin)}</b>`:''}${CL.on&&CL.pins&&!CL.pins[o.id]?` <span class="bad-t">No PIN saved on the server yet: tap New PIN, or Remove if this is a duplicate.</span>`:''}</div></div><span style="display:flex;gap:6px;flex:none"><button class="btn sm" data-app="newPin" data-id="${o.id}">New PIN</button><button class="btn sm danger" data-app="delRef" data-id="${o.id}">Remove</button></span></li>`).join('')||'<li><span class="muted">No staff yet. Tournaments need at least one referee for referee scoring.</span></li>'}</ul>
         <form id="refAdd" class="grid2" style="margin-top:10px"><label class="f">Name<input type="text" id="raName" placeholder="Staff name"></label><label class="f">6-digit PIN<input type="text" id="raPin" inputmode="numeric" maxlength="6" placeholder="Blank = make one up"></label><label class="f" style="grid-column:1/-1">Role<select id="raRole"><option value="ref">Referee: Courtside and Referee screens</option><option value="admin">Admin: everything</option></select></label><button class="btn primary" type="submit" style="grid-column:1/-1">Add staff</button></form>
       </section></div>`;
   }
@@ -1267,6 +1276,7 @@ const App=(()=>{
     else{const mr=$('#modalRoot');mr.innerHTML='';mr.dataset.key=''}
     if(view==='admin'&&(home||!ev))syncEvForm();
     renderAppModal();
+    try{if(mode&&mode.role!=='all')sessionStorage.setItem(KEY+'-place',JSON.stringify({view,home,homeSec,me:lastMe}));else sessionStorage.removeItem(KEY+'-place')}catch(e){}
   }
   function go(v){if(!allowed(v))v=homeView();view=v;if(v==='ref'&&mode&&mode.id&&TM.refAs)TM.refAs(mode.id);if(v!=='intro'){try{localStorage.setItem(KEY+'-view',v)}catch(e){}}render()}
   function loadSample(){const S0=window.SAMPLE;if(!S0)return;const dt=Date.now()-S0.t0;
@@ -1295,7 +1305,7 @@ const App=(()=>{
   function enterPlayer(v){mode={role:v==='public'?'viewer':'player'};saveMode();gate=null;[OPM,TM].forEach(m=>m.signOut());pickLive();home=false;pendingTop=true;save();go(v)}
   function enterStaff(o,srvRole){mode={role:srvRole||roleOf(o),id:o.id};saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pickLive();
     if(mode.role==='admin'){home=true;homeSec='events';pendingTop=true;save();go('admin')}else{const c=cur();if(!c||c.type!=='tournament'){const ts=db.events.filter(e=>e.type==='tournament');const t=ts.find(liveNow)||ts[ts.length-1];if(t)db.cur=t.id}home=false;pendingTop=true;save();go('ref')}}
-  function exitMode(){if(kiosk.on)kioskOff();if(CL.on){const t=[CL.tok.staff,CL.tok.player].filter(Boolean);t.forEach(x=>{rpc('np_logout',{p_token:x}).catch(()=>{})});CL.tok.staff=null;CL.tok.player=null;CL.staffRole=null;CL.pins=null;saveTokens();[...db.players,...db.officials].forEach(x=>{delete x.pin});save(true)}mode=null;saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pendingTop=true;go('intro')}
+  function exitMode(){lastMe=null;if(kiosk.on)kioskOff();if(CL.on){const t=[CL.tok.staff,CL.tok.player].filter(Boolean);t.forEach(x=>{rpc('np_logout',{p_token:x}).catch(()=>{})});CL.tok.staff=null;CL.tok.player=null;CL.staffRole=null;CL.pins=null;saveTokens();[...db.players,...db.officials].forEach(x=>{delete x.pin});save(true)}mode=null;saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pendingTop=true;go('intro')}
   function gateHtml(){
     const back=`<button class="btn gate-back" type="button" data-app="gateBack">Back</button>`;
     if(CLOUD_WANTED&&!CL.on)return `<div class="gate"><h2>Can't connect on this browser</h2><p>This browser couldn't start the club's live connection, so anything done here wouldn't be shared. Open the link in Chrome or Safari (not inside Messenger or Facebook), or update the browser, then try again.</p><div class="row">${back}</div></div>`;
@@ -1435,7 +1445,7 @@ const App=(()=>{
       case 'copyBoard':{const from=lb.period==='30'?Date.now()-30*864e5:lb.period==='7'?Date.now()-7*864e5:null,evx=lb.period.startsWith('ev:')?lb.period.slice(3):null;
         const r=rankRows(clubBoard({from,ev:evx}).rows,lb.sort,lb.min).slice(0,10),txt='Next Point Pickleball · Club leaderboard\n'+r.map(x=>x.rank+'. '+x.name+' · rating '+x.rating+' · '+x.w+'–'+(x.g-x.w)+' ('+pct(x.wp)+')').join('\n');
         try{navigator.clipboard.writeText(txt).then(()=>toast('Top 10 copied.'),()=>toast('Copying isn\'t allowed here. Select the table instead.'))}catch(_){toast('Copying isn\'t allowed here. Select the table instead.')}return}
-      case 'newPin':{const p=db.players.find(x=>x.id===id);p.pin=newPin();toast(p.name+'\'s new PIN: '+p.pin);break}
+      case 'newPin':{const p=db.players.find(x=>x.id===id)||db.officials.find(x=>x.id===id);if(!p)return;p.pin=newPin();toast(p.name+'\'s new PIN: '+p.pin);break}
       default:return;
     }
     save();render();
@@ -1487,10 +1497,12 @@ const App=(()=>{
     let boot=window.NP_BOOT;try{boot=boot||JSON.parse(localStorage.getItem(KEY+'-boot')||'null')}catch(e){}
     if(boot){mode={role:'all'};try{view=localStorage.getItem(KEY+'-view')||'admin'}catch(e){view='admin'}}
     const deep=h=>{if(h==='player'||h==='public'){if(!mode||(h==='player'&&mode.role==='viewer'))mode={role:h==='public'?'viewer':'player'},saveMode();view=h}else if(h==='ref'||h==='admin'){if(!allowed(h)){view='intro';gate='signin'}else view=h}};
+    home=!cur();
+    if(mode&&mode.role!=='all'&&!location.hash.slice(1)){try{const pl=JSON.parse(sessionStorage.getItem(KEY+'-place')||'null');
+      if(pl&&pl.view&&allowed(pl.view)){view=pl.view;home=pl.view==='admin'?(pl.home||!cur()):false;homeSec=pl.homeSec||'events';if(pl.me){lastMe=pl.me;[OPM,TM].forEach(m=>m.setMe&&m.setMe(pl.me))}if(view==='ref'&&mode.id&&TM.refAs)TM.refAs(mode.id)}}catch(e){}}
     deep(location.hash.slice(1));
     setTimeout(cloudInit,0);
     window.addEventListener('hashchange',()=>{deep(location.hash.slice(1));render()});
-    home=!cur();
     render();
   }
   return{db:()=>db,save,render,go,uid,newPin,addPlayer,ensureSkill,isActive,start,kpi,pageHead,icon,clubBoard,playerRank,sessionLeaders,tools,qrBlock,kioskPage,alerts,verifyPin,playerLogin,registerPlayer,pinErr,canAuto,cloud:()=>CL};
@@ -1994,6 +2006,7 @@ return{
   bind(ev){S=ev;S.players=App.db().players},
   html,after,nav,tvPages,
   signOut(){me=null},
+  setMe(id){if(S===undefined||!S||S.players&&S.players.some(p=>p.id===id)||App.db().players.some(p=>p.id===id))me=id},
   create(f){return{type:'openplay',id:f.id,offset:0,seq:0,
     session:{name:f.name,venue:f.venue,date:f.date,rule:f.rule,teams:f.teams,autoFill:true,noShow:f.noShow,gameTo:f.gameTo,open:true,openedAt:Date.now()},
     checkins:{},courts:Array.from({length:f.courts},(_,i)=>({no:i+1,level:'all',state:'free',match:null})),matches:[]}},
@@ -3104,6 +3117,7 @@ return{
   bind(ev){S=ev;S.players=App.db().players;S.officials=App.db().officials},
   html,after,nav,tvPages,
   signOut(){me=null;refMe=null;refSel=null},
+  setMe(id){if(App.db().players.some(p=>p.id===id))me=id},
   refAs(id){if(!refMe){refMe=id;refSel=null}},
   create(f){return{type:'tournament',id:f.id,offset:0,seq:0,t:{name:f.name,venue:f.venue,dates:f.date},cfg:{forfeit:f.forfeit,rest:f.rest,gameMin:f.gameMin},
     divs:[],entries:[],matches:[],audit:[],ui:{},courts:Array.from({length:f.courts},(_,i)=>({no:i+1,state:'free',match:null,hold:false}))}},

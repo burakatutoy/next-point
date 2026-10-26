@@ -831,6 +831,11 @@ body{margin:0}
 .sync-chip[data-s=off]{background:var(--warn-soft);color:var(--warn)}
 .kiosk .sync-chip{display:none}
 @media (max-width:560px){.sync-chip{font-size:0;padding:7px;margin-left:2px}.sync-chip::before{margin:0;width:9px;height:9px}}
+
+/* v16 connection line on the welcome page */
+.intro-ver{margin:6px 0 0;font-size:13px;color:#b9b1c4;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.iv-dot{width:9px;height:9px;border-radius:50%;background:#b9b1c4;flex:none}
+.iv-dot[data-s=ok]{background:#87c62d}.iv-dot[data-s=off]{background:#ff8a6b}.iv-dot[data-s=wait]{background:#e3c726}
 </style>
 
 <header class="top">
@@ -894,7 +899,8 @@ const App=(()=>{
      Docs: 'club' = players + staff (no PINs); 'ev:<id>' = one event. PINs live server-side in np_secrets.
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
-  const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null;
+  const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
+  const BUILD='2026-10-26b';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -1005,7 +1011,8 @@ const App=(()=>{
     finally{CL.busy=false;if(reverted){save(true);scheduleRender();if(Date.now()-CL.warned>8000){CL.warned=Date.now();toast('That change needs a staff sign-in, so it was undone.')}}
       setState();if(CL.again||CL.offline||CL.fail)schedulePush(CL.again&&!CL.offline&&!CL.fail?30:Math.min(30000,1500*Math.max(1,CL.fail)))}}
   function authLost(){if(CL.tok.staff){CL.tok.staff=null;CL.staffRole=null;CL.pins=null;saveTokens();if(mode&&mode.id){mode=null;saveMode();view='intro';gate='signin';gateErr='Your sign-in expired. Please sign in again.'}}else{CL.tok.player=null;saveTokens()}}
-  function setState(){const c=document.getElementById('syncChip');if(!c)return;if(!CL.on){c.hidden=true;return}
+  function setState(){const iv=document.querySelector('.intro-ver');if(iv){const want=CL.on?(CL.ready?'ok':CL.offline?'off':'wait'):'x';const d=iv.querySelector('.iv-dot');if(d&&CL.on&&d.dataset.s!==want&&!document.querySelector('.intro input:focus'))setTimeout(render,0)}
+    const c=document.getElementById('syncChip');if(!c)return;if(!CL.on){c.hidden=true;return}
     const st=!CL.ready?(CL.offline?'off':'wait'):CL.offline?'off':(CL.busy||CL.dirty)?'save':'live';
     c.hidden=view==='intro';c.dataset.s=st;c.textContent={wait:'Connecting…',off:'Offline · saved here',save:'Saving…',live:CL.live?'Live':'Online'}[st];
     c.title=st==='off'?'No connection. Changes stay on this device and upload when the connection is back.':''}
@@ -1278,6 +1285,7 @@ const App=(()=>{
   function exitMode(){if(kiosk.on)kioskOff();if(CL.on){const t=[CL.tok.staff,CL.tok.player].filter(Boolean);t.forEach(x=>{rpc('np_logout',{p_token:x}).catch(()=>{})});CL.tok.staff=null;CL.tok.player=null;CL.staffRole=null;CL.pins=null;saveTokens();[...db.players,...db.officials].forEach(x=>{delete x.pin});save(true)}mode=null;saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pendingTop=true;go('intro')}
   function gateHtml(){
     const back=`<button class="btn gate-back" type="button" data-app="gateBack">Back</button>`;
+    if(CLOUD_WANTED&&!CL.on)return `<div class="gate"><h2>Can't connect on this browser</h2><p>This browser couldn't start the club's live connection, so anything done here wouldn't be shared. Open the link in Chrome or Safari (not inside Messenger or Facebook), or update the browser, then try again.</p><div class="row">${back}</div></div>`;
     if(CL.on&&!CL.ready)return `<div class="gate"><h2>Connecting…</h2><p>${CL.offline?'No connection yet. Check the Wi-Fi or data; this page retries by itself.':'Getting the latest from the club\'s database.'}</p><div class="row">${back}</div></div>`;
     if(needSetup())return `<div class="gate"><h2>Set up the first admin</h2><p>Nobody can run the site yet. Choose your name and a 6-digit PIN; you only do this once. Referees and other staff are added later in Admin.</p>
       <form id="gateSetup" class="gate-f"><label class="f">Your name<input type="text" id="gsName" autocomplete="name"></label><label class="f">6-digit PIN<input type="password" id="gsPin" inputmode="numeric" maxlength="6"></label><label class="f">Type the PIN again<input type="password" id="gsPin2" inputmode="numeric" maxlength="6"></label>
@@ -1306,6 +1314,7 @@ const App=(()=>{
         ${live.length&&!gate?`<div class="intro-live">${live.map(e=>`<button class="il-ev" data-app="enterEv" data-id="${e.id}"><span class="il-dot"></span><span>Live now</span><b>${esc(e.type==='openplay'?e.session.name:e.t.name)}</b></button>`).join('')}</div>`:''}
         ${gate?gateHtml():`<div class="intro-roles">${role('public','Watch live courts','Courtside: scores, courts and who plays next','pri')}${role('player',"I'm playing",'Check in and see when you\'re up')}${role('staff','Staff sign-in','Admins and referees')}</div>
         ${DEMO&&window.SAMPLE?`<button class="intro-sample" data-app="sampleModal">New here? Load a sample tournament to try everything</button>`:''}`}
+        <p class="intro-ver"><span class="iv-dot" data-s="${CL.on?(CL.ready?'ok':CL.offline?'off':'wait'):CLOUD_WANTED?'off':'local'}"></span>${CL.on?(CL.ready?'Connected to the club database':CL.offline?'No connection yet, retrying…':'Connecting to the club database…'):CLOUD_WANTED?"Not connected: this browser couldn't start the live connection":'Practice copy: saved in this browser only'} · version ${BUILD}</p>
       </div></section>`;
   }
   /* ---------- TV mode ---------- */

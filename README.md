@@ -1,2 +1,2 @@
-# next-point
+# next-point-pickleball
 burakapickleapp

@@ -936,6 +936,12 @@ p,li,.tb,.li-m{text-wrap:pretty}
   @starting-style{.scrim .modal{transform:none}.toast{transform:translateX(-50%)}}
   .kprog i{transition:none}
 }
+
+/* v24 playoff seeding */
+.seedp{border-color:var(--ball);box-shadow:inset 4px 0 0 var(--ball),var(--shadow-1)}
+.seedp .row{align-items:flex-end}
+.seedlist .seedno{display:inline-grid;place-items:center;min-width:26px;height:26px;margin-right:8px;border-radius:7px;background:var(--ball-soft,#f6eaa2);font-weight:800;font-variant-numeric:tabular-nums}
+.seedlist li{transition:background-color 160ms var(--ease-out)}
 </style>
 
 <header class="top">
@@ -1013,7 +1019,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-03a';
+  const BUILD='2026-11-03b';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2387,10 +2393,35 @@ function standings(d,p){
 /* ---------- bracket ---------- */
 function seedPos(n){let a=[1,2];while(a.length<n){const k=a.length*2+1;a=a.flatMap(x=>[x,k-x])}return a}
 function roundLabel(i,total){const fromEnd=total-1-i;return fromEnd===0?'Final':fromEnd===1?'Semifinal':fromEnd===2?'Quarterfinal':'Round of '+Math.pow(2,fromEnd+1)}
-function buildBracket(d){
-  const W=[],R=[];d.pools.forEach(p=>{const st=standings(d,p);W.push(st[0]);if(st[1])R.push(st[1])});
-  const srt=a=>a.sort((x,y)=>y.w-x.w||y.diff-x.diff||y.pf-x.pf);
-  const q=[...srt(W),...srt(R)].map(r=>r.id);
+/* who goes to the playoffs, in seed order: every pool's 1st place (best record first), then every 2nd place, and so on.
+   When a level doesn't fit completely, the best of that level take the wildcard spots. */
+const poN=d=>{const n=d.pools.reduce((a,p)=>a+p.entries.length,0);return d.poSize?Math.min(d.poSize,n):Math.min(d.pools.length*2,n)};
+function qualifiers(d,N){
+  N=N||poN(d);const tables=d.pools.map(p=>({p,st:standings(d,p)})),out=[],info={};
+  const key=r=>{const g=Math.max(1,r.w+r.l);return[r.w/g,r.diff/g,r.pf/g]};
+  const cmp=(x,y)=>{const a=key(x),b=key(y);return b[0]-a[0]||b[1]-a[1]||b[2]-a[2]||x.seed-y.seed};
+  for(let lvl=0;out.length<N;lvl++){
+    const level=tables.filter(t=>t.st[lvl]).map(t=>({...t.st[lvl],pool:t.p.name,place:lvl+1}));if(!level.length)break;
+    level.sort(cmp).slice(0,N-out.length).forEach(r=>{out.push(r.id);info[r.id]=r});
+  }
+  return{ids:avoidRematch(d,out,info),info};
+}
+function poolOf(d,id){const p=d.pools.find(x=>x.entries.includes(id));return p?p.name:null}
+// first-round pairs that are a pool rematch: swap the lower seed with a same-place team from another pair when that fixes it
+function avoidRematch(d,ids,info){
+  if(d.pools.length<2)return ids;const q=[...ids];let B=2;while(B<q.length)B*=2;const pos=seedPos(B),pairs=[];
+  for(let i=0;i<B/2;i++)pairs.push([pos[2*i]-1,pos[2*i+1]-1]);
+  const pl=i=>q[i]?poolOf(d,q[i]):null,clash=([a,b])=>q[a]&&q[b]&&pl(a)===pl(b);
+  for(const pr of pairs){if(!clash(pr))continue;const lo=Math.max(...pr),hi=Math.min(...pr);
+    for(const o of pairs){if(o===pr)continue;const c=Math.max(...o),oc=Math.min(...o);if(!q[c]||!info[q[c]]||!info[q[lo]]||info[q[c]].place!==info[q[lo]].place)continue;
+      if(pl(c)!==pl(hi)&&pl(lo)!==pl(oc)){[q[lo],q[c]]=[q[c],q[lo]];break}}}
+  return q}
+function rematches(d,q){let B=2;while(B<q.length)B*=2;const pos=seedPos(B),r=[];for(let i=0;i<B/2;i++){const a=q[pos[2*i]-1],b=q[pos[2*i+1]-1];if(a&&b&&poolOf(d,a)===poolOf(d,b))r.push([a,b])}return r}
+function poDraft(d){const q=qualifiers(d);d.poDraft={n:poN(d),ids:q.ids};audit('System','Pools finished in '+dname(d)+'. Playoff seeding is ready for the desk to check.')}
+function unbuildBracket(d){const seeds=d.bracket?d.bracket.seeds||[]:[];S.matches=S.matches.filter(m=>!(m.div===d.id&&m.stage==='po'));d.bracket=null;d.poDraft={n:seeds.length||poN(d),ids:seeds.length?seeds:qualifiers(d).ids};if(d.status==='done')d.status='live'}
+const poStarted=d=>!!d.bracket&&S.matches.some(m=>m.div===d.id&&m.stage==='po'&&m.result!=='bye'&&m.status!=='queued');
+function buildBracket(d,order){
+  const q=order&&order.length?order:qualifiers(d).ids;
   let B=2;while(B<q.length)B*=2;
   const total=Math.log2(B),pos=seedPos(B),base=Math.ceil(Math.max(0,...S.matches.map(m=>m.ord||0)));
   const rounds=[];
@@ -2400,8 +2431,8 @@ function buildBracket(d){
   if(d.third&&B>=4){third=mkMatch({div:d.id,stage:'po',label:'3rd place',round:total,slot:1,a:null,b:null,ord:base+total+.5});rounds[total-2].forEach((m,i)=>{m.loserNext=third.id;m.loserSide=i?'b':'a'})}
   rounds[0].forEach((m,i)=>{m.a=q[pos[2*i]-1]||null;m.b=q[pos[2*i+1]-1]||null;m.seedA=pos[2*i];m.seedB=pos[2*i+1]});
   rounds[0].forEach(m=>{if(!m.a||!m.b){m.status='done';m.result='bye';m.winner=m.a||m.b;m.end=now();advance(m)}});
-  d.bracket={rounds:rounds.map(r=>r.map(m=>m.id)),third:third&&third.id};
-  audit('System','Pools finished in '+dname(d)+'. Playoff bracket of '+q.length+' created.');
+  d.bracket={rounds:rounds.map(r=>r.map(m=>m.id)),third:third&&third.id,seeds:[...q]};d.poDraft=null;
+  audit(order?'Admin':'System',(order?'Started playoffs for ':'Pools finished in ')+dname(d)+'. Playoff bracket of '+q.length+' created.');
 }
 function advance(m){
   if(m.next){const n=M(m.next);n[m.nextSide]=m.winner}
@@ -2410,7 +2441,7 @@ function advance(m){
 function divProgress(d){
   if(d.status!=='live')return;
   const pool=S.matches.filter(m=>m.div===d.id&&m.stage==='pool');
-  if(!d.bracket&&pool.every(m=>m.status==='done')){if(d.pools.length===1){d.status='done';audit('System',dname(d)+' finished (round robin).')}else buildBracket(d)}
+  if(!d.bracket&&!d.poDraft&&pool.every(m=>m.status==='done')){if(d.pools.length===1&&!d.poSize){d.status='done';audit('System',dname(d)+' finished (round robin).')}else if(d.poReview)poDraft(d);else buildBracket(d)}
   if(d.bracket){const f=M(d.bracket.rounds[d.bracket.rounds.length-1][0]),t=d.bracket.third&&M(d.bracket.third);if(f.status==='done'&&(!t||t.status==='done')){d.status='done';audit('System',dname(d)+' finished.')}}
 }
 function podium(d){
@@ -2445,7 +2476,7 @@ const nowMin=()=>{const d=new Date(now());return d.getHours()*60+d.getMinutes()+
 const toMin=t=>{const d=new Date(t);return d.getHours()*60+d.getMinutes()};
 const r5=m=>Math.round(m/5)*5;
 function newBlock(div,stage,day){return{id:App.uid('b'),div,stage,day,mode:'follow',at:'13:00',courts:null,released:false,hold:false}}
-function needsPo(d){return d.status==='open'?active(d.id).length>=6:d.pools.length>1}
+function needsPo(d){return d.status==='open'?(d.poSize?active(d.id).length>=4:active(d.id).length>=6):(d.pools.length>1||!!d.poSize)}
 function sched(){
   if(!S.sched)S.sched={days:[{label:'Day 1',start:'08:00',end:'18:00'}],today:0,pace:{11:15,15:20,21:25},buffer:3,blocks:[],plan:null};
   const sc=S.sched;
@@ -2498,7 +2529,7 @@ function blockWork(b){
   if(d.bracket){const tot=d.bracket.rounds.length,left=S.matches.filter(m=>m.div===d.id&&m.stage==='po'&&m.status!=='done'&&m.result!=='bye');
     const rs=[...new Set(left.map(m=>m.round))];
     return{cm:left.reduce((a,m)=>a+matchLen(d,'po',m.round>=tot-1),0),n:left.length,rt:rs.reduce((a,r)=>a+matchLen(d,'po',r>=tot-1),0)}}
-  const np=d.status==='open'?poolShape(active(d.id).length).length:d.pools.length,q=np*2;let B=2;while(B<q)B*=2;
+  const ne=d.status==='open'?active(d.id).length:d.pools.reduce((a,p)=>a+p.entries.length,0),np=d.status==='open'?poolShape(ne).length:d.pools.length,q=Math.min(ne,d.poSize||np*2);let B=2;while(B<q)B*=2;
   const tot=Math.log2(B);let cm=0,n=0,rt=0;
   for(let r=1;r<=tot;r++){let c=B/Math.pow(2,r);if(r===1)c-=B-q;if(r===tot&&d.third&&B>=4)c+=1;const L=matchLen(d,'po',r>=tot-1);cm+=c*L;n+=c;rt+=L}
   return{cm,n,rt};
@@ -2530,7 +2561,9 @@ function planDrift(pr){const sc=sched();if(!sc.plan)return null;let worst=null;
   sc.blocks.forEach(b=>{if(b.day!==sc.today)return;const p=sc.plan.b[b.id],x=pr.get(b.id);if(!p||!x||x.done)return;const d=x.started?x.e-p.e:x.s-p.s;worst=worst==null?d:Math.max(worst,d)});return worst}
 function dayFinish(pr,di){const v=ordered().filter(b=>b.day===di).map(b=>pr.get(b.id)).filter(Boolean).map(x=>x.e);return v.length?Math.max(...v):null}
 function scheduleTips(){
-  const sc=sched(),tips=[],day=sc.days[sc.today];if(!day||!sc.blocks.length)return tips;
+  const sc=sched(),tips=[],day=sc.days[sc.today];
+  S.divs.filter(d=>d.poDraft&&!d.bracket).forEach(d=>tips.push({k:'soon',msg:`Pools are done in <b>${esc(dname(d))}</b>. Check the playoff seeding, then start the playoffs.`,act:`<button class="btn sm primary" data-act="poOpen" data-id="${d.id}">Check seeding</button>`}));
+  if(!day||!sc.blocks.length)return tips;
   const g=schedGate(),pr=project(),q=queue(),free=S.courts.filter(c=>c.state==='free'&&!c.hold).length;
   if(free&&!q.some(x=>x.ok)){
     const nx=ordered().find(b=>{const x=g.get(b.id);return b.day<=sc.today&&x&&!x.open&&(x.state==='ready'||x.state==='playing')});
@@ -2692,10 +2725,10 @@ function courtTile(ct,mode){
   return `<article class="ct2 s-${st} ${big?'big':''}"><header class="ct2-h"><div class="ct2-id"><span class="ct2-no">Court ${ct.no}</span>${pill}${m&&m.flag&&mode==='admin'?'<span class="pill p-flag">Flagged</span>':''}</div>${clock}</header>${what?`<div class="ct2-what">${what}</div>`:''}${board}${meta?`<div class="ct2-meta">${meta}</div>`:''}${acts}</article>`;
 }
 function poolTable(d,p,hl){
-  const st=standings(d,p),adv=d.pools.length>1?2:0;
+  const st=standings(d,p),qs=needsPo(d)?new Set(d.bracket&&d.bracket.seeds?d.bracket.seeds:d.poDraft?d.poDraft.ids:qualifiers(d).ids):new Set(),adv=qs.size;
   return `<div class="tablebox"><table class="t"><thead><tr><th>#</th><th>${d.type==='singles'?'Player':'Team'}</th><th class="n">W</th><th class="n">L</th><th class="n">PF</th><th class="n">PA</th><th class="n">+/–</th></tr></thead><tbody>
-  ${st.map((r,i)=>`<tr class="${i<adv?'q':''}" ${hl&&hl===r.id?'style="background:var(--ball-soft)"':''}><td class="num">${i+1}</td><td>${esc(ename(r.id))} <span class="skill">#${r.seed}</span>${r.tb?`<div class="tb">Tiebreak: ${r.tb}</div>`:''}</td><td class="n">${r.w}</td><td class="n">${r.l}</td><td class="n">${r.pf}</td><td class="n">${r.pa}</td><td class="n">${r.diff>0?'+':''}${r.diff}</td></tr>`).join('')}</tbody></table></div>
-  ${adv?'<p class="tb" style="margin:6px 0 0">Top 2 advance to the playoffs (green bar).</p>':''}`;
+  ${st.map((r,i)=>`<tr class="${qs.has(r.id)?'q':''}" ${hl&&hl===r.id?'style="background:var(--ball-soft)"':''}><td class="num">${i+1}</td><td>${esc(ename(r.id))} <span class="skill">#${r.seed}</span>${r.tb?`<div class="tb">Tiebreak: ${r.tb}</div>`:''}</td><td class="n">${r.w}</td><td class="n">${r.l}</td><td class="n">${r.pf}</td><td class="n">${r.pa}</td><td class="n">${r.diff>0?'+':''}${r.diff}</td></tr>`).join('')}</tbody></table></div>
+  ${adv?`<p class="tb" style="margin:6px 0 0">${d.bracket||d.poDraft?'In the playoffs':'In the playoffs if pools ended now'} (green bar). ${poLabel(d)}.</p>`:''}`;
 }
 function bracketView(d){
   if(!d.bracket)return '';
@@ -3019,7 +3052,7 @@ function adminLive(){
   </div></div>`;
 }
 function divForm(){
-  const d=editDiv?D(editDiv):{type:'doubles',gender:'open',rating:{rule:'none',v:3.5,v2:3.99},age:{rule:'none',v:50},cap:16,score:{pool:{bo:1,to:11},po:{bo:1,to:11},fin:{bo:1,to:11}},third:true,unverified:false,custom:''};
+  const d=editDiv?D(editDiv):{type:'doubles',gender:'open',rating:{rule:'none',v:3.5,v2:3.99},age:{rule:'none',v:50},cap:16,score:{pool:{bo:1,to:11},po:{bo:1,to:11},fin:{bo:1,to:11}},third:true,unverified:false,custom:'',poSize:0,poReview:true};
   const o=(v,cur,l)=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${l}</option>`;
   return `<section class="panel"><h2>${editDiv?'Edit '+esc(dname(d)):'New division'} <small id="dvPreview">${esc(dname(d))}</small></h2>
    <form id="divForm" class="grid-form">
@@ -3035,20 +3068,23 @@ function divForm(){
     <label class="f">Early playoff rounds<select id="dvPo">${[11,15,21].map(n=>o(n,d.score.po.to,'1 game to '+n)).join('')}</select></label>
     <label class="f">Semis, final, 3rd<select id="dvFin">${o('1-11',d.score.fin.bo+'-'+d.score.fin.to,'1 game to 11')}${o('3-11',d.score.fin.bo+'-'+d.score.fin.to,'Best of 3 to 11')}${o('1-15',d.score.fin.bo+'-'+d.score.fin.to,'1 game to 15')}${o('1-21',d.score.fin.bo+'-'+d.score.fin.to,'1 game to 21')}</select></label>
     <label class="f">Custom name (optional)<input type="text" id="dvName" value="${esc(d.custom||'')}" placeholder="Uses the auto name"></label>
+    <label class="f">Playoffs<select id="dvPoSize">${o(0,d.poSize||0,'Top 2 from each pool')}${o(4,d.poSize||0,'Top 4: semifinals')}${o(8,d.poSize||0,'Top 8: quarterfinals')}</select></label>
     <label class="check"><input type="checkbox" id="dvThird" ${d.third?'checked':''}> 3rd place match</label>
+    <label class="check"><input type="checkbox" id="dvPoReview" ${d.poReview!==false?'checked':''}> Let me check the playoff seeding before the bracket starts</label>
     <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">${editDiv?'Save changes':'Add division'}</button>${editDiv?'<button class="btn" type="button" data-act="cancelEdit">Cancel</button>':''}<span class="err" id="dvErr"></span></div>
-   </form><p class="muted" style="margin:10px 0 0">Format is picked from the entry count when the draw is locked: 3–5 entries play one round robin; 6 or more are split into pools of 3–4 with the top 2 advancing to a single elimination bracket.</p></section>`;
+   </form><p class="muted" style="margin:10px 0 0">Format is picked from the entry count when the draw is locked: 3–5 entries play one round robin; 6 or more are split into pools of 3–4. <b>Playoffs</b> decides how many go on to the single elimination bracket: the top 2 from each pool, or a fixed top 4 or top 8 (quarterfinals). Extra spots go to the best runners-up by record, then point difference. You can still change the playoff size and seeding when pools finish.</p></section>`;
 }
 function readDivForm(){
   const v=id=>$('#'+id).value,fin=v('dvFin').split('-').map(Number);
   return{type:v('dvType'),gender:v('dvGender'),rating:{rule:v('dvRule'),v:+v('dvV'),v2:+v('dvV2')},age:{rule:v('dvAge'),v:+v('dvAgeV')},cap:+v('dvCap'),
-    score:{pool:{bo:1,to:+v('dvPool')},po:{bo:1,to:+v('dvPo')},fin:{bo:fin[0],to:fin[1]}},third:$('#dvThird').checked,unverified:false,custom:v('dvName').trim()};
+    score:{pool:{bo:1,to:+v('dvPool')},po:{bo:1,to:+v('dvPo')},fin:{bo:fin[0],to:fin[1]}},third:$('#dvThird').checked,unverified:false,custom:v('dvName').trim(),poSize:+v('dvPoSize')||0,poReview:$('#dvPoReview').checked};
 }
+const poLabel=d=>d.poSize===8?'Top 8: quarterfinals':d.poSize===4?'Top 4: semifinals':'Top 2 per pool';
 function adminDivs(){
   return App.pageHead('Tournament · '+esc(S.t.name),'Divisions','')+`<div class="stack">${divForm()}<div class="divcards">${S.divs.map(d=>{const n=active(d.id).length,w=S.entries.filter(e=>e.div===d.id&&e.status==='wait').length;
     return `<section class="panel divcard"><div class="row"><h3>${esc(dname(d))}</h3><span class="pill p-${d.status}" style="margin-left:auto">${{open:'Registration open',live:'Live',done:'Finished'}[d.status]}</span></div>
      <div class="rules">${ruleText(d).map(t=>`<span class="pill p-muted">${esc(t)}</span>`).join('')}</div>
-     <div class="li-m">Pool: ${scoreText(d.score.pool)} · Playoffs: ${scoreText(d.score.po)} · Semis/final: ${scoreText(d.score.fin)}${d.third?' · 3rd place match':''}</div>
+     <div class="li-m">${poLabel(d)} · Pool: ${scoreText(d.score.pool)} · Playoffs: ${scoreText(d.score.po)} · Semis/final: ${scoreText(d.score.fin)}${d.third?' · 3rd place match':''}</div>
      <div class="li-m"><b>${n}</b> of ${d.cap} entered${w?' · '+w+' on waitlist':''}${d.status!=='open'?' · '+d.pools.length+' pool'+(d.pools.length>1?'s':''):''}</div>
      <div class="row">${d.status==='open'?`<button class="btn sm" data-act="editDiv" data-id="${d.id}">Edit rules</button><button class="btn sm primary" data-act="goDraw" data-id="${d.id}">Seed & draw</button>${n===0?`<button class="btn sm danger" data-act="delDiv" data-id="${d.id}">Delete</button>`:''}`:`<button class="btn sm" data-act="goPub" data-id="${d.id}">View results</button>`}</div></section>`}).join('')}</div></div>`;
 }
@@ -3068,13 +3104,33 @@ function adminRegs(){
    ${S.divs.length?'':'<p class="muted">Create a division first under Divisions. Entries are added per division.</p>'}${list.length?'':'<p class="muted">No entries yet. Add them one at a time, or export your Google Form responses as CSV and import them.</p>'}
    <p class="muted">One entry = one team (or one player in singles). Each player gets a 6-digit PIN, shown in the Entry column; a returning player (same DUPR ID or mobile) keeps their PIN. Flags don't reject an entry. You decide: accept it or withdraw it.</p>`;
 }
+function seedPanel(d){
+  if(d.status==='open'||!needsPo(d))return '';
+  const pool=S.matches.filter(m=>m.div===d.id&&m.stage==='pool'),poolDone=pool.length&&pool.every(m=>m.status==='done');
+  if(d.bracket){return poStarted(d)?'':`<section class="panel seedp"><h2>Playoff seeding <small>${esc(dname(d))}</small></h2><p style="margin:0 0 10px">The bracket is set but no playoff match has started, so the seeding can still change.</p><button class="btn" data-act="poReseed" data-id="${d.id}">Change seeding</button></section>`}
+  if(!poolDone&&!d.poDraft)return '';
+  const dr=d.poDraft||{n:poN(d),ids:qualifiers(d).ids},ids=dr.ids,qd=qualifiers(d,ids.length+8),info=qd.info,total=d.pools.reduce((a,p)=>a+p.entries.length,0);
+  let B=2;while(B<ids.length)B*=2;const pos=seedPos(B),rm=new Set(rematches(d,ids).flat()),stat=id=>{const r=info[id];return r?`${d.pools.length>1?'Pool '+r.pool+' · ':''}${['1st','2nd','3rd','4th','5th','6th'][r.place-1]||r.place+'th'} · ${r.w}–${r.l}, ${r.diff>0?'+':''}${r.diff}`:''};
+  const out=d.pools.flatMap(p=>standings(d,p)).filter(r=>!ids.includes(r.id)).sort((a,b)=>{const ka=info[a.id],kb=info[b.id];return (ka?ka.place:9)-(kb?kb.place:9)||b.w-a.w||b.diff-a.diff});
+  const first=Array.from({length:B/2},(_,i)=>[ids[pos[2*i]-1],ids[pos[2*i+1]-1],pos[2*i],pos[2*i+1]]);
+  const rl=roundLabel(0,Math.log2(B));
+  return `<section class="panel seedp"><h2>Playoff seeding <small>${esc(dname(d))}</small></h2>
+   <p style="margin:0 0 12px">Pools are done. Check the seeds, then start the playoffs. Nothing goes on court until you do.</p>
+   <div class="row" style="margin-bottom:12px"><label class="f" style="min-width:220px">Playoff size<select data-posize="${d.id}">${[[2*d.pools.length,'Top 2 from each pool'],[4,'Top 4: semifinals'],[8,'Top 8: quarterfinals']].filter(([n],i,a)=>n<=total&&a.findIndex(x=>x[0]===n)===i).map(([n,l])=>`<option value="${n}" ${n===ids.length?'selected':''}>${l} (${n})</option>`).join('')}</select></label>
+   <button class="btn" data-act="poResetSeeds" data-id="${d.id}">Reset to standings</button></div>
+   <div class="two"><div><h3 class="eyebrow" style="margin:0 0 6px">Seeds</h3><ol class="list seedlist">${ids.map((id,i)=>`<li><div class="li-main"><span class="li-t"><span class="seedno">${i+1}</span>${esc(ename(id))}</span><div class="li-m">${stat(id)}</div></div><div class="row"><button class="btn sm" data-act="poUp" data-id="${d.id}" data-i="${i}" ${i?'':'disabled'} aria-label="Move ${esc(ename(id))} up">↑</button><button class="btn sm" data-act="poDown" data-id="${d.id}" data-i="${i}" ${i<ids.length-1?'':'disabled'} aria-label="Move ${esc(ename(id))} down">↓</button></div></li>`).join('')}</ol>
+     ${out.length?`<details style="margin-top:10px"><summary class="muted" style="cursor:pointer">Not in the playoffs (${out.length})</summary><ul class="list">${out.map(r=>`<li><div class="li-main"><span class="li-t">${esc(ename(r.id))}</span><div class="li-m">${stat(r.id)}</div></div><button class="btn sm" data-act="poSwapIn" data-id="${d.id}" data-e="${r.id}">Replace #${ids.length}</button></li>`).join('')}</ul></details>`:''}</div>
+   <div><h3 class="eyebrow" style="margin:0 0 6px">${rl} preview</h3><ul class="list">${first.map(([a,b,sa,sb])=>`<li><div class="li-main"><span class="li-t">#${sa} ${a?esc(ename(a)):'—'} <span class="muted">vs</span> ${b?'#'+sb+' '+esc(ename(b)):'<span class="muted">bye</span>'}</span>${a&&b&&rm.has(a)&&rm.has(b)&&poolOf(d,a)===poolOf(d,b)?`<div class="li-m"><span class="pill p-flag">Same pool rematch (Pool ${poolOf(d,a)})</span></div>`:''}</div></li>`).join('')}</ul>
+   ${B>ids.length?`<p class="tb" style="margin:6px 0 0">${B-ids.length} top seed${B-ids.length>1?'s get':' gets'} a bye into the next round.</p>`:''}</div></div>
+   <div class="row" style="margin-top:14px"><button class="btn primary" data-act="poStart" data-id="${d.id}">Start playoffs</button><span class="muted">Creates the bracket and adds the first round to the court queue.</span></div></section>`;
+}
 function adminDraw(){
   if(!S.divs.length)return App.pageHead('Tournament · '+esc(S.t.name),'Draw','')+'<section class="panel"><p class="muted" style="margin:0">Create a division and add entries first. The draw for each division is made here.</p></section>';
   const opts=S.divs;if(!drawDiv||!D(drawDiv))drawDiv=(S.divs.find(d=>d.status==='open')||S.divs[0]).id;
   const d=D(drawDiv),sel=`<select id="drawDiv" aria-label="Division">${opts.map(x=>`<option value="${x.id}" ${x.id===drawDiv?'selected':''}>${esc(dname(x))}</option>`).join('')}</select>`;
-  if(d.status!=='open')return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="pill p-${d.status}">Draw locked</span>`)+`<section class="panel">${divResults(d)}</section>`;
+  if(d.status!=='open')return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="pill p-${d.status}">Draw locked</span>`)+seedPanel(d)+`<section class="panel">${divResults(d)}</section>`;
   const es=seeded(d.id),pools=makePools(es),blk=es.filter(e=>blocking(e).length);
-  return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="muted">${es.length} entries → ${es.length<3?'need at least 3':es.length<=5?'1 round robin':pools.length+' pools, top 2 advance'}</span>`)+`
+  return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="muted">${es.length} entries → ${es.length<3?'need at least 3':(pools.length>1?pools.length+' pools':'1 round robin')+(needsPo(d)?' → '+(d.poSize?'top '+Math.min(d.poSize,es.length)+(Math.min(d.poSize,es.length)>4?' (quarterfinals)':' (semifinals)'):'top 2 per pool'):'')}</span>`)+`
   <div class="two"><section class="panel"><h2>Seeding <small>by ${d.type} DUPR${d.type==='doubles'?' (team average)':''}</small></h2><ul class="list">${es.map((e,i)=>`<li><div class="li-main"><span class="li-t">${e.seed}. ${esc(ename(e.id))}</span><div class="li-m">${erate(e).toFixed(3)}${isNR(e)?' · NR':''}${blocking(e).length?' · <span style="color:var(--bad)">needs review</span>':''}</div></div><div class="row"><button class="btn sm" data-act="seedUp" data-id="${e.id}" ${i?'':'disabled'} aria-label="Move up">↑</button><button class="btn sm" data-act="seedDown" data-id="${e.id}" ${i<es.length-1?'':'disabled'} aria-label="Move down">↓</button></div></li>`).join('')}</ul>
    <div class="row" style="margin-top:10px"><button class="btn" data-act="reseed">Re-seed by rating</button></div></section>
    <div class="stack"><section class="panel"><h2>Pools preview <small>snake by seed</small></h2><div class="pools">${pools.map(p=>`<div><div class="eyebrow">${pools.length>1?'Pool '+p.name:'Round robin'}</div><ul class="list">${p.entries.map(id=>`<li><span>${E(id).seed}. ${esc(ename(id))}</span></li>`).join('')}</ul></div>`).join('')}</div></section>
@@ -3317,6 +3373,12 @@ document.addEventListener('click',e=>{
     case 'reinstate':en.status=active(en.div).length<D(en.div).cap?'in':'wait';break;
     case 'seedUp':case 'seedDown':{const es=seeded(en.div),i=es.indexOf(en),j=a==='seedUp'?i-1:i+1;if(es[j]){const s=es[j].seed;es[j].seed=en.seed;en.seed=s}break}
     case 'reseed':autoSeed(drawDiv);break;
+    case 'poOpen':drawDiv=id;sub='draw';break;
+    case 'poUp':case 'poDown':{const d=D(id);if(!d.poDraft)d.poDraft={n:poN(d),ids:qualifiers(d).ids};const ids=d.poDraft.ids,i=+t.dataset.i,j=a==='poUp'?i-1:i+1;if(ids[j]){[ids[i],ids[j]]=[ids[j],ids[i]]}break}
+    case 'poSwapIn':{const d=D(id);if(!d.poDraft)d.poDraft={n:poN(d),ids:qualifiers(d).ids};const ids=d.poDraft.ids,old=ids[ids.length-1];ids[ids.length-1]=t.dataset.e;audit('Admin',dname(d)+': '+ename(t.dataset.e)+' replaces '+ename(old)+' in the playoffs');break}
+    case 'poResetSeeds':{const d=D(id);d.poDraft={n:(d.poDraft&&d.poDraft.n)||poN(d),ids:qualifiers(d,(d.poDraft&&d.poDraft.n)||poN(d)).ids};toast('Seeds reset to the pool standings.');break}
+    case 'poStart':{const d=D(id),ids=(d.poDraft&&d.poDraft.ids)||qualifiers(d).ids;buildBracket(d,ids);toast(roundLabel(0,d.bracket.rounds.length)+'s are in the queue.');break}
+    case 'poReseed':{const d=D(id);if(poStarted(d)){toast('A playoff match has already started, so the seeding is locked.');return}unbuildBracket(d);audit('Admin','Reopened playoff seeding for '+dname(d));drawDiv=id;sub='draw';break}
     case 'lock':lockDraw(drawDiv);toast('Draw locked. Matches added to the queue.');break;
     case 'addCourt':S.courts.push({no:S.courts.length+1,state:'free',match:null,hold:false,ref:null});break;
     case 'removeCourt':{const l=S.courts[S.courts.length-1];if(l.match){toast('Finish the match on the last court first.');return}if(S.courts.length>1)S.courts.pop();break}
@@ -3332,6 +3394,7 @@ document.addEventListener('change',e=>{
   if(!App.isActive('tournament'))return;
   const t=e.target;
   if(t.id==='enDiv'){syncEntryForm();return}
+  if(t.dataset.posize){const d=D(t.dataset.posize),n=+t.value;d.poDraft={n,ids:qualifiers(d,n).ids};audit('Admin',dname(d)+': playoffs set to top '+n);commit();return}
   if(t.dataset.bk){const sc=sched(),b=sc.blocks.find(x=>x.id===t.dataset.bk),k=t.dataset.k;
     if(k==='mode'){b.mode=t.value;b.released=false}
     if(k==='at'){b.at=t.value||b.at;b.released=false}

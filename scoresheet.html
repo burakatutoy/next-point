@@ -189,7 +189,7 @@ function rally(w){
   L.hist.push(snap(L));L.rallies++;
   if(w===L.serving){
     L.score[ix(w)]++;const a=L.score[ix(w)],b=L.score[ix(oth(w))];
-    if(a>=c.to&&a-b>=2){L.over=w;tmPause(L)}
+    if(c.w2?(a>=c.to&&a-b>=2):a>=c.to){L.over=w;tmPause(L)}
     else if(c.switchEnds&&(c.bo===1||L.game===c.bo)&&!L.switched&&a===switchAt(c.to)&&b<a){L.switched=true;L.switchPrompt=true}
   }else if(dbl()&&L.num===1){L.num=2;L.server=partner(L.server)}
   else{L.serving=oth(L.serving);L.num=1;L.server=rightP(L,L.serving)}
@@ -198,7 +198,7 @@ function undo(){const m=M(),L=m.live;if(!L.hist.length)return false;const p=L.hi
 function callText(){const L=M().live,v=view(),a=L.score[ix(v.serving)],b=L.score[ix(v.rcv)];return dbl()?a+'–'+b+'–'+v.num:a+'–'+b}
 function pointState(){
   const m=M(),L=m.live,v=view(),s=L.score[ix(v.serving)],r=L.score[ix(v.rcv)];
-  if(s>=m.cfg.to-1&&s>r){const g=[...m.games,v.serving==='a'?[s+1,r]:[r,s+1]];return decided(g)?'Match point':'Game point'}
+  if(m.cfg.w2?(s>=m.cfg.to-1&&s>r):s===m.cfg.to-1){const g=[...m.games,v.serving==='a'?[s+1,r]:[r,s+1]];return decided(g)?'Match point':'Game point'}
   return '';
 }
 function finishMatch(type,winner,note){
@@ -252,6 +252,7 @@ function setupScreen(){
     <div class="seg"><label><input type="radio" name="mType" value="singles" ${c.type==='singles'?'checked':''}><span>Singles</span></label><label><input type="radio" name="mType" value="doubles" ${c.type!=='singles'?'checked':''}><span>Doubles</span></label></div>
     <div class="grid2"><label class="f">Event or division (optional)<input type="text" id="mLabel" value="${esc(c.label)}" placeholder="e.g. Men's Doubles 18+"></label><label class="f">Court (optional)<input type="text" id="mCourt" value="${esc(c.court)}" placeholder="e.g. 3"></label></div>
     <div class="grid2"><label class="f">Format<select id="mFmt">${[['1-11','1 game to 11'],['1-15','1 game to 15'],['1-21','1 game to 21'],['3-11','Best of 3 to 11'],['3-15','Best of 3 to 15']].map(([v,l])=>`<option value="${v}" ${c.fmt===v?'selected':''}>${l}</option>`).join('')}</select></label>
+    <label class="f">Game ends<select id="mWin"><option value="cap" ${c.w2?'':'selected'}>First to the target (11–10 wins)</option><option value="w2" ${c.w2?'selected':''}>Win by 2 (12–10, 13–11…)</option></select></label>
     <label class="f">Game timer (min, 0 = off)<input type="number" id="mTimer" min="0" max="90" value="${c.timer}"></label></div>
     <label class="check"><input type="checkbox" id="mSwitch" ${c.switchEnds?'checked':''}> Switch ends at the halfway score</label>
     <div class="sidebox a"><span class="eyebrow">Side A</span><label class="f" style="color:inherit">Player 1<input type="text" id="a0" value="${pv('a',0)}" autocomplete="off"></label><label class="f dblonly" style="color:inherit">Player 2<input type="text" id="a1" value="${pv('a',1)}" autocomplete="off"></label></div>
@@ -276,7 +277,7 @@ function rulesCard(){
    ${dbl()?'<li>Call the score as <b>server score – receiver score – server number</b>. The game starts at <b>0–0–2</b>: only one server on the first turn.</li><li>The server serves from the <b>right</b> when their side\'s score is even and from the <b>left</b> when odd. Only the serving side switches places, and only after winning a point.</li><li>After a side out, the first server is the player on the right.</li>':'<li>Call the score as <b>server score – receiver score</b>.</li><li>Serve from the <b>right</b> when the server\'s score is even, from the <b>left</b> when odd.</li>'}
    <li>Only the serving side scores. The receiver is diagonally opposite the server.</li>
    ${c.switchEnds?`<li>Switch ends when a side first reaches ${switchAt(c.to)}${c.bo>1?' in the deciding game. Sides also switch ends between games':''}.</li>`:''}
-   <li>${toLimit(c.to)} timeouts per side per game, 1 minute each.</li><li>Games to ${c.to}, win by 2.</li></ul></details>`;
+   <li>${toLimit(c.to)} timeouts per side per game, 1 minute each.</li><li>${c.w2?'Games to '+c.to+', win by 2.':'First to '+c.to+' wins: '+c.to+'–'+(c.to-1)+' ends the game.'}</li></ul></details>`;
 }
 function endsRow(){const L=M().live,left=(L.aLeft!==L.flip)?'a':'b',right=oth(left),cl=s=>s==='a'?'ta':'tbm';return{left,right,html:`<div class="endlabels"><span class="${cl(left)}">${esc(sideShort(left))}</span><span class="${cl(right)}">${esc(sideShort(right))}</span></div>`}}
 function gamesLine(){const m=M();return m.games.length?`<div class="scoreline">${m.games.map((g,i)=>`<span>Game ${i+1}: <b>${g[0]}–${g[1]}</b></span>`).join('')}</div>`:''}
@@ -361,7 +362,7 @@ function renderModal(){
   const m=M();let h='';
   if(modal.t==='fix'){const L=m.live,v=view();
     h=`<h3>Fix score and positions</h3><p class="muted" style="margin:0">Correct the score or positions before the next serve.</p>
-     <div class="grid2"><label class="f">${esc(sideShort('a'))}<input type="number" min="0" id="fxA" value="${L.score[0]}"></label><label class="f">${esc(sideShort('b'))}<input type="number" min="0" id="fxB" value="${L.score[1]}"></label></div>
+     <div class="grid2"><label class="f">${esc(sideShort('a'))}<input type="number" min="0" ${m.cfg.w2?'':'max="'+m.cfg.to+'"'} inputmode="numeric" id="fxA" value="${L.score[0]}"></label><label class="f">${esc(sideShort('b'))}<input type="number" min="0" id="fxB" value="${L.score[1]}"></label></div>
      <label class="f">Serving side<select id="fxServing"><option value="a" ${v.serving==='a'?'selected':''}>${esc(sideShort('a'))}</option><option value="b" ${v.serving==='b'?'selected':''}>${esc(sideShort('b'))}</option></select></label>
      ${dbl()?`<label class="f">Server number<select id="fxNum"><option value="1" ${v.num===1?'selected':''}>1st server</option><option value="2" ${v.num===2?'selected':''}>2nd server</option></select></label>
      <label class="f">Who is serving<select id="fxServer">${[...pids('a'),...pids('b')].map(p=>`<option value="${p}" ${p===v.server?'selected':''}>${esc(pname(p))}</option>`).join('')}</select></label>
@@ -411,11 +412,12 @@ document.addEventListener('click',e=>{
     case 'saveGame':{m.games.push([...L.score]);const w=decided(m.games);if(w){finishMatch('played',w);toast('Match finished.')}else{newLive();toast('Game saved. Set up game '+m.live.game+'.')}break}
     case 'fixModal':openModal({t:'fix'});return;
     case 'saveFix':{const A=parseInt($('#fxA').value,10),B=parseInt($('#fxB').value,10);if(!(A>=0&&B>=0)){$('#fxErr').textContent='Enter both scores.';return}
+      {const to=m.cfg.to,hi=Math.max(A,B),lo=Math.min(A,B);const er=!m.cfg.w2?(hi>to?'Games stop at '+to+'. No side can have more than '+to+'.':lo===to?'Only one side can reach '+to+'.':''):(hi>to&&hi-lo>2?'Past '+to+', the game ends as soon as one side leads by 2.':'');if(er){$('#fxErr').textContent=er;return}}
       const serving=$('#fxServing').value;let server=serving+'0',num=1;
       if(dbl()){server=$('#fxServer').value;num=+$('#fxNum').value;if(server[0]!==serving){$('#fxErr').textContent='The server must be on the serving side.';return}}
       L.hist.push(snap(L));L.score=[A,B];L.serving=serving;L.num=num;
       if(dbl()){if($('#fxSwapA').checked)L.sr.a=partner(L.sr.a);if($('#fxSwapB').checked)L.sr.b=partner(L.sr.b)}
-      L.server=server;const to=m.cfg.to;L.over=A>=to&&A-B>=2?'a':B>=to&&B-A>=2?'b':null;L.switchPrompt=false;if(L.over)tmPause(L);
+      L.server=server;const to=m.cfg.to,ov=(x,y)=>m.cfg.w2?(x>=to&&x-y>=2):x>=to;L.over=ov(A,B)?'a':ov(B,A)?'b':null;L.switchPrompt=false;if(L.over)tmPause(L);
       closeModal();toast('Score fixed.');break}
     case 'earlyModal':openModal({t:'early'});return;
     case 'saveEarly':{const lo=$('#eSide').value,type=$('#eType').value,w=oth(lo),to=m.cfg.to;let note='';
@@ -446,8 +448,8 @@ document.addEventListener('submit',e=>{
   const teams={a:[g('a0')||'Player A1',g('a1')||'Player A2'],b:[g('b0')||'Player B1',g('b1')||'Player B2']};
   if(type==='singles'){teams.a=[teams.a[0]];teams.b=[teams.b[0]]}
   const timer=Math.max(0,Math.min(90,parseInt($('#mTimer').value,10)||0));
-  st.cfg={type,fmt:$('#mFmt').value,timer,switchEnds:$('#mSwitch').checked,label:g('mLabel'),court:g('mCourt')};
-  st.m={cfg:{type,bo,to,timer,switchEnds:st.cfg.switchEnds,label:st.cfg.label,court:st.cfg.court},teams,games:[],live:null,status:'play',start:null};
+  st.cfg={type,fmt:$('#mFmt').value,w2:$('#mWin').value==='w2',timer,switchEnds:$('#mSwitch').checked,label:g('mLabel'),court:g('mCourt')};
+  st.m={cfg:{type,bo,to,w2:st.cfg.w2,timer,switchEnds:st.cfg.switchEnds,label:st.cfg.label,court:st.cfg.court},teams,games:[],live:null,status:'play',start:null};
   st.rematch=null;newLive();commit();window.scrollTo({top:0});
 });
 setInterval(()=>{

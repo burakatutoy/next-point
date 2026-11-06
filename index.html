@@ -1487,6 +1487,13 @@ table.t tbody tr:first-child td{border-top-color:var(--line-2)}
 .pool-o:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
 .pool-o .pill{margin-left:4px;vertical-align:1px}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* v35: date fields match the other inputs (light and dark) */
+input[type=date]{font:inherit;font-size:16px;padding:9px 10px;min-height:44px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);min-width:0;width:100%}
+input[type=date]:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+
+/* v36: unlock draw */
+.unl{margin-bottom:16px}.unl-ask{border-color:color-mix(in srgb,var(--bad) 45%,var(--line));background:var(--bad-soft);display:grid;gap:12px}
 </style>
 
 <header class="top">
@@ -1564,7 +1571,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-06e';
+  const BUILD='2026-11-06g';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2210,7 +2217,7 @@ const App=(()=>{
     const now=S2.courts.filter(c=>c.match&&S2.ms[c.match]);
     const courtsHtml=drawn?`<section class="hub-sec"><h2 class="sp-h2">On court now</h2>${now.length?`<div class="sch-courts">${S2.courts.map(c=>{const x=c.match&&S2.ms[c.match];return `<div class="sch-ct ${x?'busy st-'+x.status:''}"><span class="sch-ct-n">Court ${c.no}</span>${x?`<b>${esc(x.a?x.a.name:'')}</b><span class="muted">vs</span><b>${esc(x.b?x.b.name:'')}</b><span class="sch-ct-s">${x.status==='called'?'Called':'Playing'}${x.live?' · '+esc(x.live):''}</span>`:`<span class="muted">${c.hold?'On hold':'Free'}</span>`}</div>`}).join('')}</div>`:'<p class="site-empty">No games on court right now.</p>'}</section>`:'';
     // order of play by day
-    const d0=schDay[id]!=null?schDay[id]:Math.min(S2.today,S2.days.length-1),bl=S2.blocks.filter(b=>b.day===d0&&b.st!=='draft');
+    const d0=schDay[id]!=null?schDay[id]:Math.max(0,Math.min(S2.today,S2.days.length-1)),bl=S2.blocks.filter(b=>b.day===d0&&b.st!=='draft');
     const dayTabs=S2.days.length>1?`<div class="seg-tabs sch-days" role="tablist">${S2.days.map((l,k)=>`<button role="tab" class="sg ${k===d0?'on':''}" aria-selected="${k===d0}" data-app="schDay" data-id="${esc(id)}" data-d="${k}">${esc(l)}${k===S2.today?' · Today':''}</button>`).join('')}</div>`:'';
     const blk=b=>{const lab=b.st==='done'?'Finished':b.st==='playing'?'Playing now':b.st==='after'?'After pools':b.s!=null?'About '+fmtM(b.s):'';
       return `<details class="sch-blk st-${b.st}" ${b.st==='playing'?'open':''}><summary><span class="sch-b-t">${esc(lab)}</span><span class="sch-b-n"><b>${esc(b.name)}</b><span class="muted">${b.ids.length||b.n} game${(b.ids.length||b.n)===1?'':'s'}${b.courts?' · Courts '+b.courts.join(', '):''}</span></span></summary>
@@ -3114,7 +3121,7 @@ const TM=(()=>{
 
 const YEAR=new Date().getFullYear();
 let schedDay=null;
-let S,view='admin',sub='live',me=null,refMe=null,refSel=null,modal=null,pubDiv=null,regDiv='all',drawDiv=null,editDiv=null;
+let S,view='admin',sub='live',me=null,refMe=null,refSel=null,modal=null,pubDiv=null,regDiv='all',drawDiv=null,editDiv=null,unlockAsk=null;
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
@@ -3213,9 +3220,20 @@ function lockDraw(divId,base){
   d.pools=makePools(es,d);d.status='live';d.bracket=null;
   base=base??queueBase();
   d.pools.forEach((p,pi)=>rr(p.entries).forEach((round,ri)=>round.forEach(([a,b],k)=>mkMatch({div:divId,stage:'pool',pool:p.name,round:ri+1,a,b,ord:base+ri+1+pi*.1+k*.01+S.divs.indexOf(d)*.001}))));
-  S.entries.filter(e=>e.div===divId&&e.status==='wait').forEach(e=>e.status='out');
+  S.entries.filter(e=>e.div===divId&&e.status==='wait').forEach(e=>{e.status='out';e.dropAtLock=true});
   audit('Admin','Locked draw for '+dname(d)+' ('+es.length+' entries, '+d.pools.length+' pool'+(d.pools.length>1?'s':'')+')');
 }
+
+// undo a locked draw while nothing in the division has been played
+function unlockBlock(d){const ms=S.matches.filter(m=>m.div===d.id&&m.result!=='bye');const played=ms.filter(m=>m.status==='play'||m.status==='done'||(m.games||[]).length||(m.live&&m.live.hist&&m.live.hist.length));
+  return played.length?played.length+' game'+(played.length>1?'s have':' has')+' already been played or started':''}
+function unlockDraw(divId){const d=D(divId);if(!d||d.status==='open'||unlockBlock(d))return false;
+  const gone=new Set(S.matches.filter(m=>m.div===divId).map(m=>m.id));
+  S.courts.forEach(ct=>{if(ct.match&&gone.has(ct.match)){ct.match=null;ct.state='free'}});
+  S.matches=S.matches.filter(m=>!gone.has(m.id));
+  d.pools=[];d.bracket=null;delete d.poDraft;d.status='open';
+  S.entries.filter(e=>e.div===divId&&e.dropAtLock).forEach(e=>{e.status='wait';delete e.dropAtLock});
+  audit('Admin','Unlocked the draw for '+dname(d)+' ('+gone.size+' matches removed)');return gone.size}
 
 /* ---------- standings ---------- */
 const pts=m=>m.games.reduce((a,g)=>[a[0]+g[0],a[1]+g[1]],[0,0]);
@@ -3324,6 +3342,11 @@ const fmtT=min=>{min=Math.round(min);const h=Math.floor(min/60),mm=((min%60)+60)
 const nowMin=()=>{const d=new Date(now());return d.getHours()*60+d.getMinutes()+d.getSeconds()/60};
 const toMin=t=>{const d=new Date(t);return d.getHours()*60+d.getMinutes()};
 const r5=m=>Math.round(m/5)*5;
+const addDays=(v,n)=>{const [y,m,d]=String(v).split('-').map(Number);const t=new Date(y,m-1,d+n);return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')};
+const todayYmd=()=>{const t=new Date(now());return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')};
+const dayDate=dd=>{if(!dd||!/^\d{4}-\d\d-\d\d$/.test(dd.date||''))return '';const [y,m,d]=dd.date.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})};
+const dayName=dd=>dd.label+(dayDate(dd)?' · '+dayDate(dd):'');
+const planning=()=>sched().today<0;
 function newBlock(div,stage,day){return{id:App.uid('b'),div,stage,day,mode:'follow',at:'13:00',courts:null,released:false,hold:false}}
 function needsPo(d){return d.status==='open'?(d.poSize?active(d.id).length>=4:poolCount(d,active(d.id).length)>1):(d.pools.length>1||!!d.poSize)}
 function sched(){
@@ -3331,11 +3354,12 @@ function sched(){
   const sc=S.sched;
   sc.blocks=sc.blocks.filter(b=>{const d=D(b.div);return d&&(b.stage==='pool'||needsPo(d))});
   S.divs.forEach(d=>{
-    if(!sc.blocks.some(b=>b.div===d.id&&b.stage==='pool'))sc.blocks.push(newBlock(d.id,'pool',Math.min(sc.today,sc.days.length-1)));
+    if(!sc.blocks.some(b=>b.div===d.id&&b.stage==='pool'))sc.blocks.push(newBlock(d.id,'pool',Math.max(0,Math.min(sc.today,sc.days.length-1))));
     if(needsPo(d)&&!sc.blocks.some(b=>b.div===d.id&&b.stage==='po')){const pb=sc.blocks.find(b=>b.div===d.id&&b.stage==='pool');sc.blocks.push(newBlock(d.id,'po',pb?pb.day:0))}
   });
   sc.blocks.forEach(b=>{if(b.day>sc.days.length-1)b.day=sc.days.length-1});
-  if(sc.today>sc.days.length-1)sc.today=sc.days.length-1;
+  if(sc.today>sc.days.length-1)sc.today=sc.days.length-1;if(sc.today<-1)sc.today=-1;
+  if(S.t&&S.t.start&&sc.days.length&&!sc.days.some(x=>x.date))sc.days.forEach((x,i)=>{x.date=addDays(S.t.start,i)});
   return sc;
 }
 const ordered=()=>sched().blocks.map((b,i)=>({b,i})).sort((x,y)=>x.b.day-y.b.day||x.i-y.i).map(x=>x.b);
@@ -3352,7 +3376,8 @@ function schedGate(){
   const sc=sched(),out=new Map(),nm=nowMin();let open=true,closer=null;
   for(const b of ordered()){
     const st=blockState(b);let own=true,why='';
-    if(b.day>sc.today){own=false;why='Scheduled for '+sc.days[b.day].label}
+    if(sc.today<0){own=false;why='Tournament not started'}
+    else if(b.day>sc.today){own=false;why='Scheduled for '+sc.days[b.day].label}
     else if(b.mode==='manual'&&!b.released){own=false;why='Starts when the desk starts it'}
     else if(b.mode==='time'&&!b.released&&b.day===sc.today&&nm<hm(b.at)){own=false;why='Scheduled for '+fmtT(hm(b.at))}
     const ok=open&&own&&!b.hold;
@@ -3412,6 +3437,12 @@ function dayFinish(pr,di){const v=ordered().filter(b=>b.day===di).map(b=>pr.get(
 function scheduleTips(){
   const sc=sched(),tips=[],day=sc.days[sc.today];
   S.divs.filter(d=>d.poDraft&&!d.bracket).forEach(d=>tips.push({k:'soon',msg:`Pools are done in <b>${esc(dname(d))}</b>. Check the playoff seeding, then start the playoffs.`,act:`<button class="btn sm primary" data-act="poOpen" data-id="${d.id}">Check seeding</button>`}));
+  const td=todayYmd(),match=sc.days.findIndex(x=>x.date===td);
+  if(sc.today<0){
+    tips.push({k:'soon',msg:match>=0?`Today is <b>${esc(dayName(sc.days[match]))}</b>. Start it when the desk is ready: games then go to courts by themselves.`:`<b>Planning mode.</b> The tournament hasn't started, so no games are called to courts. Lock draws and arrange the schedule freely.`,act:`<button class="btn sm ${match>=0?'primary':''}" data-act="startDay" data-i="${Math.max(0,match)}">Start ${esc(sc.days[Math.max(0,match)].label)}</button>`});
+    if(sc.blocks.length){const pr=project();sc.days.forEach((dd,i)=>{const f=dayFinish(pr,i);if(f!=null&&f>hm(dd.end)+5)tips.push({k:'late',msg:`<b>${esc(dayName(dd))}</b> is projected to end around <b>${fmtT(r5(f))}</b>, ${Math.round(f-hm(dd.end))} min after ${fmtT(hm(dd.end))}. Move a block to another day, add a court, or start earlier.`})})}
+    return tips}
+  if(sc.days[0].date&&td<sc.days[0].date&&S.matches.every(m=>m.status==='queued'||m.result==='bye'))tips.push({k:'soon',msg:`${esc(dayName(sc.days[0]))} hasn't come yet, but games will be called to courts as soon as a draw is locked. Planning ahead? Switch to planning mode.`,act:'<button class="btn sm" data-act="startDay" data-i="-1">Switch to planning</button>'});
   if(!day||!sc.blocks.length)return tips;
   const g=schedGate(),pr=project(),q=queue(),free=S.courts.filter(c=>c.state==='free'&&!c.hold).length;
   if(free&&!q.some(x=>x.ok)){
@@ -3825,13 +3856,13 @@ function nav(){
 function adminSched(){
   const sc=sched();
   if(!S.divs.length)return App.pageHead('Tournament · '+esc(S.t.name),'Schedule','')+'<section class="panel"><p class="muted" style="margin:0">Create divisions first. Each division gets a block here (pools, then playoffs), and you set the order they play in.</p></section>';
-  const pr=project(),g=schedGate(),tips=scheduleTips(),di=schedDay==null?sc.today:Math.min(schedDay,sc.days.length-1),day=sc.days[di];
-  const bl=ordered().filter(b=>b.day===di),fin=dayFinish(pr,sc.today),tday=sc.days[sc.today],late=fin!=null?fin-hm(tday.end):0,dr=planDrift(pr);
-  const left=ordered().filter(b=>b.day===sc.today).reduce((a,b)=>a+((pr.get(b.id)||{}).n||0),0);
-  const kp=App.kpi('Today',esc(tday.label),fmtT(hm(tday.start))+' – '+fmtT(hm(tday.end)))+
-    App.kpi('Projected finish',fin!=null?fmtT(r5(fin)):'—',fin==null?'nothing scheduled today':late>5?Math.round(late)+' min past the end of the day':'within the day',fin!=null&&late>5?'warn':'good')+
+  const pr=project(),g=schedGate(),tips=scheduleTips(),plan=sc.today<0,di=schedDay==null?Math.max(0,sc.today):Math.min(schedDay,sc.days.length-1),day=sc.days[di],cur=plan?di:sc.today;
+  const bl=ordered().filter(b=>b.day===di),fin=dayFinish(pr,cur),tday=sc.days[cur],late=fin!=null?fin-hm(tday.end):0,dr=plan?null:planDrift(pr);
+  const left=ordered().filter(b=>b.day===cur).reduce((a,b)=>a+((pr.get(b.id)||{}).n||0),0);
+  const kp=(plan?App.kpi('Status','Planning','no games are called until you start a day'):App.kpi('Today',esc(tday.label),(dayDate(tday)?dayDate(tday)+' · ':'')+fmtT(hm(tday.start))+' – '+fmtT(hm(tday.end))))+
+    App.kpi('Projected finish',fin!=null?fmtT(r5(fin)):'—',(plan?esc(dayName(tday))+': ':'')+(fin==null?'nothing scheduled '+(plan?'yet':'today'):late>5?Math.round(late)+' min past the end of the day':'within the day'),fin!=null&&late>5?'warn':'good')+
     App.kpi('Vs saved plan',dr==null?'—':Math.abs(dr)<5?'On plan':(dr>0?'+':'−')+Math.round(Math.abs(dr))+' min',dr==null?'save a plan to track drift':dr>=5?'behind':dr<=-5?'ahead':'within 5 min',dr!=null&&dr>=10?'warn':'')+
-    App.kpi('Games left today',Math.round(left),ordered().filter(b=>b.day===sc.today&&blockState(b)!=='done').length+' blocks still to finish');
+    App.kpi(plan?'Games on '+esc(tday.label):'Games left today',Math.round(left),ordered().filter(b=>b.day===cur&&blockState(b)!=='done').length+' blocks'+(plan?'':' still to finish'));
   const statusPill=b=>{const x=g.get(b.id),st=x.state;
     if(st==='draft')return '<span class="pill p-muted">Draw not locked</span>';
     if(st==='done')return '<span class="pill p-done">Finished</span>';
@@ -3862,14 +3893,15 @@ function adminSched(){
       </div></li>`}).join('');
   return App.pageHead('Tournament · '+esc(S.t.name),'Schedule',`${sc.plan?`<span class="tb">Plan saved ${clockStr(sc.plan.at)}</span><button class="btn" data-act="clearPlan">Clear plan</button>`:''}<button class="btn primary" data-act="savePlan">${sc.plan?'Save new plan':'Save as plan'}</button>`)+
    `<div class="kpis">${kp}</div>${tipsHtml(tips)}
-   ${sc.days.length>1?`<div class="tabs daytabs" role="tablist">${sc.days.map((dd,i)=>`<button class="tab" data-act="schedDay" data-i="${i}" aria-selected="${i===di}">${esc(dd.label)}${i===sc.today?' · today':''}</button>`).join('')}</div>`:''}
-   <section class="panel"><h2>${esc(day.label)} timeline <small>${fmtT(hm(day.start))} – ${fmtT(hm(day.end))} · estimates</small></h2>${tl}</section>
+   ${sc.days.length>1?`<div class="tabs daytabs" role="tablist">${sc.days.map((dd,i)=>`<button class="tab" data-act="schedDay" data-i="${i}" aria-selected="${i===di}">${esc(dayName(dd))}${i===sc.today?' · today':''}</button>`).join('')}</div>`:''}
+   <section class="panel"><h2>${esc(dayName(day))} timeline <small>${fmtT(hm(day.start))} – ${fmtT(hm(day.end))} · estimates</small></h2>${tl}</section>
    <div class="two" style="margin-top:16px"><section class="panel"><h2>Play order <small>courts follow this order</small></h2>
      ${bl.length?`<ol class="blks">${rows}</ol>`:'<p class="muted" style="margin:0">Nothing on this day yet. Move a block here with its Day menu.</p>'}
      <p class="tb" style="margin:12px 0 0">A held block's games stay in Upcoming games with the reason. You can still start it now, put one of its games on a court yourself, or use Move to top on a game.</p></section>
    <div class="stack"><section class="panel"><h2>Days</h2>
-     <label class="f">Today is<select id="schToday">${sc.days.map((dd,i)=>`<option value="${i}" ${sc.today===i?'selected':''}>${esc(dd.label)}</option>`).join('')}</select></label>
-     <ul class="list">${sc.days.map((dd,i)=>`<li style="grid-template-columns:minmax(0,1fr)"><div class="dayrow"><label class="f">Name<input type="text" data-sday="${i}" data-k="label" value="${esc(dd.label)}"></label><label class="f">Start<input type="time" data-sday="${i}" data-k="start" value="${esc(dd.start)}"></label><label class="f">End<input type="time" data-sday="${i}" data-k="end" value="${esc(dd.end)}"></label></div></li>`).join('')}</ul>
+     <label class="f">Today is<select id="schToday"><option value="-1" ${sc.today<0?'selected':''}>Not started (planning)</option>${sc.days.map((dd,i)=>`<option value="${i}" ${sc.today===i?'selected':''}>${esc(dayName(dd))}</option>`).join('')}</select></label>
+     <p class="tb" style="margin:0 0 8px">${sc.today<0?'Planning: games stay in the queue and each day is timed from its own start. Pick a day here (or tap Start on the Live tab) on the morning it begins.':'Games are called to courts for this day. Set to <b>Not started</b> while you plan ahead.'}</p>
+     <ul class="list">${sc.days.map((dd,i)=>`<li style="grid-template-columns:minmax(0,1fr)"><div class="dayrow"><label class="f">Name<input type="text" data-sday="${i}" data-k="label" value="${esc(dd.label)}"></label><label class="f">Date<input type="date" data-sday="${i}" data-k="date" value="${esc(dd.date||'')}"></label><label class="f">Start<input type="time" data-sday="${i}" data-k="start" value="${esc(dd.start)}"></label><label class="f">End<input type="time" data-sday="${i}" data-k="end" value="${esc(dd.end)}"></label></div></li>`).join('')}</ul>
      <div class="row"><button class="btn sm" data-act="addDay">Add a day</button>${sc.days.length>1?'<button class="btn sm danger" data-act="delDay">Remove last day</button>':''}</div></section>
     <section class="panel"><h2>Game length <small>used for estimates</small></h2>
      <div class="grid2">${[11,15,21].map(n=>`<label class="f">Game to ${n} (min)<input type="number" min="5" max="60" data-pace="${n}" value="${sc.pace[n]}"></label>`).join('')}<label class="f">Changeover between games (min)<input type="number" min="0" max="20" id="schBuf" value="${sc.buffer}"></label></div>
@@ -3889,7 +3921,7 @@ function timeline(bl,pr,di){
     <div class="tl-key"><span><i class="k-plan"></i>Estimate</span><span><i class="k-playing"></i>Playing</span><span><i class="k-done"></i>Finished</span>${sc.plan?'<span><i class="k-ghost"></i>Saved plan</span>':''}<span><i class="k-now"></i>Now</span><span><i class="k-end"></i>End of day</span></div></div>`;
 }
 function publicSchedule(){
-  const sc=sched(),pr=project(),bl=ordered().filter(b=>b.day===sc.today&&blockState(b)!=='draft');if(!bl.length)return '';
+  const sc=sched();if(sc.today<0)return '';const pr=project(),bl=ordered().filter(b=>b.day===sc.today&&blockState(b)!=='draft');if(!bl.length)return '';
   return `<section class="panel"><h2>Today's schedule <small>${esc(sc.days[sc.today].label)}</small></h2><ul class="list">${bl.map(b=>{const st=blockState(b),x=pr.get(b.id)||{};
     const lab=st==='done'?'<span class="pill p-done">Finished</span>':st==='playing'?'<span class="pill p-play">Playing now</span>':x.n?`<span class="pill p-muted">About ${fmtT(r5(x.s))}</span>`:'<span class="pill p-muted">After pools</span>';
     return `<li><div class="li-main"><span class="li-t">${esc(blockName(b))}</span></div>${lab}</li>`}).join('')}</ul><p class="tb" style="margin:8px 0 0">Times are estimates and can change.</p></section>`;
@@ -3989,7 +4021,11 @@ function adminDraw(){
   if(!S.divs.length)return App.pageHead('Tournament · '+esc(S.t.name),'Draw','')+'<section class="panel"><p class="muted" style="margin:0">Create a division and add entries first. The draw for each division is made here.</p></section>';
   const opts=S.divs;if(!drawDiv||!D(drawDiv))drawDiv=(S.divs.find(d=>d.status==='open')||S.divs[0]).id;
   const d=D(drawDiv),sel=`<select id="drawDiv" aria-label="Division">${opts.map(x=>`<option value="${x.id}" ${x.id===drawDiv?'selected':''}>${esc(dname(x))}</option>`).join('')}</select>`;
-  if(d.status!=='open')return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="pill p-${d.status}">Draw locked</span>`)+seedPanel(d)+`<section class="panel">${divResults(d)}</section>`;
+  if(d.status!=='open'){const why=unlockBlock(d),n=S.matches.filter(m=>m.div===d.id).length;
+    const ul=why?`<section class="panel unl"><p class="muted" style="margin:0">Draw locked. It can't be unlocked because ${esc(why)}. To change something now, correct scores or use Move to top on the Live tab.</p></section>`
+      :unlockAsk===d.id?`<section class="panel unl unl-ask" role="alert"><p style="margin:0"><b>Unlock the draw for ${esc(dname(d))}?</b> This removes its ${n} match${n===1?'':'es'} from the queue and courts and reopens the division, so you can change the pools or seeding and lock it again. Entries stay; waitlisted teams come back.</p><div class="row"><button class="btn danger" data-act="unlockYes" data-id="${d.id}">Yes, unlock the draw</button><button class="btn" data-act="unlockNo">Cancel</button></div></section>`
+      :`<section class="panel unl"><div class="row" style="justify-content:space-between"><p class="muted" style="margin:0;flex:1 1 320px">Locked by mistake, or want different pools? You can unlock it while no game in this division has started.</p><button class="btn" data-act="unlockAsk" data-id="${d.id}">Unlock draw</button></div></section>`;
+    return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="pill p-${d.status}">Draw locked</span>`)+ul+seedPanel(d)+`<section class="panel">${divResults(d)}</section>`}
   const es=seeded(d.id),pools=makePools(es,d),blk=es.filter(e=>blocking(e).length);
   return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="muted">${es.length} entries → ${es.length<3?'need at least 3':(pools.length>1?pools.length+' pools':'1 round robin')+(needsPo(d)?' → '+(d.poSize?'top '+Math.min(d.poSize,es.length)+(Math.min(d.poSize,es.length)>4?' (quarterfinals)':' (semifinals)'):'top 2 per pool'):'')}</span>`)+`
   <div class="two"><section class="panel"><h2>Seeding <small>by ${d.type} DUPR${d.type==='doubles'?' (team average)':''}</small></h2><ul class="list">${es.map((e,i)=>`<li><div class="li-main"><span class="li-t">${e.seed}. ${esc(ename(e.id))}</span><div class="li-m">${erate(e).toFixed(3)}${isNR(e)?' · NR':''}${blocking(e).length?' · <span style="color:var(--bad)">needs review</span>':''}</div></div><div class="row"><button class="btn sm" data-act="seedUp" data-id="${e.id}" ${i?'':'disabled'} aria-label="Move up">↑</button><button class="btn sm" data-act="seedDown" data-id="${e.id}" ${i<es.length-1?'':'disabled'} aria-label="Move down">↓</button></div></li>`).join('')}</ul>
@@ -4203,7 +4239,8 @@ document.addEventListener('click',e=>{
     case 'bkNextDay':{const sc=sched(),b=sc.blocks.find(x=>x.id===id);if(sc.today+1>=sc.days.length)return;b.day=sc.today+1;sc.blocks.splice(sc.blocks.indexOf(b),1);sc.blocks.push(b);audit('Admin','Schedule: moved '+blockName(b)+' to '+sc.days[b.day].label);toast('Moved to '+sc.days[b.day].label+'.');break}
     case 'savePlan':{const sc=sched(),pr=project();sc.plan={at:now(),b:{}};sc.blocks.forEach(b=>{const x=pr.get(b.id);if(x)sc.plan.b[b.id]={s:x.s,e:x.e,day:b.day}});audit('Admin','Schedule: saved plan');toast('Plan saved. The schedule now shows how far ahead or behind you are.');break}
     case 'clearPlan':sched().plan=null;break;
-    case 'addDay':{const sc=sched();sc.days.push({label:'Day '+(sc.days.length+1),start:'08:00',end:'18:00'});break}
+    case 'addDay':{const sc=sched(),lst=sc.days[sc.days.length-1];sc.days.push({label:'Day '+(sc.days.length+1),start:lst.start||'08:00',end:lst.end||'18:00',...(lst.date?{date:addDays(lst.date,1)}:{})});break}
+    case 'startDay':{const sc=sched(),i=+t.dataset.i;sc.today=Math.max(-1,Math.min(i,sc.days.length-1));if(sc.today<0)S.matches.filter(m=>m.status==='called').forEach(backToQueue);schedDay=null;audit('Admin',sc.today<0?'Schedule: planning mode':'Schedule: started '+sc.days[sc.today].label);toast(sc.today<0?'Planning mode: no games are called to courts.':sc.days[sc.today].label+' started. Games now go to courts.');break}
     case 'delDay':{const sc=sched();if(sc.days.length<2)return;const last=sc.days.length-1;sc.blocks.forEach(b=>{if(b.day===last)b.day=last-1});sc.days.pop();if(schedDay!=null&&schedDay>=sc.days.length)schedDay=null;break}
     case 'lvFirst':m.live.first=t.dataset.side;break;
     case 'lvSR':m.live.sr[t.dataset.side]=t.dataset.p;break;
@@ -4293,7 +4330,10 @@ document.addEventListener('click',e=>{
     case 'poResetSeeds':{const d=D(id);d.poDraft={n:(d.poDraft&&d.poDraft.n)||poN(d),ids:qualifiers(d,(d.poDraft&&d.poDraft.n)||poN(d)).ids};toast('Seeds reset to the pool standings.');break}
     case 'poStart':{const d=D(id),ids=(d.poDraft&&d.poDraft.ids)||qualifiers(d).ids;buildBracket(d,ids);toast(roundLabel(0,d.bracket.rounds.length)+'s are in the queue.');break}
     case 'poReseed':{const d=D(id);if(poStarted(d)){toast('A playoff match has already started, so the seeding is locked.');return}unbuildBracket(d);audit('Admin','Reopened playoff seeding for '+dname(d));drawDiv=id;sub='draw';break}
-    case 'lock':lockDraw(drawDiv);toast('Draw locked. Matches added to the queue.');break;
+    case 'lock':lockDraw(drawDiv);unlockAsk=null;toast(planning()?'Draw locked. Matches wait in the queue until you start the day.':'Draw locked. Matches added to the queue.');break;
+    case 'unlockAsk':unlockAsk=id;App.render();return;
+    case 'unlockNo':unlockAsk=null;App.render();return;
+    case 'unlockYes':{unlockAsk=null;const n=unlockDraw(id);if(n===false){toast('Can\'t unlock: a game in this division has started.');App.render();return}toast('Draw unlocked. '+n+' matches removed. Change the pools or seeds, then lock again.');break}
     case 'addCourt':S.courts.push({no:S.courts.length+1,state:'free',match:null,hold:false,ref:null});break;
     case 'removeCourt':{const l=S.courts[S.courts.length-1];if(l.match){toast('Finish the match on the last court first.');return}if(S.courts.length>1)S.courts.pop();break}
     case 'delRef':S.officials=S.officials.filter(o=>o.id!==id);S.matches.forEach(m=>{if(m.ref===id&&m.status!=='done')m.ref=null});if(refMe===id)refMe=null;break;
@@ -4318,8 +4358,8 @@ document.addEventListener('change',e=>{
     if(k==='day'){b.day=+t.value;sc.blocks.splice(sc.blocks.indexOf(b),1);sc.blocks.push(b)}
     audit('Admin','Schedule: '+blockName(b)+' '+(k==='mode'?'starts '+({follow:'next in line',time:'at '+fmtT(hm(b.at)),manual:'when the desk starts it'}[b.mode]):k==='at'?'set to '+fmtT(hm(b.at)):'moved to '+sc.days[b.day].label));commit();return}
   if(t.dataset.bkc){const b=sched().blocks.find(x=>x.id===t.dataset.bkc),n=+t.value;let c=b.courts||[];c=t.checked?[...new Set([...c,n])].sort((x,y)=>x-y):c.filter(x=>x!==n);b.courts=c.length&&c.length<S.courts.length?c:null;commit();return}
-  if(t.dataset.sday){const d=sched().days[+t.dataset.sday];d[t.dataset.k]=t.value||d[t.dataset.k];commit();return}
-  if(t.id==='schToday'){sched().today=+t.value;schedDay=null;audit('Admin','Schedule: today is '+sched().days[+t.value].label);commit();return}
+  if(t.dataset.sday){const d=sched().days[+t.dataset.sday];if(t.dataset.k==='date')d.date=t.value||undefined;else d[t.dataset.k]=t.value||d[t.dataset.k];commit();return}
+  if(t.id==='schToday'){const sc=sched();sc.today=+t.value;if(sc.today<0)S.matches.filter(m=>m.status==='called').forEach(backToQueue);schedDay=null;audit('Admin',sc.today<0?'Schedule: planning mode':'Schedule: today is '+sc.days[sc.today].label);toast(sc.today<0?'Planning mode: no games are called to courts.':sc.days[sc.today].label+': games now go to courts.');commit();return}
   if(t.dataset.pace){const v=Math.max(5,Math.min(60,parseInt(t.value,10)||15));sched().pace[t.dataset.pace]=v;commit();return}
   if(t.id==='schBuf'){sched().buffer=Math.max(0,Math.min(20,parseInt(t.value,10)||0));commit();return}
   if(t.id==='csvFile'&&t.files&&t.files[0]&&/\.xlsx$/i.test(t.files[0].name)){const f=t.files[0];$('#csvErr').textContent='Reading '+f.name+'…';
@@ -4394,7 +4434,7 @@ return{
       const people=Object.keys(ents).map(pid=>({id:pid,name:PL(pid).name})).sort((a,b)=>a.name.localeCompare(b.name));
       const courts=S.courts.map(c=>({no:c.no,state:c.state,match:c.match,hold:c.hold}));
       const divs=S.divs.map(d=>{const pd=d.status==='done'?podium(d):null;return{id:d.id,name:dname(d),status:d.status,champ:pd&&pd[0]?ename(pd[0]):null}});
-      return{days:sc.days.map(x=>x.label),today:sc.today,blocks,ms,ents,people,courts,divs,C,forfeit:S.cfg.forfeit}}
+      return{days:sc.days.map(x=>dayName(x)),today:sc.today,blocks,ms,ents,people,courts,divs,C,forfeit:S.cfg.forfeit}}
     catch(e){console.warn('schedData',e);return null}finally{S=s0}},
   resultsHtml(ev,divId){const s0=S;S=ev;S.players=App.db().players;S.officials=App.db().officials;try{const d=D(divId);return d?divResults(d):''}catch(e){return ''}finally{S=s0}},
   pubInfo(ev){const s0=S;S=ev;S.players=App.db().players;S.officials=App.db().officials;
@@ -4402,7 +4442,7 @@ return{
     catch(e){return{divs:[]}}finally{S=s0}},
   divsOf(pid){return S&&S.entries?S.entries.filter(e=>e.status!=='out'&&e.p.includes(pid)).map(e=>dname(D(e.div))):[]},
   create(f){return{type:'tournament',id:f.id,offset:0,seq:0,t:{name:f.name,venue:f.venue,dates:f.date},cfg:{forfeit:f.forfeit,rest:f.rest,gameMin:f.gameMin},
-    divs:[],entries:[],matches:[],audit:[],ui:{},courts:Array.from({length:f.courts},(_,i)=>({no:i+1,state:'free',match:null,hold:false}))}},
+    divs:[],entries:[],matches:[],audit:[],ui:{},sched:{days:[{label:'Day 1',start:'08:00',end:'18:00'}],today:-1,pace:{11:15,15:20,21:25},buffer:3,blocks:[],plan:null},courts:Array.from({length:f.courts},(_,i)=>({no:i+1,state:'free',match:null,hold:false}))}},
   summary(ev){return ev.divs.length+' division'+(ev.divs.length===1?'':'s')+' · '+ev.entries.filter(e=>e.status==='in').length+' entries · '+ev.matches.filter(m=>m.status==='done'&&m.result!=='bye').length+'/'+ev.matches.filter(m=>m.result!=='bye').length+' matches'}
 };
 

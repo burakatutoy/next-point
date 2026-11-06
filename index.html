@@ -1434,7 +1434,7 @@ table.t tbody tr:first-child td{border-top-color:var(--line-2)}
 .sch-entry{display:grid;gap:10px}
 .sch-ent-h{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .sch-hero{display:grid;gap:3px;padding:14px 16px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
-.sch-hero b{font-size:18px}.sch-hero span{color:var(--muted);font-size:14.5px}
+.sch-hero b{font-size:18px}.sch-hero .sch-hero-d{color:var(--ink);font-weight:600;font-size:15px}.sch-hero span{color:var(--muted);font-size:14.5px}
 .sch-hero.h-called{background:var(--ball-soft);border-color:color-mix(in srgb,var(--ball) 50%,transparent)}.sch-hero.h-called b,.sch-hero.h-called span{color:var(--ball-ink)}
 .sch-hero.h-play{background:var(--live-soft);border-color:color-mix(in srgb,var(--lime) 40%,transparent)}
 .sch-hero.h-done{background:var(--accent-soft)}
@@ -1443,9 +1443,9 @@ table.t tbody tr:first-child td{border-top-color:var(--line-2)}
 .sm-list{list-style:none;margin:0;padding:0;display:grid}
 .sm-row{display:grid;grid-template-columns:118px minmax(0,1fr);gap:4px 14px;padding:11px 2px;border-top:1px solid var(--line);align-items:start}
 .sm-row:first-child{border-top:0}
-.sm-when{display:grid;gap:1px}.sm-when b{font-size:14.5px}.sm-when span{font-size:12.5px;color:var(--muted)}
+.sm-when{display:grid;gap:1px}.sm-when b{font-size:14.5px}.sm-row.st-est .sm-when b,.sm-row.st-tbd .sm-when b{font-size:16px;font-variant-numeric:tabular-nums}.sm-when span{font-size:12.5px;color:var(--muted)}
 .sm-row.st-play .sm-when b{color:var(--live)}.sm-row.st-called .sm-when b{color:var(--ball-ink)}.sm-row.st-called .sm-when{background:var(--ball-soft);border-radius:8px;padding:4px 6px;margin:-4px -6px}
-.sm-row.st-done .sm-when b{color:var(--muted)}
+.sm-row.st-done .sm-when b{color:var(--muted)}.sm-row.st-est .sm-when b,.sm-row.st-tbd .sm-when b{color:var(--ink)}
 .sm-teams{display:flex;flex-wrap:wrap;gap:2px 8px;font-weight:600;line-height:1.35}
 .sm-teams .w{font-weight:800}.sm-teams .w::after{content:" ✓";color:var(--good)}
 .sm-teams .me{background:color-mix(in srgb,var(--lime) 30%,transparent);border-radius:4px;padding:0 3px;margin:0 -3px}
@@ -1571,7 +1571,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-06g';
+  const BUILD='2026-11-06h';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2180,12 +2180,18 @@ const App=(()=>{
   const schMe=id=>{try{return localStorage.getItem(schKey(id))||''}catch(e){return ''}};
   let schDay={};
   const fmtM=v=>{v=Math.round(v/5)*5;const h=Math.floor(v/60),m=((v%60)+60)%60,h24=((h%24)+24)%24;return (h24%12||12)+':'+String(m).padStart(2,'0')+' '+(h24<12?'AM':'PM')};
+  let schCtx={today:0,dayShort:[]};
+  const etaDay=x=>x.etaDay!=null&&x.etaDay!==schCtx.today&&schCtx.dayShort[x.etaDay]?schCtx.dayShort[x.etaDay]:'';
+  const etaTxt=x=>x.eta==null?'':'about '+fmtM(x.eta)+(etaDay(x)?' on '+etaDay(x):'');
   function smState(x,me){
     if(x.status==='done')return{k:'done',t:x.result==='forfeit'?'Forfeit':x.result==='walkover'?'Walkover':'Final',sub:x.score};
     if(x.status==='play')return{k:'play',t:'Court '+x.court,sub:'Playing'+(x.live?' · '+x.live:'')};
     if(x.status==='called')return{k:'called',t:'Court '+x.court,sub:'Called: go now'};
-    if(!x.a||!x.b)return{k:'tbd',t:'Later',sub:'Waiting for earlier results'};
-    if(x.ready&&x.line)return{k:'line',t:x.line<=2?'Up next':'#'+x.line+' in line',sub:x.eta!=null?'About '+fmtM(x.eta):''};
+    const et=etaTxt(x),cap=v=>v?v.charAt(0).toUpperCase()+v.slice(1):v;
+    const dd=etaDay(x),wy=x.why&&!/not started|scheduled for/i.test(x.why)?x.why:'';
+    if(!x.a||!x.b)return{k:'tbd',t:x.eta!=null?fmtM(x.eta):'Later',sub:[x.eta!=null?'Estimate'+(dd?' · '+dd:''):'','Teams set by earlier results'].filter(Boolean).join(' · ')};
+    if(x.ready&&x.line&&!schCtx.planning)return{k:'line',t:x.line<=2?'Up next':'#'+x.line+' in line',sub:et?cap(et):''};
+    if(x.eta!=null)return{k:'est',t:fmtM(x.eta),sub:['Estimate'+(dd?' · '+dd:''),x.line?'#'+x.line+' in line':'',wy].filter(Boolean).join(' · ')};
     if(x.why)return{k:'wait',t:'In line'+(x.line?' #'+x.line:''),sub:x.why};
     return{k:'later',t:'Later',sub:'Not in line yet'};
   }
@@ -2194,7 +2200,7 @@ const App=(()=>{
       <div class="sm-what"><div class="sm-teams"><span class="${w('a')?'w':''} ${mine('a')?'me':''}">${nm('a')}</span><span class="muted sm-vs">vs</span><span class="${w('b')?'w':''} ${mine('b')?'me':''}">${nm('b')}</span></div><div class="sm-meta">${esc(x.divName)} · ${esc(x.stage)}</div></div></li>`}
   function schedPage(id){const ev=tours().find(e=>e.id===id);
     if(!ev)return `<div class="site-page"><div class="sp-head"><h1>Schedule not found</h1><p>The link may be old, or the tournament was removed.</p></div><button class="btn primary" data-app="pg" data-pg="tours">All tournaments</button></div>`;
-    const S2=TM.schedData&&TM.schedData(ev),t=ev.t||{},i=tInfo(ev);if(!S2)return '<div class="site-page"><p class="site-empty">The schedule couldn\'t load. Pull to refresh.</p></div>';
+    const S2=TM.schedData&&TM.schedData(ev),t=ev.t||{},i=tInfo(ev);if(S2)schCtx={today:S2.planning?-2:S2.today,dayShort:S2.dayShort,planning:S2.planning};if(!S2)return '<div class="site-page"><p class="site-empty">The schedule couldn\'t load. Pull to refresh.</p></div>';
     const me=schMe(id),myE=me&&S2.ents[me]||null,meName=myE?(S2.people.find(p=>p.id===me)||{}).name:'';
     const all=Object.values(S2.ms),drawn=S2.blocks.some(b=>b.st!=='draft');
     // your games
@@ -2205,7 +2211,7 @@ const App=(()=>{
         if(e.status==='wait')hero=`<div class="sch-hero"><b>Waitlist</b><span>You move in if an entry withdraws before the draw.</span></div>`;
         else if(!list.length)hero=`<div class="sch-hero"><b>Draw not out yet</b><span>Your games appear here once the desk locks the draw.</span></div>`;
         else if(cur){const st=smState(cur);hero=`<div class="sch-hero ${cur.status==='called'?'h-called':'h-play'}"><b>${cur.status==='called'?'Go to Court '+cur.court+' now':'Playing on Court '+cur.court}</b><span>vs ${esc(cur.a&&cur.a.id===e.id?(cur.b||{}).name||'':(cur.a||{}).name||'')} · ${esc(cur.stage)}</span></div>`}
-        else if(nx){const st=smState(nx);hero=`<div class="sch-hero"><b>${st.t==='Up next'?'You\'re up next':'Next game: '+esc(st.t)}${nx.eta!=null?' · about '+esc(fmtM(nx.eta)):''}</b><span>vs ${esc(nx.a&&nx.a.id===e.id?(nx.b?nx.b.name:'TBD'):(nx.a?nx.a.name:'TBD'))} · ${esc(nx.stage)}${nx.why?' · '+esc(nx.why):''}</span></div>`}
+        else if(nx){const st=smState(nx),et=etaTxt(nx),dd=etaDay(nx),wy=nx.why&&!/not started|scheduled for/i.test(nx.why)?nx.why:'';hero=`<div class="sch-hero"><b>${st.t==='Up next'?'You\'re up next'+(et?' · '+esc(et):''):nx.eta!=null?(list.some(y=>y.status==='done')?'Next game ':'First game ')+'about '+esc(fmtM(nx.eta)):'Next game: '+esc(st.t)}</b>${dd&&st.t!=='Up next'?`<span class="sch-hero-d">${esc(dd)}</span>`:''}<span>vs ${esc(nx.a&&nx.a.id===e.id?(nx.b?nx.b.name:'TBD'):(nx.a?nx.a.name:'TBD'))} · ${esc(nx.stage)}${wy?' · '+esc(wy):''}</span></div>`}
         else{const dv=S2.divs.find(d=>d.id===e.div);hero=`<div class="sch-hero h-done"><b>${dv&&dv.status==='done'?'Division finished':'No more games right now'}</b><span>${dv&&dv.champ?'Champions: '+esc(dv.champ):'More games appear here when the next round is set.'}</span></div>`}
         return `<div class="sch-entry"><div class="sch-ent-h"><b>${esc(e.divName)}</b>${e.partner.length?`<span class="muted">with ${esc(e.partner.join(', '))}</span>`:''}</div>${hero}${list.length?`<ul class="sm-list">${list.sort((a,b)=>({play:0,called:0,queued:1,done:2}[a.status]-{play:0,called:0,queued:1,done:2}[b.status])||(a.line||999)-(b.line||999)).map(x=>smRow(x,me)).join('')}</ul>`:''}</div>`}).join('')}
       <p class="sch-tip">Want a buzz when you're called? <button class="btn linkish" data-app="enter" data-v="player">Sign in with your PIN</button> and turn on alerts.</p></section>`}
@@ -2219,11 +2225,11 @@ const App=(()=>{
     // order of play by day
     const d0=schDay[id]!=null?schDay[id]:Math.max(0,Math.min(S2.today,S2.days.length-1)),bl=S2.blocks.filter(b=>b.day===d0&&b.st!=='draft');
     const dayTabs=S2.days.length>1?`<div class="seg-tabs sch-days" role="tablist">${S2.days.map((l,k)=>`<button role="tab" class="sg ${k===d0?'on':''}" aria-selected="${k===d0}" data-app="schDay" data-id="${esc(id)}" data-d="${k}">${esc(l)}${k===S2.today?' · Today':''}</button>`).join('')}</div>`:'';
-    const blk=b=>{const lab=b.st==='done'?'Finished':b.st==='playing'?'Playing now':b.st==='after'?'After pools':b.s!=null?'About '+fmtM(b.s):'';
-      return `<details class="sch-blk st-${b.st}" ${b.st==='playing'?'open':''}><summary><span class="sch-b-t">${esc(lab)}</span><span class="sch-b-n"><b>${esc(b.name)}</b><span class="muted">${b.ids.length||b.n} game${(b.ids.length||b.n)===1?'':'s'}${b.courts?' · Courts '+b.courts.join(', '):''}</span></span></summary>
+    const blk=b=>{const lab=b.st==='done'?'Finished':b.st==='playing'?'Playing now':b.s!=null?'About '+fmtM(b.s):b.st==='after'?'After pools':'';
+      return `<details class="sch-blk st-${b.st}" ${b.st==='playing'?'open':''}><summary><span class="sch-b-t">${esc(lab)}</span><span class="sch-b-n"><b>${esc(b.name)}</b><span class="muted">${b.ids.length?b.ids.length+' game'+(b.ids.length===1?'':'s'):b.st==='after'?'After pools finish':b.n+' games'}${b.courts?' · Courts '+b.courts.join(', '):''}</span></span></summary>
         ${(()=>{if(!b.ids.length)return '<p class="muted sch-b-empty">Matchups appear when the pools finish.</p>';const op=b.ids.filter(k=>S2.ms[k].status!=='done'),dn=b.ids.filter(k=>S2.ms[k].status==='done');
           return (op.length?`<ul class="sm-list">${op.map(k=>smRow(S2.ms[k],me)).join('')}</ul>`:'')+(dn.length?(op.length?`<details class="sch-done"><summary>Finished games (${dn.length})</summary><ul class="sm-list">${dn.map(k=>smRow(S2.ms[k],me)).join('')}</ul></details>`:`<ul class="sm-list">${dn.map(k=>smRow(S2.ms[k],me)).join('')}</ul>`):'')})()}</details>`};
-    const order=drawn?`<section class="hub-sec"><div class="hs-h"><h2 class="sp-h2">Order of play</h2>${dayTabs}</div>${bl.length?bl.map(blk).join(''):'<p class="site-empty">Nothing scheduled for this day yet.</p>'}<p class="sch-note">Times are estimates and move with the day. "In line" is the order courts take games; the desk can change it.</p></section>`
+    const order=drawn?`<section class="hub-sec"><div class="hs-h"><h2 class="sp-h2">Order of play</h2>${dayTabs}</div>${bl.length?bl.map(blk).join(''):'<p class="site-empty">Nothing scheduled for this day yet.</p>'}<p class="sch-note">Times are estimates from the schedule and typical game length. They move as the day runs early or late, so arrive 30 minutes before your first game. "In line" is the order courts take games; the desk can change it.</p></section>`
       :`<p class="site-empty">The draw isn't out yet. Games and times appear here once the desk locks the draw${t.start?', before '+esc(fmtYmd(t.start)):''}.</p>`;
     return `<div class="site-page schpage"><button class="btn linkish tp-back" data-app="pg" data-pg="t:${esc(id)}">${icon('back')}Tournament details</button>
       <div class="sp-head"><div class="sch-top">${stPill(i.st)}<span class="sch-live"><span class="tst-dot" aria-hidden="true"></span>Updates live</span></div><h1>${esc(t.name)}</h1><p>${[t.venue,t.dates||fmtYmd(t.start)].filter(Boolean).map(esc).join(' · ')}</p></div>
@@ -3417,7 +3423,7 @@ function project(){
       const st=blockState(b),ms=blockMatches(b);
       if(st==='done'&&ms.length){const s0=Math.min(...ms.map(m=>m.start||m.calledAt||m.end)),e0=Math.max(...ms.map(m=>m.end||0));res.set(b.id,{s:toMin(s0),e:toMin(e0),done:true,n:0});continue}
       const w=blockWork(b),c=b.courts&&b.courts.length?Math.min(b.courts.length,C):C;
-      const started=ms.some(m=>m.status!=='queued');
+      const started=sc.today>=0&&ms.some(m=>m.status!=='queued');
       let s=T;
       if(b.mode==='time'&&!b.released)s=Math.max(s,hm(b.at));
       if(b.stage==='po'&&poolEnd[b.div]!=null)s=Math.max(s,poolEnd[b.div]);
@@ -3430,6 +3436,30 @@ function project(){
     }
   });
   return res;
+}
+// Estimated start of every unfinished match: walk the schedule day by day, block by block, putting each game on the
+// court that frees up first (only the block's courts), never before its block starts, a team's rest is over, or the
+// previous playoff round has finished. Returns Map id -> {day, t (minutes after midnight)}.
+function simTimes(pr){
+  const sc=sched(),nm=nowMin(),out=new Map(),rest=+S.cfg.rest||0,plan=sc.today<0,q=queue(),qi=new Map(q.map((x,i)=>[x.m.id,i]));
+  const ready={};S.matches.forEach(m=>{if(m.status==='done'&&m.end)[m.a,m.b].forEach(e=>{if(e)ready[e]=Math.max(ready[e]||0,toMin(m.end)+rest)})});
+  sc.days.forEach((day,di)=>{
+    if(!plan&&di<sc.today)return;
+    const live=!plan&&di===sc.today,ds=hm(day.start),t0=live?Math.max(ds,nm):ds,free={};
+    S.courts.forEach(c=>{free[c.no]=t0;if(live){const m=c.match&&M(c.match);if(m){const L=matchLen(D(m.div),m.stage,['Final','Semifinal','3rd place'].includes(m.label));free[c.no]=Math.max(t0,(m.start?toMin(m.start):nm)+L)}}});
+    const rdEnd={},eReady={};if(live)Object.assign(eReady,ready);
+    for(const b of ordered().filter(x=>x.day===di)){
+      const x=pr.get(b.id)||{},bs=x.s!=null?x.s:t0,cs=b.courts&&b.courts.length?b.courts.filter(n=>free[n]!=null):S.courts.map(c=>c.no);
+      const ms=blockMatches(b).filter(m=>m.status==='queued').sort((m1,m2)=>(qi.has(m1.id)?qi.get(m1.id):1e9)-(qi.has(m2.id)?qi.get(m2.id):1e9)||m1.ord-m2.ord);
+      for(const m of ms){const d=D(m.div),L=matchLen(d,m.stage,['Final','Semifinal','3rd place'].includes(m.label));
+        let st=Math.max(bs,...[m.a,m.b].filter(Boolean).map(e=>eReady[e]||0));
+        if(m.stage==='po'){const k=m.div;for(let r=1;r<m.round;r++)st=Math.max(st,(rdEnd[k+'|'+r]||0))}
+        const ct=(cs.length?cs:S.courts.map(c=>c.no)).reduce((a,n)=>free[n]<free[a]?n:a,(cs[0]||S.courts[0].no));st=Math.max(st,free[ct]);
+        out.set(m.id,{day:di,t:st});free[ct]=st+L;[m.a,m.b].filter(Boolean).forEach(e=>{eReady[e]=st+L+rest});
+        if(m.stage==='po'){const key=m.div+'|'+m.round;rdEnd[key]=Math.max(rdEnd[key]||0,st+L)}}
+    }
+  });
+  return out;
 }
 function planDrift(pr){const sc=sched();if(!sc.plan)return null;let worst=null;
   sc.blocks.forEach(b=>{if(b.day!==sc.today)return;const p=sc.plan.b[b.id],x=pr.get(b.id);if(!p||!x||x.done)return;const d=x.started?x.e-p.e:x.s-p.s;worst=worst==null?d:Math.max(worst,d)});return worst}
@@ -4419,14 +4449,14 @@ return{
   // everything the public schedule page needs, computed for any tournament (not just the current one)
   schedData(ev){const s0=S;S=ev;S.players=App.db().players;S.officials=App.db().officials;
     try{const sc=sched(),pr=project(),q=queue(),C=Math.max(1,S.courts.length),nm=nowMin(),bm=blockMap();
-      const qi=new Map(q.map((x,i)=>[x.m.id,i])),okI=new Map(q.filter(x=>x.ok).map((x,i)=>[x.m.id,i]));
+      const qi=new Map(q.map((x,i)=>[x.m.id,i])),okI=new Map(q.filter(x=>x.ok).map((x,i)=>[x.m.id,i])),sim=simTimes(pr);
       const late=m=>['Final','Semifinal','3rd place'].includes(m.label);
       const side=x=>x?{id:x,name:ename(x),p:[...(E(x)||{p:[]}).p]}:null;
       const ms={};S.matches.filter(m=>m.result!=='bye').forEach(m=>{const d=D(m.div),b=blockOfM(bm,m),x=qi.has(m.id)?q[qi.get(m.id)]:null;
-        const eta=m.status==='queued'&&okI.has(m.id)?nm+Math.floor(okI.get(m.id)/C)*matchLen(d,m.stage,late(m)):null;
+        const sm=m.status==='queued'?sim.get(m.id):null,eta=sm?sm.t:null,etaDay=sm?sm.day:null;
         ms[m.id]={id:m.id,div:m.div,divName:dname(d),stage:stageLabel(m),a:side(m.a),b:side(m.b),status:m.status,court:m.court,
           score:(m.games||[]).length?gamesStr(m):'',winner:m.winner||null,result:m.result||null,line:qi.has(m.id)?qi.get(m.id)+1:null,ready:!!(x&&x.ok),why:x&&!x.ok?x.why:null,
-          eta,block:b?b.id:null,live:m.live&&!m.live.setup&&!m.live.over?m.live.score.join('–'):null}});
+          eta,etaDay,block:b?b.id:null,live:m.live&&!m.live.setup&&!m.live.over?m.live.score.join('–'):null}});
       const blocks=ordered().map(b=>{const st=blockState(b),x=pr.get(b.id)||{},bm2=blockMatches(b);
         return{id:b.id,day:b.day,name:blockName(b),div:b.div,st,s:x.s!=null?x.s:null,e:x.e!=null?x.e:null,courts:b.courts&&b.courts.length?[...b.courts]:null,
           ids:bm2.sort((m1,m2)=>(m1.status==='done')-(m2.status==='done')||(qi.has(m1.id)?qi.get(m1.id):999)-(qi.has(m2.id)?qi.get(m2.id):999)||m1.ord-m2.ord).filter(m=>m.result!=='bye').map(m=>m.id),n:bm2.length}});
@@ -4434,7 +4464,7 @@ return{
       const people=Object.keys(ents).map(pid=>({id:pid,name:PL(pid).name})).sort((a,b)=>a.name.localeCompare(b.name));
       const courts=S.courts.map(c=>({no:c.no,state:c.state,match:c.match,hold:c.hold}));
       const divs=S.divs.map(d=>{const pd=d.status==='done'?podium(d):null;return{id:d.id,name:dname(d),status:d.status,champ:pd&&pd[0]?ename(pd[0]):null}});
-      return{days:sc.days.map(x=>dayName(x)),today:sc.today,blocks,ms,ents,people,courts,divs,C,forfeit:S.cfg.forfeit}}
+      return{days:sc.days.map(x=>dayName(x)),dayShort:sc.days.map(x=>dayDate(x)||x.label),today:sc.today,planning:sc.today<0,blocks,ms,ents,people,courts,divs,C,forfeit:S.cfg.forfeit}}
     catch(e){console.warn('schedData',e);return null}finally{S=s0}},
   resultsHtml(ev,divId){const s0=S;S=ev;S.players=App.db().players;S.officials=App.db().officials;try{const d=D(divId);return d?divResults(d):''}catch(e){return ''}finally{S=s0}},
   pubInfo(ev){const s0=S;S=ev;S.players=App.db().players;S.officials=App.db().officials;

@@ -1465,6 +1465,14 @@ table.t tbody tr:first-child td{border-top-color:var(--line-2)}
 .prose{max-width:760px;line-height:1.6}
 .prose h2{font-size:18px;margin:18px 0 6px}.prose h2:first-child{margin-top:0}
 .prose ul{margin:0;padding-left:20px;display:grid;gap:4px}.prose p{margin:0 0 6px}
+
+/* v34: choose the number of pools */
+.pool-opts{border:0;margin:0;padding:0;display:grid;gap:6px}
+.pool-o{align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;cursor:pointer;font-weight:500;line-height:1.4}
+.pool-o input{margin-top:3px}
+.pool-o:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.pool-o .pill{margin-left:4px;vertical-align:1px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 
 <header class="top">
@@ -1529,7 +1537,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-06d';
+  const BUILD='2026-11-06e';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -3159,8 +3167,13 @@ function autoSeed(divId){
   es.forEach((e,i)=>e.seed=i+1);
 }
 function seeded(divId){const es=active(divId);if(es.some(e=>!e.seed)||new Set(es.map(e=>e.seed)).size!==es.length)autoSeed(divId);return active(divId).sort((a,b)=>a.seed-b.seed)}
-function makePools(es){
-  const n=es.length,np=n<=5?1:Math.ceil(n/4),pools=Array.from({length:np},(_,i)=>({name:String.fromCharCode(65+i),entries:[]}));
+// how many pools: d.poolN set on the Draw tab (0 or missing = auto: one round robin up to 5, else pools of 3-4)
+const autoPools=n=>n<=5?1:Math.ceil(n/4);
+const maxPools=n=>Math.max(1,Math.floor(n/3));
+function poolCount(d,n){return d&&d.poolN?Math.max(1,Math.min(d.poolN,maxPools(n))):autoPools(n)}
+const sizesFor=(n,np)=>{const sz=Array(np).fill(0);for(let i=0;i<n;i++)sz[i%np]++;return sz};
+function makePools(es,d){
+  const n=es.length,np=poolCount(d,n),pools=Array.from({length:np},(_,i)=>({name:String.fromCharCode(65+i),entries:[]}));
   es.forEach((e,i)=>{const row=Math.floor(i/np),k=i%np;pools[row%2?np-1-k:k].entries.push(e.id)});
   return pools;
 }
@@ -3170,7 +3183,7 @@ function mkMatch(o){const m={id:'m'+(++S.seq),status:'queued',games:[],court:nul
 function queueBase(){const q=S.matches.filter(m=>m.status==='queued');return q.length?Math.floor(Math.min(...q.map(m=>m.ord))):Math.ceil(Math.max(0,...S.matches.map(m=>m.ord||0)))}
 function lockDraw(divId,base){
   const d=D(divId),es=seeded(divId);
-  d.pools=makePools(es);d.status='live';d.bracket=null;
+  d.pools=makePools(es,d);d.status='live';d.bracket=null;
   base=base??queueBase();
   d.pools.forEach((p,pi)=>rr(p.entries).forEach((round,ri)=>round.forEach(([a,b],k)=>mkMatch({div:divId,stage:'pool',pool:p.name,round:ri+1,a,b,ord:base+ri+1+pi*.1+k*.01+S.divs.indexOf(d)*.001}))));
   S.entries.filter(e=>e.div===divId&&e.status==='wait').forEach(e=>e.status='out');
@@ -3285,7 +3298,7 @@ const nowMin=()=>{const d=new Date(now());return d.getHours()*60+d.getMinutes()+
 const toMin=t=>{const d=new Date(t);return d.getHours()*60+d.getMinutes()};
 const r5=m=>Math.round(m/5)*5;
 function newBlock(div,stage,day){return{id:App.uid('b'),div,stage,day,mode:'follow',at:'13:00',courts:null,released:false,hold:false}}
-function needsPo(d){return d.status==='open'?(d.poSize?active(d.id).length>=4:active(d.id).length>=6):(d.pools.length>1||!!d.poSize)}
+function needsPo(d){return d.status==='open'?(d.poSize?active(d.id).length>=4:poolCount(d,active(d.id).length)>1):(d.pools.length>1||!!d.poSize)}
 function sched(){
   if(!S.sched)S.sched={days:[{label:'Day 1',start:'08:00',end:'18:00'}],today:0,pace:{11:15,15:20,21:25},buffer:3,blocks:[],plan:null};
   const sc=S.sched;
@@ -3325,12 +3338,12 @@ function blockMap(){const mp=new Map();sched().blocks.forEach(b=>mp.set(b.div+'|
 const blockOfM=(mp,m)=>mp.get(m.div+'|'+(m.stage==='pool'?'pool':'po'));
 function courtOk(m,ct){const b=blockOfM(blockMap(),m);return !b||!b.courts||!b.courts.length||b.courts.includes(ct.no)}
 function matchLen(d,stage,late){const sc=sched(),f=stage==='pool'?d.score.pool:late?d.score.fin:d.score.po;return (sc.pace[f.to]||15)*(f.bo>1?2.5:1)+(+sc.buffer||0)}
-function poolShape(n){if(n<3)return [];const np=n<=5?1:Math.ceil(n/4),sz=Array(np).fill(0);for(let i=0;i<n;i++)sz[i%np]++;return sz}
+function poolShape(n,d){if(n<3)return [];return sizesFor(n,poolCount(d,n))}
 function blockWork(b){
   const d=D(b.div);
   if(b.stage==='pool'){
     const L=matchLen(d,'pool');
-    if(d.status==='open'){const sz=poolShape(active(d.id).length),n=sz.reduce((a,k)=>a+k*(k-1)/2,0),r=sz.length?Math.max(...sz.map(k=>k%2?k:k-1)):0;return{cm:n*L,n,rt:r*L}}
+    if(d.status==='open'){const sz=poolShape(active(d.id).length,d),n=sz.reduce((a,k)=>a+k*(k-1)/2,0),r=sz.length?Math.max(...sz.map(k=>k%2?k:k-1)):0;return{cm:n*L,n,rt:r*L}}
     const left=S.matches.filter(m=>m.div===d.id&&m.stage==='pool'&&m.status!=='done'),per={};
     left.forEach(m=>[m.a,m.b].forEach(e=>per[e]=(per[e]||0)+1));
     const r=Object.values(per).length?Math.max(...Object.values(per)):0;return{cm:left.length*L,n:left.length,rt:r*L};
@@ -3338,7 +3351,7 @@ function blockWork(b){
   if(d.bracket){const tot=d.bracket.rounds.length,left=S.matches.filter(m=>m.div===d.id&&m.stage==='po'&&m.status!=='done'&&m.result!=='bye');
     const rs=[...new Set(left.map(m=>m.round))];
     return{cm:left.reduce((a,m)=>a+matchLen(d,'po',m.round>=tot-1),0),n:left.length,rt:rs.reduce((a,r)=>a+matchLen(d,'po',r>=tot-1),0)}}
-  const ne=d.status==='open'?active(d.id).length:d.pools.reduce((a,p)=>a+p.entries.length,0),np=d.status==='open'?poolShape(ne).length:d.pools.length,q=Math.min(ne,d.poSize||np*2);let B=2;while(B<q)B*=2;
+  const ne=d.status==='open'?active(d.id).length:d.pools.reduce((a,p)=>a+p.entries.length,0),np=d.status==='open'?poolShape(ne,d).length:d.pools.length,q=Math.min(ne,d.poSize||np*2);let B=2;while(B<q)B*=2;
   const tot=Math.log2(B);let cm=0,n=0,rt=0;
   for(let r=1;r<=tot;r++){let c=B/Math.pow(2,r);if(r===1)c-=B-q;if(r===tot&&d.third&&B>=4)c+=1;const L=matchLen(d,'po',r>=tot-1);cm+=c*L;n+=c;rt+=L}
   return{cm,n,rt};
@@ -3892,7 +3905,7 @@ function divForm(){
     <label class="check"><input type="checkbox" id="dvThird" ${d.third?'checked':''}> 3rd place match</label>
     <label class="check"><input type="checkbox" id="dvPoReview" ${d.poReview!==false?'checked':''}> Let me check the playoff seeding before the bracket starts</label>
     <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">${editDiv?'Save changes':'Add division'}</button>${editDiv?'<button class="btn" type="button" data-act="cancelEdit">Cancel</button>':''}<span class="err" id="dvErr"></span></div>
-   </form><p class="muted" style="margin:10px 0 0">Format is picked from the entry count when the draw is locked: 3–5 entries play one round robin; 6 or more are split into pools of 3–4. <b>Playoffs</b> decides how many go on to the single elimination bracket: the top 2 from each pool, or a fixed top 4 or top 8 (quarterfinals). Extra spots go to the best runners-up by record, then point difference. You can still change the playoff size and seeding when pools finish.</p></section>`;
+   </form><p class="muted" style="margin:10px 0 0">Format is picked from the entry count when the draw is locked: 3–5 entries play one round robin; 6 or more are split into pools of 3–4. You can choose a different number of pools on the Draw tab before locking. <b>Playoffs</b> decides how many go on to the single elimination bracket: the top 2 from each pool, or a fixed top 4 or top 8 (quarterfinals). Extra spots go to the best runners-up by record, then point difference. You can still change the playoff size and seeding when pools finish.</p></section>`;
 }
 function readDivForm(){
   const v=id=>$('#'+id).value,fin=v('dvFin').split('-').map(Number);
@@ -3950,11 +3963,20 @@ function adminDraw(){
   const opts=S.divs;if(!drawDiv||!D(drawDiv))drawDiv=(S.divs.find(d=>d.status==='open')||S.divs[0]).id;
   const d=D(drawDiv),sel=`<select id="drawDiv" aria-label="Division">${opts.map(x=>`<option value="${x.id}" ${x.id===drawDiv?'selected':''}>${esc(dname(x))}</option>`).join('')}</select>`;
   if(d.status!=='open')return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="pill p-${d.status}">Draw locked</span>`)+seedPanel(d)+`<section class="panel">${divResults(d)}</section>`;
-  const es=seeded(d.id),pools=makePools(es),blk=es.filter(e=>blocking(e).length);
+  const es=seeded(d.id),pools=makePools(es,d),blk=es.filter(e=>blocking(e).length);
   return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="muted">${es.length} entries → ${es.length<3?'need at least 3':(pools.length>1?pools.length+' pools':'1 round robin')+(needsPo(d)?' → '+(d.poSize?'top '+Math.min(d.poSize,es.length)+(Math.min(d.poSize,es.length)>4?' (quarterfinals)':' (semifinals)'):'top 2 per pool'):'')}</span>`)+`
   <div class="two"><section class="panel"><h2>Seeding <small>by ${d.type} DUPR${d.type==='doubles'?' (team average)':''}</small></h2><ul class="list">${es.map((e,i)=>`<li><div class="li-main"><span class="li-t">${e.seed}. ${esc(ename(e.id))}</span><div class="li-m">${erate(e).toFixed(3)}${isNR(e)?' · NR':''}${blocking(e).length?' · <span style="color:var(--bad)">needs review</span>':''}</div></div><div class="row"><button class="btn sm" data-act="seedUp" data-id="${e.id}" ${i?'':'disabled'} aria-label="Move up">↑</button><button class="btn sm" data-act="seedDown" data-id="${e.id}" ${i<es.length-1?'':'disabled'} aria-label="Move down">↓</button></div></li>`).join('')}</ul>
    <div class="row" style="margin-top:10px"><button class="btn" data-act="reseed">Re-seed by rating</button></div></section>
-   <div class="stack"><section class="panel"><h2>Pools preview <small>snake by seed</small></h2><div class="pools">${pools.map(p=>`<div><div class="eyebrow">${pools.length>1?'Pool '+p.name:'Round robin'}</div><ul class="list">${p.entries.map(id=>`<li><span>${E(id).seed}. ${esc(ename(id))}</span></li>`).join('')}</ul></div>`).join('')}</div></section>
+   <div class="stack">${es.length>=3?(()=>{const n=es.length,mx=maxPools(n),au=autoPools(n),cur=d.poolN&&d.poolN<=mx?d.poolN:0,po=d.poSize||0;
+      const opt=k=>{const sz=sizesFor(n,k),even=Math.max(...sz)===Math.min(...sz),g=sz.reduce((a,x)=>a+x*(x-1)/2,0),lo=Math.min(...sz)-1,hi=Math.max(...sz)-1;
+        const q=k===1?(po?Math.min(po,n):0):(po||k*2),wild=k>1&&po&&po%k!==0,fair=even&&!wild;
+        return{k,sz,g,txt:(k===1?'1 round robin':k+' pools')+' · '+(k===1?n+' teams':sz.join(', ')+' teams'),sub:(lo===hi?lo+' games each':lo+'–'+hi+' games each')+' · '+g+' pool games'+(k===1&&!po?' · no playoffs':'')+(wild?' · '+(po-k*Math.floor(po/k))+' wildcard spot'+((po-k*Math.floor(po/k))>1?'s':''):''),fair}};
+      const list=Array.from({length:mx},(_,i)=>opt(i+1)).filter(o=>o.sz.every(x=>x>=3));
+      return `<section class="panel"><h2>Pools <small>how ${n} entries are split</small></h2><fieldset class="pool-opts"><legend class="sr-only">Number of pools</legend>
+        <label class="check pool-o"><input type="radio" name="poolN" value="0" data-div="${d.id}" ${cur?'':'checked'}><span><b>Auto</b> <span class="muted">(${au===1?'1 round robin':au+' pools'}: pools of 3–4)</span></span></label>
+        ${list.map(o=>`<label class="check pool-o"><input type="radio" name="poolN" value="${o.k}" data-div="${d.id}" ${cur===o.k?'checked':''}><span><b>${esc(o.txt)}</b>${o.fair?' <span class="pill p-ok">Even</span>':''}<br><span class="muted">${esc(o.sub)}</span></span></label>`).join('')}</fieldset>
+        <p class="tb" style="margin:8px 0 0">Even pools mean every team plays the same number of games${po?'; with Top '+po+', pools that divide '+po+' evenly need no wildcards':''}. More games per team means a longer day: check the Schedule tab after you choose.</p></section>`})():''}
+   <section class="panel"><h2>Pools preview <small>snake by seed</small></h2><div class="pools">${pools.map(p=>`<div><div class="eyebrow">${pools.length>1?'Pool '+p.name:'Round robin'}</div><ul class="list">${p.entries.map(id=>`<li><span>${E(id).seed}. ${esc(ename(id))}</span></li>`).join('')}</ul></div>`).join('')}</div></section>
    <section class="panel"><h2>Lock draw</h2><p style="margin:0 0 10px">Locking creates all pool matches and adds them to the court queue. Registration for this division closes and waitlisted entries are dropped.</p>
    ${blk.length?`<p class="err">${blk.length} entr${blk.length>1?'ies need':'y needs'} review in Registrations first.</p>`:''}
    <button class="btn primary" data-act="lock" ${blk.length||es.length<3?'disabled':''}>Lock draw and create matches</button></section></div></div>`;
@@ -4259,6 +4281,7 @@ document.addEventListener('change',e=>{
   if(!App.isActive('tournament'))return;
   const t=e.target;
   if(t.id==='enDiv'){syncEntryForm();return}
+  if(t.name==='poolN'&&t.dataset.div){const d=D(t.dataset.div);if(!d||d.status!=='open')return;const v=+t.value;if(v)d.poolN=v;else delete d.poolN;audit('Admin',dname(d)+': pools set to '+(v?v:'auto'));toast(v?'Pools: '+(v===1?'1 round robin':v+' pools')+'.':'Pools: automatic.');commit();return}
   if(t.dataset.poslot){const d=D(t.dataset.poslot);if(!d.poDraft)d.poDraft={n:poN(d),ids:qualifiers(d).ids};const ids=d.poDraft.ids,i=+t.dataset.i,j=ids.indexOf(t.value);
     if(j>=0&&j!==i){const was=ids[i];[ids[i],ids[j]]=[ids[j],ids[i]];audit('Admin',dname(d)+': set '+ename(ids[i])+' as seed '+(i+1)+(was?' (swapped with '+ename(was)+')':''));toast('Matchups updated.')}commit();return}
   if(t.dataset.posize){const d=D(t.dataset.posize),n=+t.value;d.poDraft={n,ids:qualifiers(d,n).ids};audit('Admin',dname(d)+': playoffs set to top '+n);commit();return}

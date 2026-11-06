@@ -1385,6 +1385,14 @@ table.t tbody tr:first-child td{border-top-color:var(--line-2)}
   body.has-tabbar .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
   .kiosk .tabbar{display:none}
 }
+
+/* v30: Google sign-in */
+.gate-g{display:grid;gap:10px}
+.gate .gate-google{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:52px;border-radius:12px;background:#fff;border:1px solid #dadce0;color:#1f1f1f;font-family:var(--f-body);font-weight:600;font-size:16px;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+@media (hover:hover) and (pointer:fine){.gate .gate-google:not([disabled]):hover{background:#f6f8fc;border-color:#c6c9ce}}
+.gate .gate-google[disabled]{opacity:.6}
+.g-logo{width:20px;height:20px;flex:none}
+.gate-mail{border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
 </style>
 
 <header class="top">
@@ -1462,7 +1470,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-05b';
+  const BUILD='2026-11-06a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -1635,10 +1643,15 @@ const App=(()=>{
   function acctWatch(){if(!CL.sb||!CL.sb.auth)return;
     try{CL.sb.auth.onAuthStateChange((ev,ss)=>{AC.sess=ss||null;
       if(ev==='PASSWORD_RECOVERY'){view='intro';gate='reset';gateErr='';scheduleRender();return}
-      if(ev==='SIGNED_IN'&&AC.fromLink&&!mode){AC.fromLink=false;view='intro';gate='signin';gateErr='';AC.note='Your email is confirmed. Continue to sign in.'}
+      if(ev==='SIGNED_IN'&&AC.fromLink&&!mode&&gate!=='reset'){AC.fromLink=false;view='intro';gate='signin';gateErr='';acctAuto()}
       if(gate||view==='intro')scheduleRender()})}catch(e){}
-    try{CL.sb.auth.getSession().then(r=>{AC.sess=(r&&r.data&&r.data.session)||null;if(AC.sess&&AC.fromLink&&!mode&&gate!=='reset'){AC.fromLink=false;view='intro';gate='signin';AC.note='Your email is confirmed. Continue to sign in.'}if(gate||view==='intro')scheduleRender()},()=>{})}catch(e){}}
+    try{CL.sb.auth.getSession().then(r=>{AC.sess=(r&&r.data&&r.data.session)||null;if(AC.sess&&AC.fromLink&&!mode&&gate!=='reset'){AC.fromLink=false;view='intro';gate='signin';acctAuto()}if(gate||view==='intro')scheduleRender()},()=>{})}catch(e){}}
   const acctEmail=()=>AC.sess&&AC.sess.user?AC.sess.user.email||'':'';
+  function acctAuto(){let n=0;const go=()=>{if(mode||gate!=='signin')return;if(CL.ready&&AC.sess){acctGo();return}if(++n<60)setTimeout(go,250)};go()}
+  // which sign-in methods are switched on in Supabase (Authentication > Sign In / Providers)
+  function acctProviders(){if(AC.prov||!CFG||AC.provBusy)return;if(typeof fetch!=='function'){AC.prov={google:false,email:true};return}AC.provBusy=true;
+    fetch(CFG.url.replace(/\/$/,'')+'/auth/v1/settings',{headers:{apikey:CFG.key}}).then(r=>r.ok?r.json():null).then(j=>{AC.prov={google:!!(j&&j.external&&j.external.google),email:!(j&&j.external&&j.external.email===false)};AC.provBusy=false;if(gate)render()},()=>{AC.prov={google:false,email:true};AC.provBusy=false;if(gate)render()})}
+  const G_LOGO='<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
   function acctToken(){return rpc('np_account_login',{}).catch(e=>({error:e.net?'offline':'auth'}))}
   async function acctList(){if(!acctOn()||CL.staffRole!=='admin'||!CL.tok.staff)return;try{const r=await rpc('np_accounts_get',{p_token:CL.tok.staff});if(r&&r.rows){AC.accts={};r.rows.forEach(x=>{AC.accts[x.staff_id]=x});scheduleRender()}}catch(e){}}
   function acctEnter(r){const o=db.officials.find(x=>x.id===r.subject);
@@ -1901,6 +1914,7 @@ const App=(()=>{
     if(mode.role==='admin'){home=true;homeSec='events';pendingTop=true;save();go('admin')}else{const c=cur();if(!c||c.type!=='tournament'){const ts=db.events.filter(e=>e.type==='tournament');const t=ts.find(liveNow)||ts[ts.length-1];if(t)db.cur=t.id}home=false;pendingTop=true;save();go('ref')}}
   function exitMode(){if(AC.sess&&CL.sb){CL.sb.auth.signOut().catch(()=>{});AC.sess=null}lastMe=null;remClear();if(kiosk.on)kioskOff();if(CL.on){const t=[CL.tok.staff,CL.tok.player].filter(Boolean);t.forEach(x=>{rpc('np_logout',{p_token:x}).catch(()=>{})});CL.tok.staff=null;CL.tok.player=null;CL.staffRole=null;CL.pins=null;saveTokens();[...db.players,...db.officials].forEach(x=>{delete x.pin});save(true)}mode=null;saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pendingTop=true;go('intro')}
   function gateHtml(){
+    if(acctOn()&&!AC.prov)acctProviders();
     const back=`<button class="btn gate-back" type="button" data-app="gateBack">Back</button>`;
     if(CLOUD_WANTED&&!CL.on)return `<div class="gate"><h2>Can't connect on this browser</h2><p>This browser couldn't start the club's live connection, so anything done here wouldn't be shared. Open the link in Chrome or Safari (not inside Messenger or Facebook), or update the browser, then try again.</p><div class="row">${back}</div></div>`;
     if(CL.on&&!CL.ready)return `<div class="gate"><h2>Connecting…</h2><p>${CL.offline?'No connection yet. Check the Wi-Fi or data; this page retries by itself.':'Getting the latest from the club\'s database.'}</p><div class="row">${back}</div></div>`;
@@ -1926,10 +1940,14 @@ const App=(()=>{
     if(!acctOn())return `<div class="gate"><h2>Staff sign-in</h2><p>Admins run events; referees score matches. Use the PIN the admin gave you.</p>${err}${pinForm}
       ${DEMO?`<p class="gate-hint">Demo PINs: ${list.map(o=>`${esc(o.name)} ${esc(o.pin)}`).join(' · ')}</p>`:''}</div>`;
     return `<div class="gate"><h2>Staff sign-in</h2><p>Admins run events; referees score matches.</p>${note}${err}
-      ${AC.sess?`<div class="acct-cur"><span>Signed in as <b>${esc(acctEmail())}</b></span><div class="row">${back}<button class="btn primary" type="button" data-app="acctGo">Continue</button></div><button class="btn linkish" type="button" data-app="acctOut">Use a different account</button></div>`
-      :`<form id="gateEmail" class="gate-f"><label class="f">Email<input type="email" id="geEmail" autocomplete="username"></label><label class="f">Password<input type="password" id="gePass" autocomplete="current-password"></label>
-        <div class="row">${back}<button class="btn primary" type="submit">Sign in</button></div>
-        <p class="gate-links"><button type="button" class="btn linkish" data-app="gateTo" data-g="forgot">Forgot password?</button><button type="button" class="btn linkish" data-app="gateTo" data-g="signup">Create a staff account</button></p></form>`}
+      ${AC.sess?`<div class="acct-cur"><span>Signed in${AC.sess&&AC.sess.user&&AC.sess.user.app_metadata&&AC.sess.user.app_metadata.provider==='google'?' with Google':''} as <b>${esc(acctEmail())}</b></span><div class="row">${back}<button class="btn primary" type="button" data-app="acctGo">Continue</button></div><button class="btn linkish" type="button" data-app="acctOut">Use a different account</button></div>`
+      :(()=>{const pv=AC.prov||{google:false,email:true},mailForm=`<form id="gateEmail" class="gate-f"><label class="f">Email<input type="email" id="geEmail" autocomplete="username"></label><label class="f">Password<input type="password" id="gePass" autocomplete="current-password"></label>
+        <div class="row">${pv.google?'':back}<button class="btn ${pv.google?'':'primary'}" type="submit">Sign in</button></div>
+        <p class="gate-links"><button type="button" class="btn linkish" data-app="gateTo" data-g="forgot">Forgot password?</button><button type="button" class="btn linkish" data-app="gateTo" data-g="signup">Create a staff account</button></p></form>`;
+        if(!AC.prov)return `<p class="gate-hint">Checking sign-in options…</p><div class="row">${back}</div>`;
+        if(!pv.google)return pv.email?mailForm:'';
+        return `<div class="gate-g"><button class="btn gate-google" type="button" data-app="acctGoogle">${G_LOGO}<span>Continue with Google</span></button><p class="gate-hint">First time? After Google, pick your name and enter your staff PIN once.</p><div class="row">${back}</div></div>
+          ${pv.email?`<details class="gate-pin gate-mail" ${AC.mailOpen?'open':''}><summary>Use email and password instead</summary>${mailForm}</details>`:''}`})()}
       <details class="gate-pin" ${AC.pinOpen?'open':''}><summary>Sign in with a staff PIN instead</summary>${pinForm}</details></div>`;
   }
   /* ---------- welcome page ---------- */
@@ -2280,6 +2298,9 @@ const App=(()=>{
       case 'gateBack':gate=null;gateErr='';AC.note='';render();return;
       case 'gateTo':gate=t.dataset.g;gateErr='';if(gate!=='sent')AC.note='';render();setTimeout(()=>{const f=document.querySelector('.gate input');f&&f.focus()},0);return;
       case 'acctGo':acctGo();return;
+      case 'acctGoogle':{t.disabled=true;gateErr='';
+        CL.sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:siteUrl(),skipBrowserRedirect:true,queryParams:{prompt:'select_account'}}}).then(({data,error})=>{
+          if(error||!data||!data.url){t.disabled=false;gateErr=authMsg(error);render();return}location.assign(data.url)},err=>{t.disabled=false;gateErr=authMsg(err);render()});return}
       case 'acctOut':if(CL.sb)CL.sb.auth.signOut().catch(()=>{});AC.sess=null;gate='signin';gateErr='';AC.note='';render();return;
       case 'acctUnlink':{if(!CL.tok.staff)return;rpc('np_account_unlink',{p_token:CL.tok.staff,p_staff:id}).then(r=>{if(r&&r.ok){if(AC.accts)delete AC.accts[id];toast('Email sign-in removed. They can still use their PIN.');render()}else toast('Couldn\'t remove it. Try again.')},()=>toast(pinErr('offline')));return}
       case 'pg':goPg(t.dataset.pg);return;
@@ -2333,7 +2354,7 @@ const App=(()=>{
       const ev=type==='openplay'?OPM.create({...base,rule:$('#evRule').value,teams:$('#evTeams').value,gameTo:+$('#evTo').value,noShow:+$('#evNoShow').value})
         :TM.create({...base,forfeit:Math.min(60,Math.max(1,Math.round(+$('#evForf').value)||10)),rest:Math.min(120,Math.max(0,Math.round(+$('#evRest').value)||0)),gameMin:Math.min(60,Math.max(0,Math.round(+$('#evTimer').value)||0))});
       db.events.push(ev);db.cur=ev.id;home=false;homeSec='events';[OPM,TM].forEach(m=>m.signOut());save();toast((type==='openplay'?'Session':'Tournament')+' created.');render();return}
-    if(f.id==='gateEmail'){e.preventDefault();const em=$('#geEmail').value.trim(),pw=$('#gePass').value;if(!em||!pw){gateErr='Enter your email and password.';render();return}
+    if(f.id==='gateEmail'){e.preventDefault();AC.mailOpen=true;const em=$('#geEmail').value.trim(),pw=$('#gePass').value;if(!em||!pw){gateErr='Enter your email and password.';render();return}
       const btn=f.querySelector('button[type=submit]');if(btn)btn.disabled=true;
       CL.sb.auth.signInWithPassword({email:em,password:pw}).then(({data,error})=>{if(error||!data||!data.session){gateErr=authMsg(error);render();return}AC.sess=data.session;acctGo()},err=>{gateErr=authMsg(err);render()});return}
     if(f.id==='gateSignup'){e.preventDefault();const em=$('#guEmail').value.trim(),a1=$('#guPass').value,a2=$('#guPass2').value;

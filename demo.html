@@ -1395,6 +1395,13 @@ table.t tbody tr:first-child td{border-top-color:var(--line-2)}
 .top select option,.top select optgroup,.gate select option,.site-gate select option,.site-nav select option{background:#2a2234;color:#f4f1f7}
 .top select option:checked,.gate select option:checked{background:#4d3c84;color:#fff}
 .top select:disabled option,.gate select option:disabled{color:#a39cb2}
+
+/* v32: hand-set playoff matchups */
+.mup-s .seedno{flex:none}
+.mup{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}.mups li{grid-template-columns:minmax(0,1fr)}
+.mup-s{display:flex;align-items:center;gap:6px;min-width:0}
+.mup-s select{min-width:0;width:100%;min-height:40px;font-size:14px}
+.mup-vs,.mup-bye{font-size:13px;padding-left:12px}
 </style>
 
 <header class="top">
@@ -1459,7 +1466,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-06b';
+  const BUILD='2026-11-06c';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -3782,7 +3789,8 @@ function seedPanel(d){
    <button class="btn" data-act="poResetSeeds" data-id="${d.id}">Reset to standings</button></div>
    <div class="two"><div><h3 class="eyebrow" style="margin:0 0 6px">Seeds</h3><ol class="list seedlist">${ids.map((id,i)=>`<li><div class="li-main"><span class="li-t"><span class="seedno">${i+1}</span>${esc(ename(id))}</span><div class="li-m">${stat(id)}</div></div><div class="row"><button class="btn sm" data-act="poUp" data-id="${d.id}" data-i="${i}" ${i?'':'disabled'} aria-label="Move ${esc(ename(id))} up">↑</button><button class="btn sm" data-act="poDown" data-id="${d.id}" data-i="${i}" ${i<ids.length-1?'':'disabled'} aria-label="Move ${esc(ename(id))} down">↓</button></div></li>`).join('')}</ol>
      ${out.length?`<details style="margin-top:10px"><summary class="muted" style="cursor:pointer">Not in the playoffs (${out.length})</summary><ul class="list">${out.map(r=>`<li><div class="li-main"><span class="li-t">${esc(ename(r.id))}</span><div class="li-m">${stat(r.id)}</div></div><button class="btn sm" data-act="poSwapIn" data-id="${d.id}" data-e="${r.id}">Replace #${ids.length}</button></li>`).join('')}</ul></details>`:''}</div>
-   <div><h3 class="eyebrow" style="margin:0 0 6px">${rl} preview</h3><ul class="list">${first.map(([a,b,sa,sb])=>`<li><div class="li-main"><span class="li-t">#${sa} ${a?esc(ename(a)):'—'} <span class="muted">vs</span> ${b?'#'+sb+' '+esc(ename(b)):'<span class="muted">bye</span>'}</span>${a&&b&&rm.has(a)&&rm.has(b)&&poolOf(d,a)===poolOf(d,b)?`<div class="li-m"><span class="pill p-flag">Same pool rematch (Pool ${poolOf(d,a)})</span></div>`:''}</div></li>`).join('')}</ul>
+   <div><h3 class="eyebrow" style="margin:0 0 6px">${rl} preview</h3><p class="tb" style="margin:0 0 8px">Pick a team in any slot to set who plays whom. The team already there swaps into the old spot.</p><ul class="list mups">${first.map(([a,b,sa,sb])=>{const pick=(id,sn)=>`<label class="mup-s"><select data-poslot="${d.id}" data-i="${sn-1}" aria-label="Seed ${sn}">${ids.map((x,k)=>`<option value="${x}" ${x===id?'selected':''}>#${k+1} ${esc(ename(x))}</option>`).join('')}</select></label>`;
+     return `<li><div class="li-main"><div class="mup">${a?pick(a,sa):'<span class="muted">—</span>'}<span class="muted mup-vs">vs</span>${b?pick(b,sb):'<span class="muted mup-bye">bye</span>'}</div>${a&&b&&rm.has(a)&&rm.has(b)&&poolOf(d,a)===poolOf(d,b)?`<div class="li-m"><span class="pill p-flag">Same pool rematch (Pool ${poolOf(d,a)})</span></div>`:''}</div></li>`}).join('')}</ul>
    ${B>ids.length?`<p class="tb" style="margin:6px 0 0">${B-ids.length} top seed${B-ids.length>1?'s get':' gets'} a bye into the next round.</p>`:''}</div></div>
    <div class="row" style="margin-top:14px"><button class="btn primary" data-act="poStart" data-id="${d.id}">Start playoffs</button><span class="muted">Creates the bracket and adds the first round to the court queue.</span></div></section>`;
 }
@@ -4100,6 +4108,8 @@ document.addEventListener('change',e=>{
   if(!App.isActive('tournament'))return;
   const t=e.target;
   if(t.id==='enDiv'){syncEntryForm();return}
+  if(t.dataset.poslot){const d=D(t.dataset.poslot);if(!d.poDraft)d.poDraft={n:poN(d),ids:qualifiers(d).ids};const ids=d.poDraft.ids,i=+t.dataset.i,j=ids.indexOf(t.value);
+    if(j>=0&&j!==i){const was=ids[i];[ids[i],ids[j]]=[ids[j],ids[i]];audit('Admin',dname(d)+': set '+ename(ids[i])+' as seed '+(i+1)+(was?' (swapped with '+ename(was)+')':''));toast('Matchups updated.')}commit();return}
   if(t.dataset.posize){const d=D(t.dataset.posize),n=+t.value;d.poDraft={n,ids:qualifiers(d,n).ids};audit('Admin',dname(d)+': playoffs set to top '+n);commit();return}
   if(t.dataset.bk){const sc=sched(),b=sc.blocks.find(x=>x.id===t.dataset.bk),k=t.dataset.k;
     if(k==='mode'){b.mode=t.value;b.released=false}

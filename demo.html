@@ -1390,6 +1390,11 @@ table.t tbody tr:first-child td{border-top-color:var(--line-2)}
 .gate .gate-google[disabled]{opacity:.6}
 .g-logo{width:20px;height:20px;flex:none}
 .gate-mail{border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
+
+/* v31: dropdown lists inside dark areas (event picker, sign-in) were white text on white on Windows */
+.top select option,.top select optgroup,.gate select option,.site-gate select option,.site-nav select option{background:#2a2234;color:#f4f1f7}
+.top select option:checked,.gate select option:checked{background:#4d3c84;color:#fff}
+.top select:disabled option,.gate select option:disabled{color:#a39cb2}
 </style>
 
 <header class="top">
@@ -1454,7 +1459,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-06a';
+  const BUILD='2026-11-06b';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);

@@ -1544,7 +1544,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-06h';
+  const BUILD='2026-11-07a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2574,7 +2574,7 @@ const App=(()=>{
     window.addEventListener('hashchange',()=>{deep(location.hash.slice(1));render()});
     render();
   }
-  return{db:()=>db,save,render,go,uid,newPin,addPlayer,ensureSkill,isActive,start,kpi,pageHead,icon,clubBoard,playerRank,sessionLeaders,tools,qrBlock,kioskPage,alerts,verifyPin,playerLogin,registerPlayer,pinErr,canAuto,cloud:()=>CL,forgetMe,ackMatch,acked:ackedM,pushCard,me:()=>lastMe};
+  return{fresh:()=>{lastKey=''},db:()=>db,save,render,go,uid,newPin,addPlayer,ensureSkill,isActive,start,kpi,pageHead,icon,clubBoard,playerRank,sessionLeaders,tools,qrBlock,kioskPage,alerts,verifyPin,playerLogin,registerPlayer,pinErr,canAuto,cloud:()=>CL,forgetMe,ackMatch,acked:ackedM,pushCard,me:()=>lastMe};
 })();
 
 const OPM=(()=>{
@@ -3124,12 +3124,18 @@ let rs=20261121;const rnd=()=>(rs=(rs*16807)%2147483647)/2147483647;
 
 /* ---------- divisions & rules ---------- */
 const GW={men:"Men's",women:"Women's",mixed:'Mixed',open:'Open'};
+// skill levels; each fills in a DUPR range when picked (the range can still be edited)
+const LEVELS=[['novice','Novice',2.0,2.99],['lowint','Low Inter',3.0,3.49],['hiint','High Inter',3.5,3.99],['adv','Advanced',4.0,8],['open','Open',null,null]];
+const LV=Object.fromEntries(LEVELS.map(x=>[x[0],x]));
+const rangeTxt=(v,v2)=>(+v).toFixed(1)+(+v2>=8?'+':'–'+(+v2).toFixed(2));
+function guessLevel(d){const r=d.rating;if(r.rule!=='range')return '';return r.v<3?'novice':r.v<3.5?'lowint':r.v<4?'hiint':'adv'}
 function autoName(d){
-  let n=GW[d.gender]+' '+(d.type==='singles'?'Singles':'Doubles');
+  const lv=d.level&&LV[d.level];
+  let n=(lv?lv[1]+' ':'')+(lv&&d.level==='open'&&d.gender==='open'?'':GW[d.gender]+' ')+(d.type==='singles'?'Singles':'Doubles');
   const r=d.rating;
   if(r.rule==='each'||r.rule==='avg')n+=' '+(+r.v).toFixed(1);
   if(r.rule==='sum')n+=' '+(+r.v).toFixed(1)+' combined';
-  if(r.rule==='range')n+=' '+(+r.v).toFixed(1)+'–'+(+r.v2).toFixed(2);
+  if(r.rule==='range')n+=' '+rangeTxt(r.v,r.v2);
   if(d.age.rule==='min')n+=' '+d.age.v+'+';
   if(d.age.rule==='max')n+=' U'+d.age.v;
   return n;
@@ -3137,7 +3143,7 @@ function autoName(d){
 const dname=d=>d.custom||autoName(d);
 function ruleText(d){
   const r=d.rating,out=[d.type==='singles'?'Singles':'Doubles',{men:'Men only',women:'Women only',mixed:'1 man + 1 woman',open:'Anyone'}[d.gender]];
-  out.push({none:'No rating limit',each:'Each player ≤ '+r.v,avg:'Team average ≤ '+r.v,sum:'Team combined ≤ '+r.v,range:'Rating '+r.v+'–'+r.v2}[r.rule]);
+  out.push({none:'No rating limit',each:'Each player ≤ '+r.v,avg:'Team average ≤ '+r.v,sum:'Team combined ≤ '+r.v,range:'DUPR '+r.v+(r.v2>=8?'+':'–'+r.v2)}[r.rule]);
   if(d.age.rule!=='none')out.push(d.age.rule==='min'?'Age '+d.age.v+'+':'Under '+d.age.v);
   out.push('Max '+d.cap+(d.type==='singles'?' players':' teams'));
   return out;
@@ -3341,6 +3347,12 @@ function sched(){
   if(S.t&&S.t.start&&sc.days.length&&!sc.days.some(x=>x.date))sc.days.forEach((x,i)=>{x.date=addDays(S.t.start,i)});
   return sc;
 }
+const shareAll=()=>sched().share!=='order';
+const lateM=m=>['Final','Semifinal','3rd place'].includes(m.label);
+// how far along its block each game is (0..1): with all courts shared, every division moves forward together
+function blockFrac(){const mp=blockMap(),by=new Map(),out=new Map();
+  S.matches.forEach(m=>{if(m.result==='bye')return;const b=blockOfM(mp,m);if(!b)return;if(!by.has(b.id))by.set(b.id,[]);by.get(b.id).push(m)});
+  by.forEach(ms=>{ms.sort((a,b)=>a.ord-b.ord);ms.forEach((m,i)=>out.set(m.id,i/ms.length))});return out}
 const ordered=()=>sched().blocks.map((b,i)=>({b,i})).sort((x,y)=>x.b.day-y.b.day||x.i-y.i).map(x=>x.b);
 const stageName=b=>b.stage==='po'?'Playoffs':needsPo(D(b.div))?'Pools':'Round robin';
 const blockName=b=>dname(D(b.div))+' · '+stageName(b);
@@ -3361,7 +3373,7 @@ function schedGate(){
     else if(b.mode==='time'&&!b.released&&b.day===sc.today&&nm<hm(b.at)){own=false;why='Scheduled for '+fmtT(hm(b.at))}
     const ok=open&&own&&!b.hold;
     out.set(b.id,{open:ok,state:st,why:b.hold?'Paused by the desk':!own?why:!open?'After '+blockName(closer):''});
-    if(open&&!own&&st!=='done'&&st!=='draft'){open=false;closer=b}
+    if(open&&!own&&st!=='done'&&st!=='draft'&&!shareAll()){open=false;closer=b}
   }
   return out;
 }
@@ -3370,6 +3382,51 @@ const blockOfM=(mp,m)=>mp.get(m.div+'|'+(m.stage==='pool'?'pool':'po'));
 function courtOk(m,ct){const b=blockOfM(blockMap(),m);return !b||!b.courts||!b.courts.length||b.courts.includes(ct.no)}
 function matchLen(d,stage,late){const sc=sched(),f=stage==='pool'?d.score.pool:late?d.score.fin:d.score.po;return (sc.pace[f.to]||15)*(f.bo>1?2.5:1)+(+sc.buffer||0)}
 function poolShape(n,d){if(n<3)return [];return sizesFor(n,poolCount(d,n))}
+function poRounds(d){
+  const ne=d.status==='open'?active(d.id).length:d.pools.reduce((a,p)=>a+p.entries.length,0),np=d.status==='open'?poolShape(ne,d).length:d.pools.length,q=Math.min(ne,d.poSize||np*2);let B=2;while(B<q)B*=2;
+  const tot=Math.log2(B),out=[];for(let r=1;r<=tot;r++){let c=B/Math.pow(2,r);if(r===1)c-=B-q;if(r===tot&&d.third&&B>=4)c+=1;out.push({c:Math.max(0,c),L:matchLen(d,'po',r>=tot-1)})}return out}
+// Shared-courts simulation: every game of the day goes to the court that frees up first, highest priority first
+// (how far along its block it is, then block order). Respects team rest, playoff rounds, pools before playoffs,
+// set start times and court limits. Blocks without a draw yet get placeholder games. Cached for one tick.
+let simMemo=null,simKey='';
+function simAll(){
+  const key=[S.id,Math.floor(nowMin()),JSON.stringify(sched()),S.matches.map(m=>m.id+m.status+(m.a||'')+(m.b||'')+(m.court||'')+(m.end||'')).join(),S.divs.map(d=>d.status+active(d.id).length+d.poSize+d.poolN).join(),S.courts.map(c=>c.state+(c.match||'')).join(),S.cfg.rest].join('|');
+  if(simMemo&&key===simKey)return simMemo;
+  const sc=sched(),nm=nowMin(),rest=+S.cfg.rest||0,plan=sc.today<0,times=new Map(),blk=new Map(),fr=blockFrac(),oi=new Map(ordered().map((b,i)=>[b.id,i]));
+  const ready={};S.matches.forEach(m=>{if(m.status==='done'&&m.end)[m.a,m.b].forEach(e=>{if(e)ready[e]=Math.max(ready[e]||0,toMin(m.end)+rest)})});
+  const courts=S.courts.map(c=>c.no);
+  sc.days.forEach((day,di)=>{
+    if(!plan&&di<sc.today)return;
+    const live=!plan&&di===sc.today,ds=hm(day.start),t0=live?Math.max(ds,nm):ds,free={};
+    S.courts.forEach(c=>{free[c.no]=t0;if(live){const m=c.match&&M(c.match);if(m)free[c.no]=Math.max(t0,(m.start?toMin(m.start):nm)+matchLen(D(m.div),m.stage,lateM(m)))}});
+    const eReady=live?{...ready}:{},jobs=[],grp={},gEnd={},poolLeft={},poolEnd={};
+    const add=j=>{jobs.push(j);if(j.g){const k=j.g+'|'+j.r;grp[k]=(grp[k]||0)+1}if(j.pool)poolLeft[j.div]=(poolLeft[j.div]||0)+1};
+    for(const b of ordered().filter(x=>x.day===di)){
+      if(blockState(b)==='done')continue;
+      const d=D(b.div),bs=b.mode==='time'&&!b.released?Math.max(t0,hm(b.at)):t0,cs=b.courts&&b.courts.length?b.courts.filter(n=>free[n]!=null):null,o=oi.get(b.id),ms=blockMatches(b);
+      if(ms.length)ms.filter(m=>m.status==='queued').forEach(m=>add({id:m.id,b,div:b.div,pool:b.stage==='pool',bs,cs,L:matchLen(d,m.stage,lateM(m)),teams:[m.a,m.b].filter(Boolean),g:b.stage==='po'?b.id:null,r:m.stage==='po'?m.round:0,f:fr.get(m.id)||0,o,ord:m.ord}));
+      else if(b.stage==='pool'){const w=blockWork(b),L=matchLen(d,'pool'),R=Math.max(1,Math.round(w.rt/L)),per=Math.max(1,Math.ceil(w.n/R));
+        for(let k=0;k<w.n;k++)add({b,div:b.div,pool:true,bs,cs,L,teams:[],g:b.id,r:Math.floor(k/per)+1,f:k/w.n,o,ord:k})}
+      else{const rs=poRounds(d),n=rs.reduce((a,x)=>a+x.c,0);let k=0;rs.forEach((x,ri)=>{for(let i=0;i<x.c;i++,k++)add({b,div:b.div,pool:false,bs,cs,L:x.L,teams:[],g:b.id,r:ri+1,f:n?k/n:0,o,ord:k})})}
+    }
+    const rdy=j=>{let t=j.bs;for(const e of j.teams)t=Math.max(t,eReady[e]||0);
+      if(j.g&&j.r>1)for(let r=1;r<j.r;r++){const k=j.g+'|'+r;if(grp[k])return Infinity;t=Math.max(t,gEnd[k]||0)}
+      if(!j.pool){if(poolLeft[j.div])return Infinity;t=Math.max(t,poolEnd[j.div]||0)}
+      return t};
+    const better=(j,k)=>!k||j.f-k.f<-1e-9||(Math.abs(j.f-k.f)<1e-9&&(j.o-k.o||j.ord-k.ord)<0);
+    let left=jobs;
+    while(left.length){let best=null,bt=Infinity,bc=null,bi=-1;
+      for(let i=0;i<left.length;i++){const j=left[i],r=rdy(j);if(r===Infinity)continue;const cl=j.cs&&j.cs.length?j.cs:courts;let c=cl[0];for(const n of cl)if(free[n]<free[c])c=n;const t=Math.max(r,free[c]);
+        if(t<bt-1e-9||(t<bt+1e-9&&better(j,best))){best=j;bt=t;bc=c;bi=i}}
+      if(!best)break;
+      left.splice(bi,1);const en=bt+best.L;free[bc]=en;best.teams.forEach(e=>{eReady[e]=en+rest});
+      if(best.g){const k=best.g+'|'+best.r;grp[k]--;gEnd[k]=Math.max(gEnd[k]||0,en)}
+      if(best.pool){poolLeft[best.div]--;poolEnd[best.div]=Math.max(poolEnd[best.div]||0,en)}
+      if(best.id)times.set(best.id,{day:di,t:bt});
+      const x=blk.get(best.b.id)||{s:bt,e:en,n:0};x.s=Math.min(x.s,bt);x.e=Math.max(x.e,en);x.n++;blk.set(best.b.id,x)}
+  });
+  simMemo={times,blk};simKey=key;return simMemo;
+}
 function blockWork(b){
   const d=D(b.div);
   if(b.stage==='pool'){
@@ -3389,6 +3446,15 @@ function blockWork(b){
 }
 function project(){
   const sc=sched(),nm=nowMin(),C=S.courts.length||1,res=new Map(),poolEnd={};
+  if(shareAll()){const sim=simAll();
+    ordered().forEach(b=>{if(sc.today>=0&&b.day<sc.today)return;const st=blockState(b),ms=blockMatches(b);
+      if(st==='done'&&ms.length){const s0=Math.min(...ms.map(m=>m.start||m.calledAt||m.end)),e0=Math.max(...ms.map(m=>m.end||0));res.set(b.id,{s:toMin(s0),e:toMin(e0),done:true,n:0});return}
+      const x=sim.blk.get(b.id),started=sc.today>=0&&ms.some(m=>m.status!=='queued'),on=ms.filter(m=>m.status==='called'||m.status==='play');
+      let s=x?x.s:null,e=x?x.e:null;
+      if(started){const st0=ms.filter(m=>m.start||m.calledAt);if(st0.length)s=toMin(Math.min(...st0.map(m=>m.start||m.calledAt)));e=Math.max(e??nm,...on.map(m=>(m.start?toMin(m.start):nm)+matchLen(D(m.div),m.stage,lateM(m))))}
+      if(s==null){const t=hm(sc.days[b.day].start);res.set(b.id,{s:t,e:t,n:0,est:true});return}
+      res.set(b.id,{s,e,started,n:(x?x.n:0)+on.length,est:!started})});
+    res.sim=sim.times;return res}
   sc.days.forEach((day,di)=>{
     if(di<sc.today)return;
     const ds=hm(day.start);let T=di===sc.today?Math.max(ds,nm):ds;
@@ -3414,6 +3480,7 @@ function project(){
 // court that frees up first (only the block's courts), never before its block starts, a team's rest is over, or the
 // previous playoff round has finished. Returns Map id -> {day, t (minutes after midnight)}.
 function simTimes(pr){
+  if(pr&&pr.sim)return pr.sim;
   const sc=sched(),nm=nowMin(),out=new Map(),rest=+S.cfg.rest||0,plan=sc.today<0,q=queue(),qi=new Map(q.map((x,i)=>[x.m.id,i]));
   const ready={};S.matches.forEach(m=>{if(m.status==='done'&&m.end)[m.a,m.b].forEach(e=>{if(e)ready[e]=Math.max(ready[e]||0,toMin(m.end)+rest)})});
   sc.days.forEach((day,di)=>{
@@ -3464,9 +3531,9 @@ function scheduleTips(){
 function tipsHtml(t){return t.length?`<div class="assist" role="status">${t.map(x=>`<div class="assist-i ${x.k}"><span class="assist-dot" aria-hidden="true"></span><div class="assist-m">${x.msg}</div>${x.act?`<div class="assist-a">${x.act}</div>`:''}</div>`).join('')}</div>`:''}
 function queue(){
   const bz=busy(),le=lastEnds(),g=schedGate(),mp=blockMap(),oi=new Map(ordered().map((b,i)=>[b.id,i]));
-  const bo=m=>{const b=blockOfM(mp,m);return b?oi.get(b.id):999};
+  const bo=m=>{const b=blockOfM(mp,m);return b?oi.get(b.id):999},all=shareAll(),fr=all?blockFrac():null,dy=m=>{const b=blockOfM(mp,m);return b?b.day:0};
   return S.matches.filter(m=>m.status==='queued'&&D(m.div).status==='live')
-    .sort((a,b)=>(b.bump||0)-(a.bump||0)||bo(a)-bo(b)||a.ord-b.ord).map(m=>{const r=readyInfo(m,bz,le),b=blockOfM(mp,m),gt=b&&g.get(b.id);
+    .sort((a,b)=>(b.bump||0)-(a.bump||0)||(all?dy(a)-dy(b)||(fr.get(a.id)||0)-(fr.get(b.id)||0):0)||bo(a)-bo(b)||a.ord-b.ord).map(m=>{const r=readyInfo(m,bz,le),b=blockOfM(mp,m),gt=b&&g.get(b.id);
       if(r.ok&&gt&&!gt.open&&!m.bump)return{m,ok:false,held:true,why:gt.why};return{m,...r}});
 }
 function nextMatch(ct){const q=queue().filter(x=>x.ok&&(!ct||courtOk(x.m,ct)));return(q.find(x=>x.rested||x.m.bump)||q[0]||{}).m}
@@ -3884,7 +3951,7 @@ function adminSched(){
         <div class="li-m">${st==='draft'?'About '+Math.round(blockWork(b).n)+' games (estimate from entries)':(ms.length?dn+' of '+ms.length+' games done':'About '+Math.round(blockWork(b).n)+' games once pools finish')} · ${scoreText(f)} · ~${Math.round(matchLen(d,b.stage==='pool'?'pool':'po'))} min per game</div>
         <div class="blk-time"><b>${x.done?'Played '+fmtT(x.s)+' – '+fmtT(x.e):x.n?(x.started?'Started '+fmtT(x.s)+' · ends ~'+fmtT(r5(x.e)):'~'+fmtT(r5(x.s))+' – '+fmtT(r5(x.e))):'—'}</b>${delta!=null&&Math.abs(delta)>=5?` <span class="pill ${delta>0?'p-hold':'p-ok'}">${delta>0?'+':'−'}${Math.round(Math.abs(delta))} min vs plan</span>`:''}</div>
         <div class="blk-ctrl">
-          <label class="f">Starts<select data-bk="${b.id}" data-k="mode">${[['follow','Next in line (uses free courts)'],['time','At a set time'],['manual','When the desk starts it']].map(([v,l])=>`<option value="${v}" ${b.mode===v?'selected':''}>${l}</option>`).join('')}</select></label>
+          <label class="f">Starts<select data-bk="${b.id}" data-k="mode">${[['follow',shareAll()?'With the others (any free court)':'Next in line (uses free courts)'],['time','At a set time'],['manual','When the desk starts it']].map(([v,l])=>`<option value="${v}" ${b.mode===v?'selected':''}>${l}</option>`).join('')}</select></label>
           ${b.mode==='time'?`<label class="f">Time<input type="time" data-bk="${b.id}" data-k="at" value="${esc(b.at)}"></label>`:''}
           ${sc.days.length>1?`<label class="f">Day<select data-bk="${b.id}" data-k="day">${sc.days.map((dd,i)=>`<option value="${i}" ${b.day===i?'selected':''}>${esc(dd.label)}</option>`).join('')}</select></label>`:''}
           <fieldset class="blk-courts"><legend>Courts</legend>${S.courts.map(c=>`<label class="cchip"><input type="checkbox" data-bkc="${b.id}" value="${c.no}" ${b.courts&&b.courts.includes(c.no)?'checked':''}><span>${c.no}</span></label>`).join('')}<span class="tb">${b.courts&&b.courts.length?'only these':'any court'}</span></fieldset>
@@ -3898,7 +3965,9 @@ function adminSched(){
    `<div class="kpis">${kp}</div>${tipsHtml(tips)}
    ${sc.days.length>1?`<div class="tabs daytabs" role="tablist">${sc.days.map((dd,i)=>`<button class="tab" data-act="schedDay" data-i="${i}" aria-selected="${i===di}">${esc(dayName(dd))}${i===sc.today?' · today':''}</button>`).join('')}</div>`:''}
    <section class="panel"><h2>${esc(dayName(day))} timeline <small>${fmtT(hm(day.start))} – ${fmtT(hm(day.end))} · estimates</small></h2>${tl}</section>
-   <div class="two" style="margin-top:16px"><section class="panel"><h2>Play order <small>courts follow this order</small></h2>
+   <div class="two" style="margin-top:16px"><section class="panel"><h2>Play order <small>${shareAll()?'all at once · order breaks ties':'courts follow this order'}</small></h2>
+     <label class="f">How divisions use the courts<select id="schShare"><option value="all" ${shareAll()?'selected':''}>All at once (every court in use)</option><option value="order" ${shareAll()?'':'selected'}>One after another (block by block)</option></select></label>
+     <p class="tb" style="margin:0 0 10px">${shareAll()?'All divisions play side by side, so no court sits empty while a team rests. Games are mixed so every division moves forward together. Use a set start time or court limits to keep a block apart.':'Blocks play in this order. A later block only gets courts the earlier ones aren\'t using.'}</p>
      ${bl.length?`<ol class="blks">${rows}</ol>`:'<p class="muted" style="margin:0">Nothing on this day yet. Move a block here with its Day menu.</p>'}
      <p class="tb" style="margin:12px 0 0">A held block's games stay in Upcoming games with the reason. You can still start it now, put one of its games on a court yourself, or use Move to top on a game.</p></section>
    <div class="stack"><section class="panel"><h2>Days</h2>
@@ -3950,6 +4019,7 @@ function divForm(){
   const o=(v,cur,l)=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${l}</option>`;
   return `<section class="panel"><h2>${editDiv?'Edit '+esc(dname(d)):'New division'} <small id="dvPreview">${esc(dname(d))}</small></h2>
    <form id="divForm" class="grid-form">
+    <label class="f">Level<select id="dvLevel">${(()=>{const lv=d.level!=null?d.level:editDiv?guessLevel(d):'';return o('',lv,'No level')+LEVELS.map(x=>o(x[0],lv,x[1]+(x[2]!=null?' · DUPR '+rangeTxt(x[2],x[3]):' · no rating limit'))).join('')})()}</select></label>
     <label class="f">Event type<select id="dvType">${o('doubles',d.type,'Doubles')}${o('singles',d.type,'Singles')}</select></label>
     <label class="f">Gender<select id="dvGender">${o('open',d.gender,'Open (anyone)')}${o('men',d.gender,'Men')}${o('women',d.gender,'Women')}${o('mixed',d.gender,'Mixed (1 man + 1 woman)')}</select></label>
     <label class="f">Rating limit<select id="dvRule">${o('none',d.rating.rule,'None')}${o('each',d.rating.rule,'Each player at or under')}${o('avg',d.rating.rule,'Team average at or under')}${o('sum',d.rating.rule,'Team combined at or under')}${o('range',d.rating.rule,'Rating range')}</select></label>
@@ -3971,7 +4041,7 @@ function divForm(){
 }
 function readDivForm(){
   const v=id=>$('#'+id).value,fin=v('dvFin').split('-').map(Number);
-  return{type:v('dvType'),gender:v('dvGender'),rating:{rule:v('dvRule'),v:+v('dvV'),v2:+v('dvV2')},age:{rule:v('dvAge'),v:+v('dvAgeV')},cap:+v('dvCap'),
+  return{level:v('dvLevel')||'',type:v('dvType'),gender:v('dvGender'),rating:{rule:v('dvRule'),v:+v('dvV'),v2:+v('dvV2')},age:{rule:v('dvAge'),v:+v('dvAgeV')},cap:+v('dvCap'),
     score:{pool:{bo:1,to:+v('dvPool')},po:{bo:1,to:+v('dvPo')},fin:{bo:fin[0],to:fin[1]},...(v('dvWin')==='w2'?{w2:true}:{})},third:$('#dvThird').checked,unverified:false,custom:v('dvName').trim(),poSize:+v('dvPoSize')||0,poReview:$('#dvPoReview').checked};
 }
 const poLabel=d=>d.poSize===8?'Top 8: quarterfinals':d.poSize===4?'Top 4: semifinals':'Top 2 per pool';
@@ -4204,12 +4274,16 @@ function addEntry(div,people,src){
   const e={id:App.uid('e'),div,p:ids,status:active(div).length>=d.cap?'wait':'in',accepted:{},src,seed:null};
   S.entries.push(e);return e;
 }
+const nk=v=>String(v||'').toLowerCase().replace(/[‐-―−]/g,'-').replace(/\s+/g,' ').trim();
+function divKeys(d){const k=new Set([nk(dname(d)),nk(autoName(d)),nk(autoName({...d,rating:{rule:'none'}}))]);
+  if(d.level){k.add(nk(autoName({...d,level:''})));k.add(nk(autoName({...d,level:'',rating:{rule:'none'}})))}return k}
 function importCSV(text){
   const rows=parseCSV(text);if(rows.length<2)return{n:0,errs:['Paste the header row and at least one entry.']};
   const head=rows[0].map(h=>h.trim().toLowerCase()),errs=[];let n=0;
   if(!head.includes('division')||!head.includes('p1 name'))return{n:0,errs:['The first row must be the header, with at least "Division" and "P1 Name".']};
   rows.slice(1).forEach((r,k)=>{const get=h=>{const i=head.indexOf(h.toLowerCase());return i<0?'':r[i]||''};
-    const dv=get('Division').trim().toLowerCase(),d=S.divs.find(x=>dname(x).toLowerCase()===dv);
+    const dv=nk(get('Division'));let d=S.divs.find(x=>nk(dname(x))===dv);
+    if(!d){const c=S.divs.filter(x=>divKeys(x).has(dv));if(c.length>1){errs.push('Row '+(k+2)+': "'+get('Division')+'" fits more than one division ('+c.map(dname).join(', ')+'). Use the full name.');return}d=c[0]}
     if(!d){errs.push('Row '+(k+2)+': no division named "'+get('Division')+'"');return}
     if(d.status!=='open'){errs.push('Row '+(k+2)+': '+dname(d)+' draw is already locked');return}
     const p1=personFrom(get,'P1',d.type),p2=d.type==='doubles'?personFrom(get,'P2',d.type):null;
@@ -4300,8 +4374,8 @@ document.addEventListener('click',e=>{
     case 'skip':S.offset+=5*60000;toast('Skipped 5 minutes.');break;
     case 'playAll':{const n=playCourts();toast(n?'Finished '+n+' match'+(n>1?'es':'')+'.':'No matches on court.');break}
     case 'playMany':{let n=0;for(let i=0;i<10;i++){autoCall();const c=S.courts.find(c=>c.match);if(!c)break;const mm=M(c.match);if(mm.status==='called')startMatch(mm);S.offset+=3*60000;randGames(mm);finish(mm,decided(mm),'Demo',true);n++}toast('Played '+n+' match'+(n===1?'':'es')+'.');break}
-    case 'editDiv':editDiv=id;render();window.scrollTo({top:0});return;
-    case 'cancelEdit':editDiv=null;render();return;
+    case 'editDiv':editDiv=id;App.fresh();render();window.scrollTo({top:0});return;
+    case 'cancelEdit':App.fresh();editDiv=null;render();return;
     case 'delDiv':S.divs=S.divs.filter(d=>d.id!==id);break;
     case 'goDraw':drawDiv=id;sub='draw';break;
     case 'goPub':pubDiv=id;App.go('public');return;
@@ -4364,6 +4438,7 @@ document.addEventListener('change',e=>{
   if(t.dataset.sday){const d=sched().days[+t.dataset.sday];if(t.dataset.k==='date')d.date=t.value||undefined;else d[t.dataset.k]=t.value||d[t.dataset.k];commit();return}
   if(t.id==='schToday'){const sc=sched();sc.today=+t.value;if(sc.today<0)S.matches.filter(m=>m.status==='called').forEach(backToQueue);schedDay=null;audit('Admin',sc.today<0?'Schedule: planning mode':'Schedule: today is '+sc.days[sc.today].label);toast(sc.today<0?'Planning mode: no games are called to courts.':sc.days[sc.today].label+': games now go to courts.');commit();return}
   if(t.dataset.pace){const v=Math.max(5,Math.min(60,parseInt(t.value,10)||15));sched().pace[t.dataset.pace]=v;commit();return}
+  if(t.id==='schShare'){sched().share=t.value;audit('Admin','Schedule: '+(t.value==='order'?'one block after another':'all divisions share the courts'));commit();return}
   if(t.id==='schBuf'){sched().buffer=Math.max(0,Math.min(20,parseInt(t.value,10)||0));commit();return}
   if(t.id==='csvFile'&&t.files&&t.files[0]&&/\.xlsx$/i.test(t.files[0].name)){const f=t.files[0];$('#csvErr').textContent='Reading '+f.name+'…';
     readXlsx(f).then(r=>{$('#csvText').value=r.text;$('#csvErr').textContent='Loaded '+r.rows+' row'+(r.rows===1?'':'s')+' from the "'+r.sheet+'" sheet of '+f.name+'. Click Import.'})
@@ -4373,6 +4448,8 @@ document.addEventListener('change',e=>{
   if(t.id==='refDivF'){applyRefFilter();return}
   if(t.id==='regDiv'){regDiv=t.value;render();return}
   if(t.id==='drawDiv'){drawDiv=t.value;render();return}
+  if(t.id==='dvLevel'){const L=LV[t.value],r=$('#dvRule'),cv=+$('#dvV').value,cv2=+$('#dvV2').value,isPreset=r.value==='none'||(r.value==='range'&&LEVELS.some(x=>x[2]!=null&&Math.abs(x[2]-cv)<1e-9&&Math.abs(x[3]-cv2)<1e-9));
+    if(L&&isPreset){if(L[2]==null)r.value='none';else{r.value='range';$('#dvV').value=L[2].toFixed(1);$('#dvV2').value=L[3].toFixed(2)}}}
   if(t.closest&&t.closest('#divForm')){try{$('#dvPreview').textContent=readDivForm().custom||autoName(readDivForm())}catch(_){}}
 });
 document.addEventListener('input',e=>{if(!App.isActive('tournament'))return;if(e.target.id==='refSearch'){applyRefFilter();return}if(e.target.closest&&e.target.closest('#divForm')){const f=readDivForm();$('#dvPreview').textContent=f.custom||autoName(f)}});
@@ -4393,7 +4470,7 @@ document.addEventListener('submit',e=>{
     else if(d.rating.rule!=='none'&&!(d.rating.v>=2&&d.rating.v<=8&&(d.rating.rule!=='range'||d.rating.v2<=8))){$('#dvErr').textContent='DUPR ratings run from 2.0 to 8.0. Check the rating value.';return}
     if(d.age.rule!=='none'&&!(Number.isInteger(d.age.v)&&d.age.v>=5&&d.age.v<=99)){$('#dvErr').textContent='Enter an age between 5 and 99.';return}
     if(!(Number.isInteger(d.cap)&&d.cap<=128)){$('#dvErr').textContent='Max entries must be a whole number up to 128.';return}
-    if(editDiv){Object.assign(D(editDiv),d);audit('Admin','Edited division rules: '+dname(D(editDiv)));toast('Division updated. Entries re-checked.');editDiv=null}
+    if(editDiv){Object.assign(D(editDiv),d);audit('Admin','Edited division rules: '+dname(D(editDiv)));toast('Division updated. Entries re-checked.');editDiv=null;App.fresh()}
     else{S.divs.push({id:App.uid('d'),...d,status:'open',pools:[],bracket:null});audit('Admin','Created division '+(d.custom||autoName(d)));toast('Division added. Add entries under Registrations.')}
     commit();return}
   if(f.id==='tPub'){const u=$('#tFormUrl').value.trim(),fee=$('#tFee').value.trim();

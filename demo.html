@@ -1480,6 +1480,9 @@ input[type=date]:focus-visible{outline:none;border-color:var(--accent);box-shado
 
 /* v36: unlock draw */
 .unl{margin-bottom:16px}.unl-ask{border-color:color-mix(in srgb,var(--bad) 45%,var(--line));background:var(--bad-soft);display:grid;gap:12px}
+
+/* v39: offline scoresheet entry */
+.sheetbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-weight:500}.sheetbar span{flex:1 1 220px}
 </style>
 
 <header class="top">
@@ -1544,7 +1547,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-07a';
+  const BUILD='2026-11-10a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -3903,7 +3906,8 @@ function refCard(m){
      <div class="row"><span class="clock" data-due="${due}">${fmt(due-now())}</span><span class="muted">until forfeit</span></div>
      <div class="row"><button class="btn primary big" style="flex:1" data-act="start" data-id="${m.id}" ${m.here.a&&m.here.b?'':'disabled'}>Start match</button><button class="btn danger" data-act="forfeitModal" data-id="${m.id}">Forfeit…</button></div>
      <div class="row"><button class="btn sm" data-act="refRelease" data-id="${m.id}">Give back to the desk</button></div></div>`}
-  return `<div class="refcourt">${head}${liveCard(m)}</div>`;
+  const cl=App.cloud(),sheet=cl.on&&cl.tok.staff&&refMe?`<div class="banner sheetbar"><span><b>Offline scoresheet (testing).</b> Scores every tap on this phone first and uploads in the background. The result is not filed in the tournament yet.</span><button class="btn primary" data-act="openSheet" data-id="${m.id}">Open scoresheet</button></div>`:'';
+  return `<div class="refcourt">${head}${sheet}${liveCard(m)}</div>`;
 }
 function applyRefFilter(){
   const box=$('#refRows');if(!box)return;const qv=($('#refSearch')?.value||'').trim().toLowerCase(),dv=$('#refDivF')?.value||'';let n=0;
@@ -4332,6 +4336,11 @@ document.addEventListener('click',e=>{
     case 'lvToEnd':m.live.toUntil=null;break;
     case 'lvTm':{const L=m.live;if(L.tm.since){tmPause(L);toast('Timer paused.')}else{L.tm.since=now();toast('Timer running.')}break}
     case 'lvTmReset':{const L=m.live;L.tm.used=0;L.tm.since=null;toast('Timer reset to '+S.cfg.gameMin+':00. Tap Resume to start.');break}
+    case 'openSheet':{const d=D(m.div),sc=stageScore(m),nm=sd=>E(m[sd]).p.map(pid=>PL(pid).name),cl=App.cloud();
+      const pk={v:1,event:'ev:'+S.id,eventName:S.t.name,match:m.id,cfg:{type:d.type==='doubles'?'doubles':'singles',bo:sc.bo,to:sc.to,w2:!!sc.w2,timer:S.cfg.gameMin||0,switchEnds:true,label:dname(d)+' · '+stageLabel(m),court:m.court?String(m.court):''},
+        teams:{a:nm('a'),b:nm('b')},games:m.games||[],auth:{token:cl.tok.staff,staff:refMe,name:OF(refMe).name,role:cl.staffRole||'ref'},back:location.href.split('#')[0]};
+      try{localStorage.setItem('np-score-open',JSON.stringify(pk))}catch(err){toast('This phone blocked storage, so the scoresheet can\'t open.');return}
+      location.href='scoresheet.html';return}
     case 'refTake':m.ref=refMe;refSel=m.id;audit(OF(refMe).name,'Took '+ename(m.a)+' vs '+ename(m.b));toast('Added to your matches.');break;
     case 'refCall':{const ct=CT(t.dataset.c);if(ct.state!=='free'){toast('Court '+ct.no+' is no longer free.');break}call(ct,m,true);audit(OF(refMe).name,'Called '+ename(m.a)+' vs '+ename(m.b)+' to Court '+ct.no);break}
     case 'refRelease':m.ref=null;refSel='list';audit(refMe?OF(refMe).name:'Referee','Gave back '+ename(m.a)+' vs '+ename(m.b));break;

@@ -1290,6 +1290,7 @@ table.t tbody tr:first-child td{border-top-color:var(--line-2)}
 .hs-h h2,.sp-h2{margin:0;font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:clamp(26px,2.6vw,34px);letter-spacing:-.02em;line-height:1.05}
 .sp-h2{font-size:22px}
 .hs-h p{margin:0;color:var(--muted);flex:1 1 320px;max-width:60ch}
+.hs-h>.btn,.hs-h>.seg-tabs,.hs-h>.hs-more{margin-left:auto}
 .hs-more{margin-left:auto}
 .hub .intro-roles{max-width:none}
 .hub .ir-card{background:var(--surface);border:1px solid var(--line);color:var(--ink);box-shadow:var(--shadow-1)}
@@ -1528,6 +1529,135 @@ input[type=date]:focus-visible{outline:none;border-color:var(--accent);box-shado
 #divForm [data-dv][hidden]{display:none!important}
 input[type=url],input[type=email],input[type=tel],input[type=date],textarea{font:inherit;font-size:16px;padding:9px 10px;min-height:44px;color:inherit;border-radius:10px;border:1px solid var(--line-2);background:var(--surface)}textarea{line-height:1.45}
 .courts-f>span{font-size:13px;font-weight:600}.courts-n{font-size:20px;min-width:2ch;text-align:center}
+
+/* ---------- v45: public site ---------- */
+/* signed-in chip in the site nav */
+.sn-me{display:inline-flex;align-items:center;gap:8px;min-width:0;color:var(--chrome-ink)}
+.sn-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(154,208,64,.16);color:var(--lime);font-weight:800;font-size:14px;border:1px solid rgba(154,208,64,.35);flex:none}
+.sn-who{display:grid;line-height:1.15;min-width:0}.sn-who small{font-size:11px;color:var(--chrome-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}.sn-who b{font-size:14px;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sn-out{background:transparent;border-color:transparent;color:var(--chrome-muted);padding-inline:10px}
+@media (hover:hover) and (pointer:fine){.sn-out:not([disabled]):hover{color:#fff;background:rgba(255,255,255,.08)}}
+@media (max-width:980px){.sn-who{display:none}}
+@media (max-width:760px){.sn-me,.sn-out{display:none}.tabbar{grid-template-columns:repeat(5,minmax(0,1fr))}.tb-i{font-size:10.5px}}
+/* hero */
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:clamp(24px,4vw,64px);align-items:center;justify-items:stretch}
+.hero-grid.solo{grid-template-columns:minmax(0,1fr)}
+.hero-copy{display:grid;gap:18px;justify-items:start;min-width:0}
+.hero-eb{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#cfe8a6}
+.hero-eb i{width:28px;height:2px;background:var(--lime);border-radius:2px}
+.intro-hero{min-height:min(calc(100svh - 57px),860px);background:radial-gradient(900px 620px at 88% 8%,rgba(154,208,64,.14),transparent 62%),radial-gradient(900px 600px at 0% 100%,rgba(110,84,170,.38),transparent 62%),linear-gradient(180deg,#221a2c 0%,#1a1422 100%)}
+.intro-hero .intro-bg{opacity:.55}
+.intro-hero .intro-bg .ball,.intro-hero .intro-bg [class*=ball]{display:none}
+.intro-h{font-size:clamp(44px,6.4vw,92px);max-width:11ch;text-wrap:balance}
+.hero-board{position:relative;display:grid;gap:14px;padding:18px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.14);box-shadow:0 30px 80px -30px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.12);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#f4f1f7;min-width:0}
+.hb-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hb-title{font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:20px;letter-spacing:-.01em}
+.hb-live{font-size:12.5px;font-weight:700;color:#b9b1c4;display:inline-flex;align-items:center;gap:7px}
+.hb-live.on{color:var(--lime)}.hb-live.on::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(154,208,64,.2)}
+.hb-list{display:grid;gap:8px}
+.hb-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(20,14,28,.45);color:inherit;font:inherit;cursor:pointer;min-height:60px;transition:border-color 140ms var(--ease-out),background 140ms var(--ease-out),transform 120ms var(--ease-out)}
+.hb-row.il-ev{border-radius:14px;border-color:rgba(154,208,64,.4);background:rgba(154,208,64,.09)}
+@media (hover:hover) and (pointer:fine){.hb-row:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.08)}.hb-row.il-ev:hover{border-color:rgba(154,208,64,.7)}}
+.hb-row:active{transform:scale(.985)}.hb-row:focus-visible{outline:3px solid #f4f1f7;outline-offset:2px}
+.hb-t{display:grid;gap:2px;min-width:0}.hb-t b{font-size:16px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hb-t small{font-size:13px;color:#b9b1c4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-k{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#cfc7da;white-space:nowrap}.hb-row.il-ev .hb-k{color:var(--lime)}
+.hb-row.il-ev span:nth-child(2){color:inherit;font-weight:inherit;font-size:inherit;text-transform:none;letter-spacing:0;white-space:normal}
+.hb-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.08);color:#d9d2e3}.hb-ic .ico{width:18px;height:18px}
+.hb-sec{display:grid;gap:8px}.hb-lab{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a79fb3}
+.hb-lead{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.hb-lead li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 4px;border-top:1px solid rgba(255,255,255,.08)}.hb-lead li:first-child{border-top:0}
+.hb-lead b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hb-lead span{font-size:13.5px;color:#cfc7da}
+.hb-lead .lb-rank{font-style:normal}
+@media (max-width:900px){.hero-grid{grid-template-columns:minmax(0,1fr)}.intro-hero{min-height:0}.hero-down{display:none}}
+/* hub */
+.hub{gap:clamp(40px,5vw,72px)}
+.hs-h{border-bottom:1px solid var(--line);padding-bottom:12px}
+.hs-h h2{position:relative;padding-left:16px}.hs-h h2::before{content:"";position:absolute;left:0;top:.12em;bottom:.12em;width:5px;border-radius:3px;background:var(--lime)}
+.hub-start .hs-h{border:0;padding:0}
+.intro-roles{max-width:none;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.hub .ir-card{position:relative;background:var(--surface);border-color:var(--line);color:var(--ink);padding:18px 52px 18px 20px;border-radius:16px;box-shadow:var(--shadow-1);min-height:84px}
+.hub .ir-card span{color:var(--muted)}
+.hub .ir-card .ir-go{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--muted);transition:transform 160ms var(--ease-out),background 160ms var(--ease-out)}
+.hub .ir-card .ir-go .ico{width:16px;height:16px}
+@media (hover:hover) and (pointer:fine){.hub .ir-card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--surface)}.hub .ir-card:hover .ir-go{transform:translate(3px,-50%);background:var(--accent-soft);color:var(--accent)}}
+.hub .ir-card.pri{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}.hub .ir-card.pri span{color:color-mix(in srgb,var(--lime-ink) 78%,transparent)}.hub .ir-card.pri .ir-go{background:rgba(0,0,0,.12);color:var(--lime-ink)}
+.hub .ir-card.in{border-color:color-mix(in srgb,var(--lime) 55%,var(--line))}
+.hub .ir-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.intro:not(.pg-home) .ir-go{display:none}
+.cards3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}.cards3>*{max-width:640px}
+.op-about{margin:0;color:var(--muted);font-size:14.5px;line-height:1.45}
+.op-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}.op-acts .btn{min-height:44px}
+a.btn{text-decoration:none}
+/* podium */
+.podium3{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}
+.pod{display:grid;gap:6px;justify-items:center;text-align:center;padding:18px 12px 16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1);min-width:0}
+.pod.p1{padding-top:28px;padding-bottom:22px;border-color:color-mix(in srgb,#d8b23a 55%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,#d8b23a 14%,var(--surface)),var(--surface))}
+.pod-n{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:20px;color:#1b1420;background:#b9c0c9}
+.pod.p1 .pod-n{background:#e0b93f;width:48px;height:48px;font-size:24px}.pod.p3 .pod-n{background:#cf8a55}
+.pod-name{font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:clamp(16px,1.7vw,22px);line-height:1.1;overflow-wrap:anywhere}
+.pod-s{font-size:14px;color:var(--muted)}.pod-s b{color:var(--ink)}
+@media (max-width:560px){.podium3{gap:8px}.pod{padding:14px 6px 12px}.pod.p1{padding-top:20px}.pod-s{font-size:12.5px}}
+.set-h{margin:16px 0 8px;font-size:16px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.set-h small{font-weight:500;color:var(--muted);font-size:13px}
+
+/* ---------- v46: schedule tab ---------- */
+.sch-band{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,1.5fr);gap:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-1);overflow:hidden;margin-bottom:18px}
+.sb-main{display:grid;gap:6px;align-content:start;padding:20px 22px;border-right:1px solid var(--line);min-width:0}
+.sch-band.is-live .sb-main{background:linear-gradient(135deg,color-mix(in srgb,var(--good) 12%,transparent),transparent 70%)}
+.sb-eb{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sb-eb i{width:9px;height:9px;border-radius:50%;background:var(--line-strong,var(--muted))}.sb-eb i.on{background:var(--good);box-shadow:0 0 0 4px color-mix(in srgb,var(--good) 22%,transparent)}
+.sb-state{font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:clamp(24px,2.4vw,32px);letter-spacing:-.02em;line-height:1.05}
+.sb-sub{color:var(--muted);font-size:14.5px;line-height:1.4;max-width:46ch}
+.sb-acts{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end;margin-top:8px}
+.sb-go{min-height:46px;padding-inline:20px;font-size:16px}
+.sb-today{min-width:190px;flex:1 1 190px;max-width:280px}.sb-today>span{font-size:12.5px}
+.sch-band .sb-kpis{margin:0;border:0;border-radius:0;box-shadow:none;background:none;grid-template-columns:repeat(3,minmax(0,1fr));align-content:stretch}
+.sch-band .sb-kpis .kpi{align-content:center}
+@media (max-width:900px){.sch-band{grid-template-columns:minmax(0,1fr)}.sb-main{border-right:0;border-bottom:1px solid var(--line)}}
+@media (max-width:560px){.sch-band .sb-kpis{grid-template-columns:minmax(0,1fr)}}
+.sch-days{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 12px}
+.sch-days .daytabs{margin:0;gap:8px}
+.daytab{display:grid;gap:1px;text-align:left;padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:52px}
+.daytab b{font-size:14.5px}.daytab small{font-size:12.5px;color:var(--muted);font-weight:500}
+.daytab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.daytab[aria-selected="true"] small{color:color-mix(in srgb,var(--accent-ink) 80%,transparent)}
+.sch-dayedit,.sch-set{margin-bottom:16px}.sch-dayedit[hidden],.sch-set[hidden],.blk-ctrl[hidden]{display:none!important}
+.dayrows{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
+.dayrows .dayrow{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(140px,1fr) minmax(110px,.8fr) minmax(110px,.8fr);gap:10px;align-items:end}
+.dayrows .dayrow label:first-child{grid-column:auto}
+@media (max-width:700px){.dayrows .dayrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding-bottom:10px;border-bottom:1px solid var(--line)}}
+.sch-set-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px 28px}
+.page-actions .btn .ico{width:16px;height:16px;margin-right:6px;vertical-align:-3px}
+/* order of play rows */
+.sch-order .blk{grid-template-columns:36px minmax(0,1fr) minmax(128px,auto) auto;gap:8px 16px;align-items:center;padding:12px 0}
+.sch-order .blk.is-done{opacity:.72}
+.blk-bar{display:block;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden;max-width:280px;margin-top:2px}.blk-bar span{display:block;height:100%;background:var(--good);border-radius:3px}
+.sch-order .blk-time{display:grid;gap:2px;justify-items:end;text-align:right;font-size:15px}.sch-order .blk-time small{font-size:12.5px;color:var(--muted)}
+.sch-order .blk-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}
+.blk-mv{display:inline-flex;gap:4px}.btn.sm.ic{min-width:40px;padding-inline:0;font-size:16px;justify-content:center}
+.blk-day{min-height:40px;padding:6px 28px 6px 10px;border-radius:9px;font-size:14px;max-width:130px}
+.blk-opt[aria-expanded="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.sch-order .blk-ctrl{grid-column:2/-1;margin:2px 0 4px;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.blk-courts legend small{font-weight:500}
+.pill.p-set{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+@media (max-width:980px){.sch-order .blk{grid-template-columns:36px minmax(0,1fr) auto}.sch-order .blk-acts{grid-column:2/-1;justify-content:flex-start}}
+@media (max-width:560px){.sch-order .blk{grid-template-columns:36px minmax(0,1fr)}.sch-order .blk-time{grid-column:2;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;text-align:left}.sch-order .blk-time b{white-space:nowrap}.sch-order .blk-ctrl{grid-column:1/-1}.btn.sm.ic,.blk-day,.sch-order .blk-acts .btn.sm{min-height:44px;min-width:44px}}
+
+/* ---------- v47: workspace polish ---------- */
+@media (min-width:900px){
+  .evcard{grid-template-columns:minmax(0,1fr) auto;column-gap:20px;align-items:center;padding:16px 18px}
+  .evcard>*{grid-column:1}
+  .evcard>.row:last-child{grid-column:2;grid-row:1/span 4;align-self:center;flex-wrap:nowrap;gap:8px}
+  .evcard>.row:last-child .btn.danger{margin-left:4px!important}
+}
+.evcard h3{line-height:1.15}
+.evcard .btn.sm.danger{background:none;border-color:transparent}
+@media (hover:hover) and (pointer:fine){.evcard .btn.sm.danger:hover{background:var(--bad-soft,color-mix(in srgb,var(--bad) 12%,transparent))}}
+.side-item[aria-current="page"]{position:relative}
+.side-item[aria-current="page"]::before{content:"";position:absolute;left:3px;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--lime)}
+.side-item.sub[aria-current="page"]::before{left:8px}
+@media (min-width:1100px){.courts:not(.big){grid-template-columns:repeat(auto-fill,minmax(min(100%,246px),1fr))}}
+.page-head{align-items:flex-end}
+.page-head h1{letter-spacing:-.025em}
+.panel>h2{letter-spacing:-.01em}
 </style>
 
 <header class="top">
@@ -1724,7 +1854,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-13b';
+  const BUILD='2026-11-13e';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2256,24 +2386,42 @@ const App=(()=>{
   function ranks(tab,off){
     if(tab==='month'){const w=monthWin(off),b=clubBoard({from:w.from,to:w.to});const r=rkHidden(b.rows).filter(x=>x.g>=1).sort((a,c)=>c.w-a.w||c.wp-a.wp||c.diff-a.diff||c.g-a.g);r.forEach((x,i)=>x.rank=i+1);return{rows:r,games:b.games,label:w.label}}
     const b=clubBoard({});return{rows:rankRows(rkHidden(b.rows),'rating',3),games:b.games,label:'All time'}}
-  function rankTable(R,tab,n){const rows=n?R.rows.slice(0,n):R.rows;
+  function rankTable(R,tab,n,skip){const rows=n?R.rows.slice(skip||0,(skip||0)+n):R.rows;if(skip&&R.rows.length&&!rows.length)return '';
     if(!rows.length)return `<p class="site-empty">${tab==='month'?'No open play games scored '+(rk.off?'in '+esc(R.label):'this month')+' yet. Rankings fill in as games are scored.':'Nobody has 3 open play games yet. Rankings fill in as games are scored.'}</p>`;
     return `<div class="tablebox"><table class="t rk-t"><thead><tr><th class="n">Rank</th><th>Player</th>${tab==='month'?'<th class="n">Wins</th><th class="n">Games</th><th class="n">Win rate</th>':'<th class="n">Club rating</th><th class="n">Games</th><th class="n">Won–lost</th>'}</tr></thead><tbody>
       ${rows.map(r=>`<tr class="${r.rank<=3?'rk-top':''}"><td class="n"><span class="lb-rank r${r.rank<=3?r.rank:''}">${r.rank}</span></td><td><b>${esc(rkName(r.name))}</b></td>${tab==='month'?`<td class="n num"><b>${r.w}</b></td><td class="n num">${r.g}</td><td class="n num">${pct(r.wp)}</td>`:`<td class="n num"><b>${r.rating}</b></td><td class="n num">${r.g}</td><td class="n num">${r.w}–${r.g-r.w}</td>`}</tr>`).join('')}</tbody></table></div>`}
   const rkTabs=()=>`<div class="seg-tabs" role="tablist" aria-label="Ranking period"><button role="tab" class="sg ${rk.tab==='month'?'on':''}" aria-selected="${rk.tab==='month'}" data-app="rkTab" data-t="month">Monthly</button><button role="tab" class="sg ${rk.tab==='all'?'on':''}" aria-selected="${rk.tab==='all'}" data-app="rkTab" data-t="all">All time</button></div>`;
-  function opCards(){const ops=db.events.filter(e=>e.type==='openplay').sort((a,b)=>(liveNow(b)-liveNow(a))||((b.createdAt||0)-(a.createdAt||0))).slice(0,3);
-    return ops.map(e=>{const lv=liveNow(e),here=Object.values(e.checkins||{}).filter(c=>c.status!=='left').length,ss=e.session;
-      return `<article class="opcard ${lv?'is-live':''}"><div class="tc-top">${lv?`<span class="pill tst-live"><span class="tst-dot" aria-hidden="true"></span>Live now</span>`:`<span class="pill tst-soon">${ss.open?'Open':'Session closed'}</span>`}${ss.date?`<span class="tc-when">${esc(ss.date)}</span>`:''}</div>
+  // open play sessions for the public pages: live first, then open or with a join link, then the rest
+  const okUrl=u=>/^https?:\/\/[^\s]+$/i.test(u||'')?u:'';
+  const joinLabel=u=>{try{const h=new URL(u).hostname.replace(/^www\./,'');return /reclub/i.test(h)?'Join on Reclub':/facebook|fb\.me|messenger/i.test(h)?'Join on Facebook':/forms\.gle|google/i.test(h)?'Sign up on the form':'Sign up'}catch(e){return 'Sign up'}};
+  function opInfo(e){const ss=e.session,pub=ss.pub||{},lv=liveNow(e),here=Object.values(e.checkins||{}).filter(c=>c.status!=='left').length,link=okUrl(pub.link);
+    return{e,ss,pub,lv,here,link,courts:(e.courts||[]).length,up:lv||ss.open||!!link,rank:lv?0:ss.open?1:link?2:3}}
+  const opList=()=>db.events.filter(e=>e.type==='openplay').map(opInfo).sort((a,b)=>a.rank-b.rank||((b.e.createdAt||0)-(a.e.createdAt||0)));
+  function opCard(i){const ss=i.ss,pub=i.pub,when=pub.when||ss.date;
+    return `<article class="opcard ${i.lv?'is-live':''}"><div class="tc-top">${i.lv?`<span class="pill tst-live"><span class="tst-dot" aria-hidden="true"></span>Live now</span>`:`<span class="pill ${ss.open?'tst-open':i.link?'tst-soon':'tst-done'}">${ss.open?'Open for check-in':i.link?'Upcoming':'Session closed'}</span>`}${when?`<span class="tc-when">${esc(when)}</span>`:''}</div>
         <h3>${esc(ss.name)}</h3>${ss.venue?`<p class="tc-venue">${esc(ss.venue)}</p>`:''}
-        <p class="op-meta">${(e.courts||[]).length} court${(e.courts||[]).length===1?'':'s'}${lv?` · ${here} playing tonight`:''}</p>
-        ${lv||ss.open?`<button class="btn primary" data-app="playEv" data-id="${esc(e.id)}">Check in</button>`:''}</article>`}).join('')}
-  function siteNav(){const on=k=>pg===k||(k==='tours'&&(pg.startsWith('t:')||pg.startsWith('s:')))?'aria-current="page"':'';
+        ${pub.about?`<p class="op-about">${esc(pub.about)}</p>`:''}
+        <dl class="tc-facts"><div><dt>Courts</dt><dd>${i.courts}</dd></div>${pub.fee?`<div><dt>Fee</dt><dd>${php(pub.fee)} per player</dd></div>`:''}<div><dt>${i.lv?'Here now':'Games'}</dt><dd>${i.lv?i.here+' player'+(i.here===1?'':'s'):'To '+(ss.gameTo||11)+(ss.rule==='winners'?', winners stay':'')}</dd></div></dl>
+        ${i.lv||ss.open||i.link?`<div class="op-acts">${i.lv||ss.open?`<button class="btn primary" data-app="playEv" data-id="${esc(i.e.id)}">Check in</button>`:''}${i.link?`<a class="btn ${i.lv||ss.open?'':'primary'}" href="${esc(i.link)}" target="_blank" rel="noopener">${esc(joinLabel(i.link))}</a>`:''}</div>`:''}</article>`}
+  function opCards(){return opList().slice(0,3).map(opCard).join('')}
+  function openPage(){const all=opList(),up=all.filter(i=>i.up),past=all.filter(i=>!i.up).slice(0,6);
+    return `<div class="site-page"><div class="sp-head"><h1>Open play</h1><p>Drop in and play. Sign up for a session, check in when you arrive, and the queue fills every court fairly.</p></div>
+      <section class="hub-sec"><h2 class="sp-h2">On now and coming up</h2>${up.length?`<div class="cards3">${up.map(opCard).join('')}</div>`:'<p class="site-empty">No open play sessions are scheduled yet. Check back soon.</p>'}</section>
+      ${past.length?`<section class="hub-sec"><h2 class="sp-h2">Earlier sessions</h2><div class="cards3">${past.map(opCard).join('')}</div></section>`:''}</div>`}
+  // staff signed in on this device (or the practice copy, where everything is open)
+  const staffIn=()=>{const me=staffMe();if(mode&&(mode.role==='all'||(me&&(mode.role==='admin'||mode.role==='ref'))))return{name:me?me.name:'',role:mode.role};
+    // an email or Google sign-in is remembered by the browser: a new tab is one tap from the workspace, so say so
+    if(!mode&&acctOn()&&AC.sess&&acctEmail())return{name:acctEmail(),role:'acct'};return null};
+  const playerIn=()=>mode&&mode.role==='player'&&mode.id?db.players.find(x=>x.id===mode.id)||null:null;
+  function siteNav(){const on=k=>pg===k||(k==='tours'&&(pg.startsWith('t:')||pg.startsWith('s:')))?'aria-current="page"':'';const st=staffIn(),pl=playerIn();
     return `<header class="site-nav"><div class="sn-in"><button class="sn-brand" data-app="pg" data-pg="home" aria-label="Next Point Pickleball home"><img src="${LOGO_TILE}" alt="" width="36" height="36"><span class="bn"><b>Next Point</b><small>Pickleball</small></span></button>
-      <nav class="sn-links" aria-label="Site"><button data-app="pg" data-pg="home" ${gate?'':on('home')}>Home</button><button data-app="pg" data-pg="tours" ${gate?'':on('tours')}>Tournaments</button><button data-app="pg" data-pg="ranks" ${gate?'':on('ranks')}>Rankings</button></nav>
-      <div class="sn-acts"><button class="btn sn-staff" data-app="enter" data-v="staff">Staff sign-in</button><button class="btn sn-play" data-app="enter" data-v="player">I'm playing</button></div></div></header>`}
+      <nav class="sn-links" aria-label="Site"><button data-app="pg" data-pg="home" ${gate?'':on('home')}>Home</button><button data-app="pg" data-pg="open" ${gate?'':on('open')}>Open play</button><button data-app="pg" data-pg="tours" ${gate?'':on('tours')}>Tournaments</button><button data-app="pg" data-pg="ranks" ${gate?'':on('ranks')}>Rankings</button></nav>
+      <div class="sn-acts">${st?`${st.name?`<span class="sn-me" title="Signed in as ${esc(st.name)}"><span class="sn-av" aria-hidden="true">${esc(Array.from(st.name.trim())[0]||'?').toUpperCase()}</span><span class="sn-who"><small>${st.role==='ref'?'Referee':st.role==='acct'?'Signed in':'Admin'}</small><b>${esc(st.name)}</b></span></span><button class="btn sn-out" data-app="exitMode">Sign out</button>`:''}<button class="btn sn-play" data-app="enter" data-v="staff">${st.role==='ref'?'My matches':'Workspace'}</button>`
+        :`<button class="btn sn-staff" data-app="enter" data-v="staff">Staff sign-in</button><button class="btn sn-play" data-app="${pl?'myGames':'enter'}" data-v="player">${pl?'My games':"I'm playing"}</button>`}</div></div></header>`}
   function tabBar(){const play=view==='player'||view==='public'||view==='ref';const on=k=>(k==='play'?play:view==='intro'&&!gate&&(pg===k||(k==='tours'&&(pg.startsWith('t:')||pg.startsWith('s:')))))?'aria-current="page"':'';
     const it=(k,ic,l,attrs)=>`<button class="tb-i" ${attrs} ${on(k)}>${icon(ic)}<span>${l}</span></button>`;
-    return `<nav class="tabbar" aria-label="Main">${it('home','home','Home','data-app="pg" data-pg="home"')}${it('tours','cal','Tournaments','data-app="pg" data-pg="tours"')}${it('ranks','trophy','Rankings','data-app="pg" data-pg="ranks"')}${it('play','user',mode&&mode.role==='ref'?'Referee':'My games','data-app="myGames"')}</nav>`}
+    const st=staffIn();
+    return `<nav class="tabbar" aria-label="Main">${it('home','home','Home','data-app="pg" data-pg="home"')}${it('open','live','Open play','data-app="pg" data-pg="open"')}${it('tours','cal','Tournaments','data-app="pg" data-pg="tours"')}${it('ranks','trophy','Rankings','data-app="pg" data-pg="ranks"')}${st&&st.role!=='ref'?it('play','user','Workspace','data-app="enter" data-v="staff"'):it('play','user',mode&&mode.role==='ref'?'Referee':'My games','data-app="myGames"')}</nav>`}
   function storyHtml(){
     const steps=[["Check in at open play.","Tap once when you arrive. The queue fills every court fairly, so nobody sits out too long."],["Your phone tells you when you're up.","Court number, partner, opponents and a countdown. Tap \"I'm on my way\" and the desk knows."],["Every game counts.","Wins move you up the monthly club rankings. A new month, a new race to the top."]];
     return `<section class="story" id="story" data-step="0" aria-label="How Next Point works"><div class="st-stage">
@@ -2285,28 +2433,50 @@ const App=(()=>{
       </div></div></section>`}
   function homeHub(){
     if(storyOn===null)storyOn=!storySeen();const live=db.events.filter(liveNow),T=tSorted(),R=ranks(rk.tab,rk.tab==='month'?rk.off:0),showStory=storyOn;
-    const role=(v,t,d,cls)=>`<button class="ir-card ${cls||''}" data-app="enter" data-v="${v}"><b>${t}</b><span>${d}</span></button>`;
+    const role=(v,t,d,cls)=>`<button class="ir-card ${cls||''}" data-app="enter" data-v="${v}"><b>${t}</b><span>${d}</span><i class="ir-go" aria-hidden="true">${icon('arrow')}</i></button>`;
+    const st=staffIn();
+    // "At the club": what is on right now, what is next, who leads this month
+    const board=(()=>{
+      const rows=live.slice(0,3).map(e=>{let sub;
+        if(e.type==='openplay'){const here=Object.values(e.checkins||{}).filter(c=>c.status!=='left').length,busy=(e.courts||[]).filter(c=>c.state==='play'||c.state==='assigned').length;sub=`${here} here · ${busy} of ${(e.courts||[]).length} courts playing`}
+        else{const ms=(e.matches||[]).filter(m=>m.result!=='bye'),dn=ms.filter(m=>m.status==='done').length,busy=(e.courts||[]).filter(c=>c.match).length;sub=`${busy} of ${(e.courts||[]).length} courts in play · ${dn} of ${ms.length} matches done`}
+        return `<button class="il-ev hb-row" data-app="enterEv" data-id="${e.id}"><span class="il-dot" aria-hidden="true"></span><span class="hb-t"><b>${esc(evName(e))}</b><small>${esc(sub)}</small></span><span class="hb-k">Live</span></button>`}).join('');
+      const nx=T.up.find(i=>i.st.k!=='live'),nxo=opList().find(i=>!i.lv&&i.up);
+      const days=v=>{if(!/^\d{4}-\d\d-\d\d$/.test(v||''))return '';const [y,m,d]=v.split('-').map(Number),n=Math.round((new Date(y,m-1,d)-new Date(new Date().toDateString()))/864e5);return n<0?'':n===0?'Today':n===1?'Tomorrow':'In '+n+' days'};
+      const next=(nx?`<button class="hb-row" data-app="pg" data-pg="t:${esc(nx.ev.id)}"><span class="hb-ic" aria-hidden="true">${icon('trophy')}</span><span class="hb-t"><b>${esc(nx.t.name)}</b><small>${esc([nx.t.dates||fmtYmd(nx.t.start),nx.st.l+(nx.regOpen&&nx.cap?' · '+nx.left+' slots left':'')].filter(Boolean).join(' · '))}</small></span><span class="hb-k">${esc(days(nx.t.start))}</span></button>`:'')+
+        (nxo?`<button class="hb-row" data-app="pg" data-pg="open"><span class="hb-ic" aria-hidden="true">${icon('live')}</span><span class="hb-t"><b>${esc(nxo.ss.name)}</b><small>${esc([nxo.pub.when||nxo.ss.date,nxo.ss.venue].filter(Boolean).join(' · ')||'Open play')}</small></span><span class="hb-k">${nxo.ss.open?'Open':''}</span></button>`:'');
+      const mo=ranks('month',0).rows.slice(0,3);
+      if(!rows&&!next&&!mo.length)return '';
+      return `<aside class="hero-board" aria-label="At the club">
+        <div class="hb-h"><span class="hb-title">At the club</span><span class="hb-live ${live.length?'on':''}">${live.length?live.length+' live now':'Nothing live right now'}</span></div>
+        ${rows?`<div class="hb-list">${rows}</div>`:''}
+        ${next?`<div class="hb-sec"><span class="hb-lab">Next up</span><div class="hb-list">${next}</div></div>`:''}
+        ${mo.length?`<div class="hb-sec"><span class="hb-lab">This month's leaders</span><ol class="hb-lead">${mo.map(r=>`<li><i class="lb-rank r${r.rank}">${r.rank}</i><b>${esc(rkName(r.name))}</b><span class="num">${r.w} win${r.w===1?'':'s'}</span></li>`).join('')}</ol></div>`:''}
+      </aside>`})();
     const resume=(()=>{const r=remGet(),p=r&&db.players.find(x=>x.id===r.id);return p?`<button class="ir-resume" data-app="resume" data-id="${esc(p.id)}"><span>Continue as</span><b>${esc(p.name)}</b></button>`:''})();
     return `<section class="intro-hero"><div class="intro-bg" aria-hidden="true">${COURT_SVG}${BALL_SVG}</div>
-      <div class="intro-in">
-        <img class="intro-logo" src="${LOGO_LOCK}" alt="Next Point Pickleball">
-        <h1 class="intro-h">${esc(introTxt('h'))}</h1>
-        <p class="intro-p">${esc(introTxt('p'))}</p>
-        ${live.length?`<div class="intro-live">${live.map(e=>`<button class="il-ev" data-app="enterEv" data-id="${e.id}"><span class="il-dot"></span><span>Live now</span><b>${esc(evName(e))}</b></button>`).join('')}</div>`:''}
-        <div class="hero-cta">${resume||`<button class="btn hc-pri" data-app="enter" data-v="player">I'm playing</button>`}<button class="btn hc-sec" data-app="pg" data-pg="tours">See tournaments</button></div>
-        <button class="hero-down" data-app="${showStory?'toStory':'toHub'}">${showStory?'How it works':'Events and rankings'} <span aria-hidden="true">↓</span></button>
+      <div class="intro-in hero-grid ${board?'':'solo'}">
+        <div class="hero-copy">
+          <span class="hero-eb"><i aria-hidden="true"></i>Open play · Tournaments · Rankings</span>
+          <h1 class="intro-h">${esc(introTxt('h'))}</h1>
+          <p class="intro-p">${esc(introTxt('p'))}</p>
+          <div class="hero-cta">${st?`<button class="btn hc-pri" data-app="enter" data-v="staff">${st.role==='ref'?'My matches':'Open workspace'}</button>`:resume||`<button class="btn hc-pri" data-app="enter" data-v="player">I'm playing</button>`}<button class="btn hc-sec" data-app="pg" data-pg="open">Open play</button><button class="btn hc-sec" data-app="pg" data-pg="tours">Tournaments</button></div>
+          <button class="hero-down" data-app="${showStory?'toStory':'toHub'}">${showStory?'How it works':'Events and rankings'} <span aria-hidden="true">↓</span></button>
+        </div>
+        ${board}
       </div></section>
       ${showStory?storyHtml()+`<section class="st-outro"><blockquote class="intro-q"><p>${esc(introTxt('q'))}</p><cite>${esc(introTxt('by'))}</cite></blockquote></section>`:''}
       <div class="hub" id="hub">
         <section class="hub-sec hub-start"><div class="hs-h"><h2>Get started</h2></div>
-          ${resume}<div class="intro-roles">${csLocked()?role('player',"I'm playing",'Sign in to see when you\'re up, get alerts and follow the courts','pri'):role('public','Watch live courts','Courtside: scores, courts and who plays next','pri')+role('player',"I'm playing",'Check in and see when you\'re up')}${role('staff','Staff sign-in','Admins and referees')}</div>
+          ${resume}<div class="intro-roles">${csLocked()?role('player',"I'm playing",'Sign in to see when you\'re up, get alerts and follow the courts','pri'):role('public','Watch live courts','Courtside: scores, courts and who plays next','pri')+role('player',"I'm playing",'Check in and see when you\'re up')}${st?role('staff',st.role==='ref'?'My matches':'Open workspace',st.name?'Signed in as '+esc(st.name):'Run events, courts and scores','in'):role('staff','Staff sign-in','Admins and referees')}</div>
           ${csLocked()?'<p class="intro-note">Watching? Follow the big screen at the venue.</p>':''}
           ${DEMO&&window.SAMPLE?`<button class="intro-sample" data-app="sampleModal">New here? Load a sample tournament to try everything</button>`:''}</section>
-        ${db.events.some(e=>e.type==='openplay')?`<section class="hub-sec"><div class="hs-h"><h2>Open play</h2><p>Drop in, check in, play. The queue does the rest.</p></div><div class="cards3">${opCards()}</div></section>`:''}
+        ${db.events.some(e=>e.type==='openplay')?`<section class="hub-sec"><div class="hs-h"><h2>Open play</h2><p>Drop in, check in, play. The queue does the rest.</p><button class="btn linkish hs-more" data-app="pg" data-pg="open">All open play</button></div><div class="cards3">${opCards()}</div></section>`:''}
         <section class="hub-sec"><div class="hs-h"><h2>Tournaments</h2><p>Run by Next Point. Register through the form, then follow every court live on the day.</p>${T.up.length+T.past.length>3?`<button class="btn linkish hs-more" data-app="pg" data-pg="tours">All tournaments</button>`:''}</div>
           ${T.up.length?`<div class="cards3">${T.up.slice(0,3).map(tCard).join('')}</div>`:`<p class="site-empty">No upcoming tournaments yet. Check back soon.${T.past.length?' <button class="btn linkish" data-app="pg" data-pg="tours">See past results</button>':''}</p>`}</section>
         <section class="hub-sec"><div class="hs-h"><h2>Rankings</h2><p>${rk.tab==='month'?'Most open play wins this month. Resets on the 1st.':'Club rating across every open play game.'}</p>${rkTabs()}</div>
-          <div class="panel rk-panel">${rankTable(R,rk.tab,5)}<button class="btn rk-all" data-app="pg" data-pg="ranks">Full rankings</button></div></section>
+          ${R.rows.length>=3?`<ol class="podium3">${[R.rows[1],R.rows[0],R.rows[2]].map(r=>`<li class="pod p${r.rank}"><span class="pod-n">${r.rank}</span><b class="pod-name">${esc(rkName(r.name))}</b><span class="pod-s">${rk.tab==='month'?`<b class="num">${r.w}</b> win${r.w===1?'':'s'} · ${pct(r.wp)}`:`<b class="num">${r.rating}</b> rating · ${r.w}–${r.g-r.w}`}</span></li>`).join('')}</ol>`:''}
+          <div class="panel rk-panel">${rankTable(R,rk.tab,5,R.rows.length>=3?3:0)}<button class="btn rk-all" data-app="pg" data-pg="ranks">Full rankings</button></div></section>
       </div>`}
   function toursPage(){const T=tSorted();
     return `<div class="site-page"><div class="sp-head"><h1>Tournaments</h1><p>Every tournament Next Point runs, with divisions, entry fees and how to register.</p></div>
@@ -2411,7 +2581,7 @@ const App=(()=>{
   const rkName=n=>{if((db.settings&&db.settings.rankNames)==='full')return n;const w=String(n||'').trim().split(/\s+/);return w.length>1?w[0]+' '+Array.from(w[w.length-1])[0]+'.':w[0]};
   let resDiv={};
   function introHtml(){
-    const body=gate?`<div class="site-gate">${gateHtml()}</div>`:pg==='tours'?toursPage():pg.startsWith('t:')?tourPage(pg.slice(2)):pg.startsWith('s:')?schedPage(pg.slice(2)):pg==='privacy'?privacyPage():pg==='ranks'?ranksPage():homeHub();
+    const body=gate?`<div class="site-gate">${gateHtml()}</div>`:pg==='tours'?toursPage():pg==='open'?openPage():pg.startsWith('t:')?tourPage(pg.slice(2)):pg.startsWith('s:')?schedPage(pg.slice(2)):pg==='privacy'?privacyPage():pg==='ranks'?ranksPage():homeHub();
     return `<section class="intro site pg-${gate?'gate':pg.split(':')[0]}">${siteNav()}${body}
       <footer class="site-foot"><p class="intro-ver"><span class="iv-dot" data-s="${CL.on?(CL.ready?'ok':CL.offline?'off':'wait'):CLOUD_WANTED?'off':'local'}"></span>${CL.on?(CL.ready?'Connected to the club database':CL.offline?'No connection yet, retrying…':'Connecting to the club database…'):CLOUD_WANTED?"Not connected: this browser couldn't start the live connection":'Practice copy: saved in this browser only'} · version ${BUILD}</p><button class="btn linkish" data-app="pg" data-pg="privacy">Privacy notice</button>${storyOn===false&&pg==='home'&&!gate?'<button class="btn linkish" data-app="replayStory">Replay the intro</button>':''}</footer></section>`;
   }
@@ -2426,7 +2596,7 @@ const App=(()=>{
   addEventListener('scroll',()=>{if(!stRaf&&document.getElementById('story'))stRaf=requestAnimationFrame(storyTick)},{passive:true});
   addEventListener('resize',()=>{if(document.getElementById('story'))storyTick()},{passive:true});
   function goPg(v,push){pg=v;gate=null;gateErr='';view='intro';pendingTop=true;
-    if(push!==false){const h=v==='home'?'#home':v==='tours'?'#tournaments':v==='ranks'?'#rankings':v==='privacy'?'#privacy':v.startsWith('s:')?'#s='+v.slice(2):'#t='+v.slice(2);try{if(location.hash!==h)history.pushState(null,'',location.pathname+location.search+h)}catch(e){}}render()}
+    if(push!==false){const h=v==='home'?'#home':v==='open'?'#openplay':v==='tours'?'#tournaments':v==='ranks'?'#rankings':v==='privacy'?'#privacy':v.startsWith('s:')?'#s='+v.slice(2):'#t='+v.slice(2);try{if(location.hash!==h)history.pushState(null,'',location.pathname+location.search+h)}catch(e){}}render()}
   /* ---------- TV mode ---------- */
   const kiosk={on:false,page:0,t0:0,wl:null,fs:false};
   function playerLink(){return db.playerUrl||(/^https?:/.test(location.protocol)?location.href.split('#')[0]+'#player':'')}
@@ -2496,7 +2666,7 @@ const App=(()=>{
     playerLogin(j.id,j.pin).then(r=>{if(!r.ok){toast(pinErr(r.err));return}resume(j.id);toast('Signed in as '+p.name+'.');render()})}
   function doAck(){if(!pendAck||(CL.on&&!CL.ready))return;const a=pendAck;pendAck=null;if(!lastMe){toast('Sign in, then tap "I\'m on my way".');return}ackMatch(a.ev,a.mid)}
   function deepLink(h){
-    if(h==='home'||h==='tournaments'||h==='rankings'||h==='privacy'||h.startsWith('t=')||h.startsWith('s=')){pg=h==='home'?'home':h==='tournaments'?'tours':h==='rankings'?'ranks':h==='privacy'?'privacy':h.startsWith('s=')?'s:'+h.slice(2):'t:'+h.slice(2);gate=null;view='intro';return}
+    if(h==='home'||h==='openplay'||h==='tournaments'||h==='rankings'||h==='privacy'||h.startsWith('t=')||h.startsWith('s=')){pg=h==='home'?'home':h==='openplay'?'open':h==='tournaments'?'tours':h==='rankings'?'ranks':h==='privacy'?'privacy':h.startsWith('s=')?'s:'+h.slice(2):'t:'+h.slice(2);gate=null;view='intro';return}
     if(h.startsWith('join=')){const [id,pin]=h.slice(5).split('.');clearHash();if(id&&/^\d{6}$/.test(pin||'')){pendJoin={id,pin};mode={role:'player'};saveMode();gate=null;view='player';setTimeout(doJoin,0)}return}
     if(h.startsWith('here=')){const [ev,mid]=h.slice(5).split('.');clearHash();const r=remGet();if(r&&!lastMe)resume(r.id);if(!mode||mode.role==='viewer'){mode={role:'player'};saveMode()}
       if(mode.role==='player'){if(ev&&db.events.some(e=>e.id===ev)){db.cur=ev;home=false}view='player';pendAck={ev,mid};setTimeout(doAck,0)}return}
@@ -2634,7 +2804,7 @@ const App=(()=>{
       case 'delPlModal':modal={pl:id};renderAppModal();return;
       case 'kioskOn':kioskOn();break;
       case 'intro':pendingTop=true;go('intro');return;
-      case 'enter':{const v=t.dataset.v;if(v!=='staff'){enterPlayer(v);return}const me=staffMe();if(me){enterStaff(me);return}gate='signin';gateErr='';render();setTimeout(()=>{const f=document.querySelector('#geEmail,#gPin,#gsName');f&&f.focus()},0);return}
+      case 'enter':{const v=t.dataset.v;if(v!=='staff'){enterPlayer(v);return}const me=staffMe();if(me){enterStaff(me);return}if(!mode&&acctOn()&&AC.sess&&t.closest('.site-nav,.intro-hero,.hub,.tabbar')){gate='signin';gateErr='';acctGo();return}gate='signin';gateErr='';render();setTimeout(()=>{const f=document.querySelector('#geEmail,#gPin,#gsName');f&&f.focus()},0);return}
       case 'enterEv':db.cur=id;enterPlayer('public');return;
       case 'resume':{const r=remGet();if(r&&r.id===id){resume(id);render()}return}
       case 'pushOn':pushOn(id);return;
@@ -3055,6 +3225,13 @@ function renderAdmin(){
           <label class="check"><input type="checkbox" id="setAuto" ${S.session.autoFill?'checked':''}> Call players automatically when a court opens</label>
           <div class="row"><span class="muted">Courts: ${S.courts.length}</span><button class="btn sm" data-act="addCourt">Add court</button><button class="btn sm" data-act="removeCourt">Remove last</button></div>
         </div>
+        <h3 class="set-h">Public listing <small>shown on the Open play page</small></h3>
+        <div class="settings">
+          <label class="f">When<input type="text" id="opWhen" value="${esc((S.session.pub||{}).when||'')}" placeholder="Every Thursday, 6–10 PM"></label>
+          <label class="f">Fee per player (₱)<input type="number" id="opFee" min="0" step="1" value="${(S.session.pub||{}).fee||''}" placeholder="Leave blank to hide"></label>
+          <label class="f" style="grid-column:1/-1">Join link (Reclub meet, form or group chat)<input type="url" id="opLink" value="${esc((S.session.pub||{}).link||'')}" placeholder="https://reclub.co/…"></label>
+          <label class="f" style="grid-column:1/-1">Note for players<input type="text" id="opAbout" maxlength="160" value="${esc((S.session.pub||{}).about||'')}" placeholder="All levels welcome. Paddles to borrow at the desk."></label>
+        </div>
         <p class="muted" style="margin:12px 0 0">Overrides: <b>To front</b> on anyone in line, <b>Swap player</b> or <b>Reassign court</b> on a called court, or <b>Hold court</b> to stop auto-calling so you can choose players yourself. Who plays next by default: fewest games played first. Ties go to whoever has waited longest. Set a court's level from the menu on its card to split players by skill.</p>
       </details>
       ${App.tools()?`<details class="panel" id="demoPanel" ${S.ui&&S.ui.demo?'open':''}><summary>Testing tools</summary>
@@ -3299,7 +3476,9 @@ document.addEventListener('change',e=>{
   if(!App.isActive('openplay'))return;
   const t=e.target;
   if(t.dataset.level){const ct=CT(t.dataset.level);ct.level=t.value;commit();return}
-  const map={setRule:v=>S.session.rule=v,setTeams:v=>S.session.teams=v,setTo:v=>S.session.gameTo=+v,setNoShow:v=>S.session.noShow=+v,setWin:v=>{if(v==='w2')S.session.win2=true;else delete S.session.win2}};
+  const pubSet=(k,v)=>{const o={...(S.session.pub||{})};if(v===''||v==null)delete o[k];else o[k]=v;S.session.pub=o};
+  if(t.id==='opLink'&&t.value.trim()&&!/^https?:\/\/\S+$/i.test(t.value.trim())){toast('Paste the full link, starting with https://');return}
+  const map={opWhen:v=>pubSet('when',v.trim()),opFee:v=>pubSet('fee',Math.max(0,Math.round(+v)||0)||''),opLink:v=>pubSet('link',v.trim()),opAbout:v=>pubSet('about',v.trim()),setRule:v=>S.session.rule=v,setTeams:v=>S.session.teams=v,setTo:v=>S.session.gameTo=+v,setNoShow:v=>S.session.noShow=+v,setWin:v=>{if(v==='w2')S.session.win2=true;else delete S.session.win2}};
   if(map[t.id]){map[t.id](t.value);commit()}
   if(t.id==='setAuto'){S.session.autoFill=t.checked;commit()}
 });
@@ -3344,7 +3523,7 @@ return{
 const TM=(()=>{
 
 const YEAR=new Date().getFullYear();
-let schedDay=null;
+let schedDay=null,schUi={days:false,set:false,opt:{}};
 let S,view='admin',sub='live',me=null,refMe=null,refSel=null,modal=null,pubDiv=null,regDiv='all',drawDiv=null,editDiv=null,unlockAsk=null,addDiv=false;
 
 /* ---------- helpers ---------- */
@@ -4229,10 +4408,19 @@ function adminSched(){
   const pr=project(),g=schedGate(),tips=scheduleTips(),plan=sc.today<0,di=schedDay==null?Math.max(0,sc.today):Math.min(schedDay,sc.days.length-1),day=sc.days[di],cur=plan?di:sc.today;
   const bl=ordered().filter(b=>b.day===di),fin=dayFinish(pr,cur),tday=sc.days[cur],late=fin!=null?fin-hm(tday.end):0,dr=plan?null:planDrift(pr);
   const left=ordered().filter(b=>b.day===cur).reduce((a,b)=>a+((pr.get(b.id)||{}).n||0),0);
-  const kp=(plan?App.kpi('Status','Planning','no games are called until you start a day'):App.kpi('Today',esc(tday.label),(dayDate(tday)?dayDate(tday)+' · ':'')+fmtT(hm(tday.start))+' – '+fmtT(hm(tday.end))))+
-    App.kpi('Projected finish',fin!=null?fmtT(r5(fin)):'—',(plan?esc(dayName(tday))+': ':'')+(fin==null?'nothing scheduled '+(plan?'yet':'today'):late>5?Math.round(late)+' min past the end of the day':'within the day'),fin!=null&&late>5?'warn':'good')+
-    App.kpi('Vs saved plan',dr==null?'—':Math.abs(dr)<5?'On plan':(dr>0?'+':'−')+Math.round(Math.abs(dr))+' min',dr==null?'save a plan to track drift':dr>=5?'behind':dr<=-5?'ahead':'within 5 min',dr!=null&&dr>=10?'warn':'')+
-    App.kpi(plan?'Games on '+esc(tday.label):'Games left today',Math.round(left),ordered().filter(b=>b.day===cur&&blockState(b)!=='done').length+' blocks'+(plan?'':' still to finish'));
+  const td=todayYmd(),match=sc.days.findIndex(x=>x.date===td),startI=match>=0?match:di,nextI=!plan&&cur<sc.days.length-1&&ordered().filter(x=>x.day===cur).every(x=>blockState(x)==='done')&&ordered().some(x=>x.day===cur)?cur+1:-1;
+  const kp=App.kpi('Projected finish',fin!=null?fmtT(r5(fin)):'—',(plan?esc(tday.label)+': ':'')+(fin==null?'nothing scheduled '+(plan?'yet':'today'):late>5?Math.round(late)+' min past the end of the day':'within the day'),fin!=null&&late>5?'warn':'good')+
+    App.kpi(plan?'Games on '+esc(tday.label):'Games left today',Math.round(left),ordered().filter(b=>b.day===cur&&blockState(b)!=='done').length+' blocks'+(plan?'':' still to finish'))+
+    App.kpi('Vs saved plan',dr==null?'—':Math.abs(dr)<5?'On plan':(dr>0?'+':'−')+Math.round(Math.abs(dr))+' min',dr==null?(sc.plan?'starts once a day is running':'save a plan to track drift'):dr>=5?'behind':dr<=-5?'ahead':'within 5 min',dr!=null&&dr>=10?'warn':'');
+  const band=`<section class="sch-band ${plan?'is-plan':'is-live'}">
+    <div class="sb-main">
+      <span class="sb-eb">${plan?'<i aria-hidden="true"></i>Not started':'<i class="on" aria-hidden="true"></i>Running now'}</span>
+      <b class="sb-state">${plan?'Planning':esc(tday.label)+' is running'}</b>
+      <span class="sb-sub">${plan?'Arrange the days freely. No games are called to courts until you start a day.':(dayDate(tday)?dayDate(tday)+' · ':'')+fmtT(hm(tday.start))+' – '+fmtT(hm(tday.end))+'. Games go to free courts by themselves.'}</span>
+      <div class="sb-acts">${plan?`<button class="btn primary sb-go" data-act="startDay" data-i="${startI}">Start ${esc(sc.days[startI].label)}</button>`:nextI>=0?`<button class="btn primary sb-go" data-act="startDay" data-i="${nextI}">Start ${esc(sc.days[nextI].label)}</button>`:''}
+        <label class="f sb-today"><span>Today is</span><select id="schToday"><option value="-1" ${sc.today<0?'selected':''}>Not started (planning)</option>${sc.days.map((dd,i)=>`<option value="${i}" ${sc.today===i?'selected':''}>${esc(dayName(dd))}</option>`).join('')}</select></label></div>
+    </div>
+    <div class="kpis sb-kpis">${kp}</div></section>`;
   const statusPill=b=>{const x=g.get(b.id),st=x.state;
     if(st==='draft')return '<span class="pill p-muted">Draw not locked</span>';
     if(st==='done')return '<span class="pill p-done">Finished</span>';
@@ -4241,43 +4429,48 @@ function adminSched(){
     if(x.open)return st==='playing'?'<span class="pill p-play">Playing</span>':'<span class="pill p-ok">Open</span>';
     return `<span class="pill p-muted">${esc(x.why)}</span>`};
   const tl=timeline(bl,pr,di);
-  const rows=bl.map((b,k)=>{const x=pr.get(b.id)||{},st=g.get(b.id).state,ms=blockMatches(b),dn=ms.filter(m=>m.status==='done').length,p=sc.plan&&sc.plan.b[b.id];
-    const delta=p&&!x.done?(x.started?x.e-p.e:x.s-p.s):null;
-    const d=D(b.div),f=b.stage==='pool'?d.score.pool:d.score.po;
-    return `<li class="blk">
+  const rows=bl.map((b,k)=>{const x=pr.get(b.id)||{},st=g.get(b.id).state,ms=blockMatches(b),dn=ms.filter(m=>m.status==='done').length,pl=sc.plan&&sc.plan.b[b.id];
+    const delta=pl&&!x.done?(x.started?x.e-pl.e:x.s-pl.s):null;
+    const d=D(b.div),f=b.stage==='pool'?d.score.pool:d.score.po,lim=b.courts&&b.courts.length,op=!!schUi.opt[b.id];
+    const set=[b.mode==='time'?'Starts at '+fmtT(hm(b.at||'00:00')):b.mode==='manual'?'Desk starts it':'',lim?'Court'+(b.courts.length===1?' ':'s ')+[...b.courts].sort((m,n)=>m-n).join(', ')+' only':''].filter(Boolean);
+    return `<li class="blk ${st==='done'?'is-done':''} ${op?'is-open':''}">
       <span class="blk-n num">${k+1}</span>
       <div class="blk-main">
-        <div class="blk-top"><span class="li-t">${esc(blockName(b))}</span>${statusPill(b)}</div>
+        <div class="blk-top"><span class="li-t">${esc(blockName(b))}</span>${statusPill(b)}${set.map(t=>`<span class="pill p-set">${esc(t)}</span>`).join('')}</div>
         <div class="li-m">${st==='draft'?'About '+Math.round(blockWork(b).n)+' games (estimate from entries)':(ms.length?dn+' of '+ms.length+' games done':'About '+Math.round(blockWork(b).n)+' games once pools finish')} · ${scoreText(f)} · ~${Math.round(matchLen(d,b.stage==='pool'?'pool':'po'))} min per game</div>
-        <div class="blk-time"><b>${x.done?'Played '+fmtT(x.s)+' – '+fmtT(x.e):x.n?(x.started?'Started '+fmtT(x.s)+' · ends ~'+fmtT(r5(x.e)):'~'+fmtT(r5(x.s))+' – '+fmtT(r5(x.e))):'—'}</b>${delta!=null&&Math.abs(delta)>=5?` <span class="pill ${delta>0?'p-hold':'p-ok'}">${delta>0?'+':'−'}${Math.round(Math.abs(delta))} min vs plan</span>`:''}</div>
-        <div class="blk-ctrl">
+        ${ms.length&&st!=='draft'?`<span class="blk-bar" aria-hidden="true"><span style="width:${Math.round(dn/ms.length*100)}%"></span></span>`:''}
+      </div>
+      <div class="blk-time"><b>${x.done?fmtT(x.s)+' – '+fmtT(x.e):x.n?(x.started?'Ends ~'+fmtT(r5(x.e)):'~'+fmtT(r5(x.s))+' – '+fmtT(r5(x.e))):'—'}</b><small>${x.done?'Played':x.n?(x.started?'Started '+fmtT(x.s):'Estimate'):'No games yet'}</small>${delta!=null&&Math.abs(delta)>=5?`<span class="pill ${delta>0?'p-hold':'p-ok'}">${delta>0?'+':'−'}${Math.round(Math.abs(delta))} min vs plan</span>`:''}</div>
+      <div class="blk-acts">
+        <div class="blk-mv"><button class="btn sm ic" data-act="bkUp" data-id="${b.id}" ${k?'':'disabled'} aria-label="Move ${esc(blockName(b))} earlier" title="Earlier">↑</button><button class="btn sm ic" data-act="bkDown" data-id="${b.id}" ${k<bl.length-1?'':'disabled'} aria-label="Move ${esc(blockName(b))} later" title="Later">↓</button></div>
+        ${sc.days.length>1?`<select class="blk-day" data-bk="${b.id}" data-k="day" aria-label="Day for ${esc(blockName(b))}">${sc.days.map((dd,i)=>`<option value="${i}" ${b.day===i?'selected':''}>${esc(dd.label)}</option>`).join('')}</select>`:''}
+        ${st==='done'||st==='draft'?'':b.hold?`<button class="btn sm primary" data-act="bkResume" data-id="${b.id}">Resume</button>`:(g.get(b.id).open?`<button class="btn sm" data-act="bkHold" data-id="${b.id}">Pause</button>`:`<button class="btn sm primary" data-act="bkRelease" data-id="${b.id}">Start now</button>`)}
+        <button class="btn sm blk-opt" data-act="bkOpt" data-id="${b.id}" aria-expanded="${op}" aria-controls="bko-${b.id}">Options</button>
+      </div>
+      <div class="blk-ctrl" id="bko-${b.id}" ${op?'':'hidden'}>
           <label class="f">Starts<select data-bk="${b.id}" data-k="mode">${[['follow',shareAll()?'With the others (any free court)':'Next in line (uses free courts)'],['time','At a set time'],['manual','When the desk starts it']].map(([v,l])=>`<option value="${v}" ${b.mode===v?'selected':''}>${l}</option>`).join('')}</select></label>
           ${b.mode==='time'?`<label class="f">Time<input type="time" data-bk="${b.id}" data-k="at" value="${esc(b.at)}"></label>`:''}
-          ${sc.days.length>1?`<label class="f">Day<select data-bk="${b.id}" data-k="day">${sc.days.map((dd,i)=>`<option value="${i}" ${b.day===i?'selected':''}>${esc(dd.label)}</option>`).join('')}</select></label>`:''}
-          <fieldset class="blk-courts"><legend>Courts</legend>${S.courts.map(c=>`<label class="cchip"><input type="checkbox" data-bkc="${b.id}" value="${c.no}" ${b.courts&&b.courts.includes(c.no)?'checked':''}><span>${c.no}</span></label>`).join('')}<span class="tb">${b.courts&&b.courts.length?'only these':'any court'}</span></fieldset>
-        </div>
-      </div>
-      <div class="blk-acts">
-        <div class="row"><button class="btn sm" data-act="bkUp" data-id="${b.id}" ${k?'':'disabled'} aria-label="Move ${esc(blockName(b))} earlier">↑ Earlier</button><button class="btn sm" data-act="bkDown" data-id="${b.id}" ${k<bl.length-1?'':'disabled'} aria-label="Move ${esc(blockName(b))} later">↓ Later</button></div>
-        ${st==='done'||st==='draft'?'':b.hold?`<button class="btn sm primary" data-act="bkResume" data-id="${b.id}">Resume</button>`:(g.get(b.id).open?`<button class="btn sm" data-act="bkHold" data-id="${b.id}">Pause</button>`:`<button class="btn sm primary" data-act="bkRelease" data-id="${b.id}">Start now</button>`)}
+          <fieldset class="blk-courts"><legend>Courts <small>${lim?'only the ones picked':'any court · tap to limit'}</small></legend>${S.courts.map(c=>`<label class="cchip"><input type="checkbox" data-bkc="${b.id}" value="${c.no}" ${b.courts&&b.courts.includes(c.no)?'checked':''}><span>${c.no}</span></label>`).join('')}</fieldset>
       </div></li>`}).join('');
-  return App.pageHead('Tournament · '+esc(S.t.name),'Schedule',`${sc.plan?`<span class="tb">Plan saved ${clockStr(sc.plan.at)}</span><button class="btn" data-act="clearPlan">Clear plan</button>`:''}<button class="btn primary" data-act="savePlan">${sc.plan?'Save new plan':'Save as plan'}</button>`)+
-   `<div class="kpis">${kp}</div>${tipsHtml(tips)}
-   ${sc.days.length>1?`<div class="tabs daytabs" role="tablist">${sc.days.map((dd,i)=>`<button class="tab" data-act="schedDay" data-i="${i}" aria-selected="${i===di}">${esc(dayName(dd))}${i===sc.today?' · today':''}</button>`).join('')}</div>`:''}
+  const settings=`<section class="panel sch-set" id="schSet" ${schUi.set?'':'hidden'}><h2>Schedule settings <small>set once, before the day</small></h2>
+     <div class="sch-set-g">
+      <div><label class="f">How divisions use the courts<select id="schShare"><option value="all" ${shareAll()?'selected':''}>All at once (every court in use)</option><option value="order" ${shareAll()?'':'selected'}>One after another (block by block)</option></select></label>
+       <p class="tb" style="margin:8px 0 0">${shareAll()?'All divisions play side by side, so no court sits empty while a team rests. Games are mixed so every division moves forward together. Use a set start time or court limits to keep a block apart.':'Blocks play in this order. A later block only gets courts the earlier ones aren\'t using.'}</p></div>
+      <div><div class="grid2">${[11,15,21].map(n=>`<label class="f">Game to ${n} (min)<input type="number" min="5" max="60" data-pace="${n}" value="${sc.pace[n]}"></label>`).join('')}<label class="f">Changeover (min)<input type="number" min="0" max="20" id="schBuf" value="${sc.buffer}"></label></div>
+       <p class="tb" style="margin:8px 0 0">Used for every time estimate. Best-of-3 matches count as 2.5 games. If real games run longer or shorter, change these and the whole schedule moves.</p></div>
+     </div></section>`;
+  const dayTabs=`<div class="sch-days"><div class="tabs daytabs" role="tablist">${sc.days.map((dd,i)=>`<button class="tab daytab" role="tab" data-act="schedDay" data-i="${i}" aria-selected="${i===di}"><b>${esc(dayName(dd))}${i===sc.today?' · today':''}</b><small>${fmtT(hm(dd.start))} – ${fmtT(hm(dd.end))} · ${ordered().filter(x=>x.day===i).length} block${ordered().filter(x=>x.day===i).length===1?'':'s'}</small></button>`).join('')}</div>
+     <button class="btn sm" data-act="schDays" aria-expanded="${schUi.days}" aria-controls="schDayEdit">${schUi.days?'Done':'Edit days'}</button></div>
+   <section class="panel sch-dayedit" id="schDayEdit" ${schUi.days?'':'hidden'}><h2>Days <small>name, date and playing hours</small></h2>
+     <ul class="dayrows">${sc.days.map((dd,i)=>`<li class="dayrow"><label class="f">Name<input type="text" data-sday="${i}" data-k="label" value="${esc(dd.label)}"></label><label class="f">Date<input type="date" data-sday="${i}" data-k="date" value="${esc(dd.date||'')}"></label><label class="f">Start<input type="time" data-sday="${i}" data-k="start" value="${esc(dd.start)}"></label><label class="f">End<input type="time" data-sday="${i}" data-k="end" value="${esc(dd.end)}"></label></li>`).join('')}</ul>
+     <div class="row"><button class="btn sm" data-act="addDay">Add a day</button>${sc.days.length>1?'<button class="btn sm danger" data-act="delDay">Remove last day</button>':''}</div></section>`;
+  const shown=tips.filter(t=>!(plan&&t.k==='soon'&&/data-act="startDay" data-i="\d/.test(t.act||'')));
+  return App.pageHead('Tournament · '+esc(S.t.name),'Schedule',`${sc.plan?`<span class="tb">Plan saved ${clockStr(sc.plan.at)}</span><button class="btn" data-act="clearPlan">Clear plan</button>`:''}<button class="btn" data-act="savePlan" title="Remember these times, then see during the day how far ahead or behind you are">${sc.plan?'Save new plan':'Save as plan'}</button><button class="btn" data-act="schSet" aria-expanded="${schUi.set}" aria-controls="schSet">${App.icon('sliders')}Settings</button>`)+
+   `${settings}${band}${tipsHtml(shown)}${dayTabs}
    <section class="panel"><h2>${esc(dayName(day))} timeline <small>${fmtT(hm(day.start))} – ${fmtT(hm(day.end))} · estimates</small></h2>${tl}</section>
-   <div class="two" style="margin-top:16px"><section class="panel"><h2>Play order <small>${shareAll()?'all at once · order breaks ties':'courts follow this order'}</small></h2>
-     <label class="f">How divisions use the courts<select id="schShare"><option value="all" ${shareAll()?'selected':''}>All at once (every court in use)</option><option value="order" ${shareAll()?'':'selected'}>One after another (block by block)</option></select></label>
-     <p class="tb" style="margin:0 0 10px">${shareAll()?'All divisions play side by side, so no court sits empty while a team rests. Games are mixed so every division moves forward together. Use a set start time or court limits to keep a block apart.':'Blocks play in this order. A later block only gets courts the earlier ones aren\'t using.'}</p>
-     ${bl.length?`<ol class="blks">${rows}</ol>`:'<p class="muted" style="margin:0">Nothing on this day yet. Move a block here with its Day menu.</p>'}
-     <p class="tb" style="margin:12px 0 0">A held block's games stay in Upcoming games with the reason. You can still start it now, put one of its games on a court yourself, or use Move to top on a game.</p></section>
-   <div class="stack"><section class="panel"><h2>Days</h2>
-     <label class="f">Today is<select id="schToday"><option value="-1" ${sc.today<0?'selected':''}>Not started (planning)</option>${sc.days.map((dd,i)=>`<option value="${i}" ${sc.today===i?'selected':''}>${esc(dayName(dd))}</option>`).join('')}</select></label>
-     <p class="tb" style="margin:0 0 8px">${sc.today<0?'Planning: games stay in the queue and each day is timed from its own start. Pick a day here (or tap Start on the Live tab) on the morning it begins.':'Games are called to courts for this day. Set to <b>Not started</b> while you plan ahead.'}</p>
-     <ul class="list">${sc.days.map((dd,i)=>`<li style="grid-template-columns:minmax(0,1fr)"><div class="dayrow"><label class="f">Name<input type="text" data-sday="${i}" data-k="label" value="${esc(dd.label)}"></label><label class="f">Date<input type="date" data-sday="${i}" data-k="date" value="${esc(dd.date||'')}"></label><label class="f">Start<input type="time" data-sday="${i}" data-k="start" value="${esc(dd.start)}"></label><label class="f">End<input type="time" data-sday="${i}" data-k="end" value="${esc(dd.end)}"></label></div></li>`).join('')}</ul>
-     <div class="row"><button class="btn sm" data-act="addDay">Add a day</button>${sc.days.length>1?'<button class="btn sm danger" data-act="delDay">Remove last day</button>':''}</div></section>
-    <section class="panel"><h2>Game length <small>used for estimates</small></h2>
-     <div class="grid2">${[11,15,21].map(n=>`<label class="f">Game to ${n} (min)<input type="number" min="5" max="60" data-pace="${n}" value="${sc.pace[n]}"></label>`).join('')}<label class="f">Changeover between games (min)<input type="number" min="0" max="20" id="schBuf" value="${sc.buffer}"></label></div>
-     <p class="tb" style="margin:8px 0 0">Best-of-3 matches count as 2.5 games. Watch the "Vs saved plan" tile during the day and adjust these if real games run longer or shorter.</p></section></div></div>`;
+   <section class="panel sch-order" style="margin-top:16px"><h2>Order of play <small>${shareAll()?'all divisions at once · the order breaks ties':'courts follow this order'}</small></h2>
+     ${bl.length?`<ol class="blks">${rows}</ol>`:`<p class="muted" style="margin:0">Nothing on ${esc(day.label)} yet. Open another day and move a block here with its day menu.</p>`}
+     <p class="tb" style="margin:12px 0 0">Use the arrows to change the order${sc.days.length>1?', the day menu to move a block to another day,':''} and Options for a set start time or court limits. A paused block's games stay in Upcoming games with the reason.</p></section>`;
 }
 function timeline(bl,pr,di){
   const sc=sched(),day=sc.days[di],ds=hm(day.start),de=hm(day.end),xs=bl.map(b=>pr.get(b.id)).filter(x=>x&&x.n!==undefined);
@@ -4288,7 +4481,8 @@ function timeline(bl,pr,di){
   const endL=`<span class="tl-end" style="left:${pc(de)}" title="End of day"></span>`;
   return `<div class="tl"><div class="tl-row tl-head"><span></span><div class="tl-track">${ticks}</div></div>${bl.map(b=>{const x=pr.get(b.id),st=blockState(b),p=sc.plan&&sc.plan.b[b.id];
     const bar=x&&(x.n||x.done)?`<span class="tl-bar s-${x.done?'done':st==='playing'?'playing':b.hold?'hold':'plan'}" style="left:${pc(x.s)};width:max(6px,${((x.e-x.s)/span*100).toFixed(2)}%)">${x.done?'':fmtT(r5(x.s)).replace(' AM','').replace(' PM','')}</span>`:'<span class="tl-none">no games yet</span>';
-    const ghost=p&&p.day===di?`<span class="tl-ghost" style="left:${pc(p.s)};width:${((p.e-p.s)/span*100).toFixed(2)}%" title="Saved plan"></span>`:'';
+    const gs=p?Math.max(lo,p.s):0,ge=p?Math.min(hi,p.e):0;   // a plan saved for other hours is clipped to the visible day
+    const ghost=p&&p.day===di&&ge>gs?`<span class="tl-ghost" style="left:${pc(gs)};width:${((ge-gs)/span*100).toFixed(2)}%" title="Saved plan"></span>`:'';
     return `<div class="tl-row"><span class="tl-l">${esc(blockName(b))}</span><div class="tl-track">${ghost}${bar}${nowL}${endL}</div></div>`}).join('')}
     <div class="tl-key"><span><i class="k-plan"></i>Estimate</span><span><i class="k-playing"></i>Playing</span><span><i class="k-done"></i>Finished</span>${sc.plan?'<span><i class="k-ghost"></i>Saved plan</span>':''}<span><i class="k-now"></i>Now</span><span><i class="k-end"></i>End of day</span></div></div>`;
 }
@@ -4622,6 +4816,9 @@ document.addEventListener('click',e=>{
   switch(a){
     case 'closeModal':closeModal();return;
     case 'schedDay':schedDay=+t.dataset.i;render();return;
+    case 'schDays':schUi.days=!schUi.days;render();return;
+    case 'schSet':schUi.set=!schUi.set;render();return;
+    case 'bkOpt':schUi.opt[t.dataset.id]=!schUi.opt[t.dataset.id];render();return;
     case 'bkUp':case 'bkDown':{const sc=sched(),b=sc.blocks.find(x=>x.id===id),same=sc.blocks.filter(x=>x.day===b.day),k=same.indexOf(b),o=same[a==='bkUp'?k-1:k+1];if(!o)return;const i1=sc.blocks.indexOf(b),i2=sc.blocks.indexOf(o);sc.blocks[i1]=o;sc.blocks[i2]=b;audit('Admin','Schedule: moved '+blockName(b)+(a==='bkUp'?' earlier':' later'));break}
     case 'bkRelease':{const b=sched().blocks.find(x=>x.id===id);b.released=true;b.hold=false;audit('Admin','Schedule: started '+blockName(b));toast(blockName(b)+' is open. Its games go to free courts.');break}
     case 'bkHold':{const b=sched().blocks.find(x=>x.id===id);b.hold=true;audit('Admin','Schedule: paused '+blockName(b));toast('Paused. Games already on court keep going; no new ones are called.');break}

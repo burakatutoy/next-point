@@ -1697,7 +1697,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-13a';
+  const BUILD='2026-11-13b';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -3479,15 +3479,37 @@ function qualifiers(d,N){
   return{ids:avoidRematch(d,out,info),info};
 }
 function poolOf(d,id){const p=d.pools.find(x=>x.entries.includes(id));return p?p.name:null}
-// first-round pairs that are a pool rematch: swap the lower seed with a same-place team from another pair when that fixes it
+// Crossover: same-pool teams are placed so they meet as late as possible (a meeting in round 1 costs most, the final least).
+// Only teams with the same pool finish swap lines (a pool winner keeps a winner's line); among equally good layouts, the
+// one closest to the plain seed order wins. Small brackets are checked exhaustively; bigger ones by repeated best swaps.
 function avoidRematch(d,ids,info){
-  if(d.pools.length<2)return ids;const q=[...ids];let B=2;while(B<q.length)B*=2;const pos=seedPos(B),pairs=[];
-  for(let i=0;i<B/2;i++)pairs.push([pos[2*i]-1,pos[2*i+1]-1]);
-  const pl=i=>q[i]?poolOf(d,q[i]):null,clash=([a,b])=>q[a]&&q[b]&&pl(a)===pl(b);
-  for(const pr of pairs){if(!clash(pr))continue;const lo=Math.max(...pr),hi=Math.min(...pr);
-    for(const o of pairs){if(o===pr)continue;const c=Math.max(...o),oc=Math.min(...o);if(!q[c]||!info[q[c]]||!info[q[lo]]||info[q[c]].place!==info[q[lo]].place)continue;
-      if(pl(c)!==pl(hi)&&pl(lo)!==pl(oc)){[q[lo],q[c]]=[q[c],q[lo]];break}}}
-  return q}
+  if(d.pools.length<2||ids.length<3)return ids;
+  let B=2;while(B<ids.length)B*=2;const R=Math.log2(B),pos=seedPos(B),slot=[];pos.forEach((sd,k)=>{slot[sd-1]=k});
+  const n=ids.length,pl=ids.map(id=>poolOf(d,id)),place=ids.map(id=>info[id]?info[id].place:0),orig=new Map(ids.map((id,i)=>[id,i]));
+  const meet=(i,j)=>{let x=slot[i]^slot[j],r=0;while(x){r++;x>>=1}return r};
+  const W=[];for(let i=0;i<n;i++){W[i]=[];for(let j=0;j<n;j++)W[i][j]=i===j?0:Math.pow(64,R-meet(i,j))}
+  const cost=q=>{const P=q.map(id=>poolOf(d,id));let c=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(P[i]&&P[i]===P[j])c+=W[i][j];return c};
+  const moved=q=>q.reduce((a,id,i)=>a+Math.abs(i-orig.get(id)),0);
+  const better=(c1,m1,c2,m2)=>c1<c2-1e-9||(Math.abs(c1-c2)<1e-9&&m1<m2);
+  const groups=[];[...new Set(place)].forEach(v=>groups.push(place.map((x,i)=>x===v?i:-1).filter(i=>i>=0)));
+  const fact=k=>k<=1?1:k*fact(k-1),space=groups.reduce((a,g)=>a*fact(g.length),1);
+  let bestQ=[...ids],bestC=cost(bestQ),bestM=0;
+  if(space<=20000){   // every order within each finishing place
+    const perm=a=>a.length<=1?[a]:a.flatMap((x,i)=>perm([...a.slice(0,i),...a.slice(i+1)]).map(r=>[x,...r]));
+    const rec=(g,cur)=>{if(g===groups.length){const c=cost(cur);if(better(c,moved(cur),bestC,bestM)){bestQ=[...cur];bestC=c;bestM=moved(cur)}return}
+      const idx=groups[g];for(const pm of perm(idx.map(i=>ids[i]))){const nx=[...cur];idx.forEach((i,t)=>{nx[i]=pm[t]});rec(g+1,nx)}};
+    rec(0,[...ids]);
+  }else{               // best single swap within a place, repeated until nothing improves
+    let q=[...ids],c=cost(q),m=0,go=true;
+    while(go){go=false;let bi=-1,bj=-1,bc=c,bm=m;
+      for(const g of groups)for(let x=0;x<g.length;x++)for(let y=x+1;y<g.length;y++){const i=g[x],j=g[y];[q[i],q[j]]=[q[j],q[i]];const c2=cost(q),m2=moved(q);if(better(c2,m2,bc,bm)){bi=i;bj=j;bc=c2;bm=m2}[q[i],q[j]]=[q[j],q[i]]}
+      if(bi>=0){[q[bi],q[bj]]=[q[bj],q[bi]];c=bc;m=bm;go=true}}
+    bestQ=q}
+  return bestQ}
+// for the desk: the earliest round two pool-mates could meet with this order (null = never before the final)
+function poolMeet(d,q){let B=2;while(B<q.length)B*=2;const R=Math.log2(B),pos=seedPos(B),slot=[];pos.forEach((sd,k)=>{slot[sd-1]=k});let e=R+1;
+  for(let i=0;i<q.length;i++)for(let j=i+1;j<q.length;j++)if(q[i]&&q[j]&&poolOf(d,q[i])===poolOf(d,q[j])){let x=slot[i]^slot[j],r=0;while(x){r++;x>>=1}e=Math.min(e,r)}
+  return e<R?roundLabel(e-1,R):null}
 function rematches(d,q){let B=2;while(B<q.length)B*=2;const pos=seedPos(B),r=[];for(let i=0;i<B/2;i++){const a=q[pos[2*i]-1],b=q[pos[2*i+1]-1];if(a&&b&&poolOf(d,a)===poolOf(d,b))r.push([a,b])}return r}
 function poDraft(d){const q=qualifiers(d);d.poDraft={n:poN(d),ids:q.ids};audit('System','Pools finished in '+dname(d)+'. Playoff seeding is ready for the desk to check.')}
 function unbuildBracket(d){const seeds=d.bracket?d.bracket.seeds||[]:[];S.matches=S.matches.filter(m=>!(m.div===d.id&&m.stage==='po'));d.bracket=null;d.poDraft={n:seeds.length||poN(d),ids:seeds.length?seeds:qualifiers(d).ids};if(d.status==='done')d.status='live'}
@@ -4340,6 +4362,8 @@ function seedPanel(d){
   const rl=roundLabel(0,Math.log2(B));
   return `<section class="panel seedp"><h2>Playoff seeding <small>${esc(dname(d))}</small></h2>
    <p style="margin:0 0 12px">Pools are done. Check the seeds, then start the playoffs. Nothing goes on court until you do.</p>
+   ${d.pools.length>1?(()=>{const pm=poolMeet(d,ids),pb=poolMeet(d,qualifiers(d,ids.length).ids),rk=x=>x?['Round of 16','Quarterfinal','Semifinal'].indexOf(x):9;
+     return `<p class="tb" style="margin:-4px 0 12px">${!pm?'Crossover: teams from the same pool are kept apart, so they can only meet again in the final.':rk(pm)>=rk(pb)?`Crossover: teams from the same pool are kept as far apart as ${d.pools.length} pools allow. The earliest two of them could meet is the ${esc(pm.toLowerCase())}.`:`<span style="color:var(--bad)">With this order, teams from the same pool could meet as early as the ${esc(pm.toLowerCase())}.</span> Reset to standings to spread them out again.`}</p>`})():''}
    <div class="row" style="margin-bottom:12px"><label class="f" style="min-width:220px">Playoff size<select data-posize="${d.id}">${[[2*d.pools.length,'Top 2 from each pool'],[4,'Top 4: semifinals'],[8,'Top 8: quarterfinals']].filter(([n],i,a)=>n<=total&&a.findIndex(x=>x[0]===n)===i).map(([n,l])=>`<option value="${n}" ${n===ids.length?'selected':''}>${l} (${n})</option>`).join('')}</select></label>
    <button class="btn" data-act="poResetSeeds" data-id="${d.id}">Reset to standings</button></div>
    <div class="two"><div><h3 class="eyebrow" style="margin:0 0 6px">Seeds</h3><ol class="list seedlist">${ids.map((id,i)=>`<li><div class="li-main"><span class="li-t"><span class="seedno">${i+1}</span>${esc(ename(id))}</span><div class="li-m">${stat(id)}</div></div><div class="row"><button class="btn sm" data-act="poUp" data-id="${d.id}" data-i="${i}" ${i?'':'disabled'} aria-label="Move ${esc(ename(id))} up">↑</button><button class="btn sm" data-act="poDown" data-id="${d.id}" data-i="${i}" ${i<ids.length-1?'':'disabled'} aria-label="Move ${esc(ename(id))} down">↓</button></div></li>`).join('')}</ol>

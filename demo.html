@@ -1507,6 +1507,13 @@ input[type=date]:focus-visible{outline:none;border-color:var(--accent);box-shado
 .sheet-sc{display:grid;grid-template-columns:minmax(0,1fr) auto auto minmax(0,1fr);gap:10px;align-items:center;font-weight:600}
 .sheet-sc b{font-size:40px;line-height:1;font-family:var(--f-display);min-width:1.4em;text-align:center}.sheet-sc span:last-child{text-align:right}
 .kiosk .ct2-fresh{font-size:14px}
+
+/* v43: clean-up */
+.dv-grp{border:0;margin:0 0 14px;padding:0;min-width:0}.dv-grp legend{font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding:0}
+.dv-act{margin-top:4px}
+#divForm [data-dv][hidden]{display:none!important}
+input[type=url],input[type=email],input[type=tel],input[type=date],textarea{font:inherit;font-size:16px;padding:9px 10px;min-height:44px;color:inherit;border-radius:10px;border:1px solid var(--line-2);background:var(--surface)}textarea{line-height:1.45}
+.courts-f>span{font-size:13px;font-weight:600}.courts-n{font-size:20px;min-width:2ch;text-align:center}
 </style>
 
 <header class="top">
@@ -1690,7 +1697,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-12c';
+  const BUILD='2026-11-13a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -3311,7 +3318,7 @@ const TM=(()=>{
 
 const YEAR=new Date().getFullYear();
 let schedDay=null;
-let S,view='admin',sub='live',me=null,refMe=null,refSel=null,modal=null,pubDiv=null,regDiv='all',drawDiv=null,editDiv=null,unlockAsk=null;
+let S,view='admin',sub='live',me=null,refMe=null,refSel=null,modal=null,pubDiv=null,regDiv='all',drawDiv=null,editDiv=null,unlockAsk=null,addDiv=false;
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
@@ -3351,7 +3358,7 @@ function autoName(d){
   if(d.age.rule==='max')n+=' U'+d.age.v;
   return n;
 }
-const dname=d=>d.custom||autoName(d);
+const dname=d=>autoName(d);
 function ruleText(d){
   const r=d.rating,out=[d.type==='singles'?'Singles':'Doubles',{men:'Men only',women:'Women only',mixed:'1 man + 1 woman',open:'Anyone'}[d.gender]];
   out.push({none:'No rating limit',each:'Each player ≤ '+r.v,avg:'Team average ≤ '+r.v,sum:'Team combined ≤ '+r.v,range:'DUPR '+r.v+(r.v2>=8?'+':'–'+r.v2)}[r.rule]);
@@ -3398,9 +3405,11 @@ function autoSeed(divId){
 }
 function seeded(divId){const es=active(divId);if(es.some(e=>!e.seed)||new Set(es.map(e=>e.seed)).size!==es.length)autoSeed(divId);return active(divId).sort((a,b)=>a.seed-b.seed)}
 // how many pools: d.poolN set on the Draw tab (0 or missing = auto: one round robin up to 5, else pools of 3-4)
-const autoPools=n=>n<=5?1:Math.ceil(n/4);
+// equal pools only: pools of 4 where possible, else 3, else 5; a count with no equal split (7, 11, 13…) gets pools one apart
+const evenKs=n=>{const ks=[];for(let k=1;k<=Math.floor(n/3);k++)if(n%k===0)ks.push(k);return ks};
+const autoPools=n=>{if(n<=5)return 1;for(const z of [4,3,5])if(n%z===0)return n/z;return Math.ceil(n/4)};
 const maxPools=n=>Math.max(1,Math.floor(n/3));
-function poolCount(d,n){return d&&d.poolN?Math.max(1,Math.min(d.poolN,maxPools(n))):autoPools(n)}
+function poolCount(d,n){return d&&d.poolN&&d.poolN<=maxPools(n)&&n%d.poolN===0?d.poolN:autoPools(n)}
 const sizesFor=(n,np)=>{const sz=Array(np).fill(0);for(let i=0;i<n;i++)sz[i%np]++;return sz};
 function makePools(es,d){
   const n=es.length,np=poolCount(d,n),pools=Array.from({length:np},(_,i)=>({name:String.fromCharCode(65+i),entries:[]}));
@@ -4162,7 +4171,7 @@ function nav(){
   const ic={live:'live',sched:'clock',divs:'layers',regs:'clip',draw:'bracket',setup:'sliders'};
   const tp=S.divs.length?scheduleTips().filter(t=>t.k!=='soon').length:0;
   const it=(k,l,b,w)=>`<button class="side-item sub" data-sub="${k}" ${sub===k?'aria-current="page"':''}>${App.icon(ic[k])}${l}${b?`<span class="badge ${w?'warn':''}">${b}</span>`:''}</button>`;
-  return it('live','Live',att||'',att>0)+it('sched','Schedule',tp||'',tp>0)+it('divs','Divisions',S.divs.length||'')+it('regs','Registrations',flg||S.entries.filter(e=>e.status==='in').length||'',flg>0)+it('draw','Draw')+it('setup','Setup');
+  return it('live','Live',att||'',att>0)+it('setup','Setup')+it('divs','Divisions',S.divs.length||'')+it('regs','Registrations',flg||S.entries.filter(e=>e.status==='in').length||'',flg>0)+it('draw','Draw')+it('sched','Schedule',tp||'',tp>0);
 }
 
 function adminSched(){
@@ -4260,35 +4269,43 @@ function divForm(){
   const d=editDiv?D(editDiv):{type:'doubles',gender:'open',rating:{rule:'none',v:3.5,v2:3.99},age:{rule:'none',v:50},cap:16,score:{pool:{bo:1,to:11},po:{bo:1,to:11},fin:{bo:1,to:11}},third:true,unverified:false,custom:'',poSize:0,poReview:true};
   const o=(v,cur,l)=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${l}</option>`;
   return `<section class="panel"><h2>${editDiv?'Edit '+esc(dname(d)):'New division'} <small id="dvPreview">${esc(dname(d))}</small></h2>
-   <form id="divForm" class="grid-form">
+   <form id="divForm">
+    <fieldset class="dv-grp"><legend>Who can enter</legend><div class="grid-form">
     <label class="f">Level<select id="dvLevel">${(()=>{const lv=d.level!=null?d.level:editDiv?guessLevel(d):'';return o('',lv,'No level')+LEVELS.map(x=>o(x[0],lv,x[1]+(x[2]!=null?' · DUPR '+rangeTxt(x[2],x[3]):' · no rating limit'))).join('')})()}</select></label>
     <label class="f">Event type<select id="dvType">${o('doubles',d.type,'Doubles')}${o('singles',d.type,'Singles')}</select></label>
     <label class="f">Gender<select id="dvGender">${o('open',d.gender,'Open (anyone)')}${o('men',d.gender,'Men')}${o('women',d.gender,'Women')}${o('mixed',d.gender,'Mixed (1 man + 1 woman)')}</select></label>
     <label class="f">Rating limit<select id="dvRule">${o('none',d.rating.rule,'None')}${o('each',d.rating.rule,'Each player at or under')}${o('avg',d.rating.rule,'Team average at or under')}${o('sum',d.rating.rule,'Team combined at or under')}${o('range',d.rating.rule,'Rating range')}</select></label>
-    <label class="f">DUPR value<input type="number" step="0.01" min="2" max="16" id="dvV" value="${d.rating.v??3.5}"></label>
-    <label class="f">Range top (range only)<input type="number" step="0.01" min="2" max="8" id="dvV2" value="${d.rating.v2??3.99}"></label>
+    <label class="f" data-dv="v"><span id="dvVLab">DUPR limit</span><input type="number" step="0.01" min="2" max="16" id="dvV" value="${d.rating.v??3.5}"></label>
+    <label class="f" data-dv="v2">DUPR to<input type="number" step="0.01" min="2" max="8" id="dvV2" value="${d.rating.v2??3.99}"></label>
     <label class="f">Age limit<select id="dvAge">${o('none',d.age.rule,'None')}${o('min',d.age.rule,'Minimum age')}${o('max',d.age.rule,'Under age')}</select></label>
-    <label class="f">Age<input type="number" min="5" max="99" id="dvAgeV" value="${d.age.v??50}"></label>
+    <label class="f" data-dv="age">Age<input type="number" min="5" max="99" id="dvAgeV" value="${d.age.v??50}"></label>
     <label class="f">Max entries<input type="number" id="dvCap" min="3" max="128" value="${d.cap}"></label>
+    </div></fieldset>
+    <fieldset class="dv-grp"><legend>Format</legend><div class="grid-form">
+    <label class="f">Playoffs<select id="dvPoSize">${o(0,d.poSize||0,'Top 2 from each pool')}${o(4,d.poSize||0,'Top 4: semifinals')}${o(8,d.poSize||0,'Top 8: quarterfinals')}</select></label>
     <label class="f">Pool play<select id="dvPool">${[11,15].map(n=>o(n,d.score.pool.to,'1 game to '+n)).join('')}</select></label>
     <label class="f">Early playoff rounds<select id="dvPo">${[11,15,21].map(n=>o(n,d.score.po.to,'1 game to '+n)).join('')}</select></label>
     <label class="f">Semis, final, 3rd<select id="dvFin">${o('1-11',d.score.fin.bo+'-'+d.score.fin.to,'1 game to 11')}${o('3-11',d.score.fin.bo+'-'+d.score.fin.to,'Best of 3 to 11')}${o('1-15',d.score.fin.bo+'-'+d.score.fin.to,'1 game to 15')}${o('1-21',d.score.fin.bo+'-'+d.score.fin.to,'1 game to 21')}</select></label>
     <label class="f">Game ends<select id="dvWin">${o('cap',d.score.w2?'w2':'cap','First to the target (11–10 wins)')}${o('w2',d.score.w2?'w2':'cap','Win by 2 (12–10, 13–11…)')}</select></label>
-    <label class="f">Custom name (optional)<input type="text" id="dvName" value="${esc(d.custom||'')}" placeholder="Uses the auto name"></label>
-    <label class="f">Playoffs<select id="dvPoSize">${o(0,d.poSize||0,'Top 2 from each pool')}${o(4,d.poSize||0,'Top 4: semifinals')}${o(8,d.poSize||0,'Top 8: quarterfinals')}</select></label>
     <label class="check"><input type="checkbox" id="dvThird" ${d.third?'checked':''}> 3rd place match</label>
     <label class="check"><input type="checkbox" id="dvPoReview" ${d.poReview!==false?'checked':''}> Let me check the playoff seeding before the bracket starts</label>
-    <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">${editDiv?'Save changes':'Add division'}</button>${editDiv?'<button class="btn" type="button" data-act="cancelEdit">Cancel</button>':''}<span class="err" id="dvErr"></span></div>
-   </form><p class="muted" style="margin:10px 0 0">Format is picked from the entry count when the draw is locked: 3–5 entries play one round robin; 6 or more are split into pools of 3–4. You can choose a different number of pools on the Draw tab before locking. <b>Playoffs</b> decides how many go on to the single elimination bracket: the top 2 from each pool, or a fixed top 4 or top 8 (quarterfinals). Extra spots go to the best runners-up by record, then point difference. You can still change the playoff size and seeding when pools finish.</p></section>`;
+    </div></fieldset>
+    <div class="row dv-act"><button class="btn primary" type="submit">${editDiv?'Save changes':'Add division'}</button>${editDiv||S.divs.length?'<button class="btn" type="button" data-act="cancelEdit">Cancel</button>':''}<span class="err" id="dvErr"></span></div>
+   </form><p class="muted" style="margin:10px 0 0">Pools are set on the Draw tab when the draw is locked: 3–5 entries play one round robin; more are split into equal pools (of 3–5 where the count allows). <b>Playoffs</b> decides how many go on to the single elimination bracket: the top 2 from each pool, or a fixed top 4 or top 8 (quarterfinals). Extra spots go to the best runners-up by record, then point difference. You can still change the playoff size and seeding when pools finish.</p></section>`;
 }
 function readDivForm(){
   const v=id=>$('#'+id).value,fin=v('dvFin').split('-').map(Number);
   return{level:v('dvLevel')||'',type:v('dvType'),gender:v('dvGender'),rating:{rule:v('dvRule'),v:+v('dvV'),v2:+v('dvV2')},age:{rule:v('dvAge'),v:+v('dvAgeV')},cap:+v('dvCap'),
-    score:{pool:{bo:1,to:+v('dvPool')},po:{bo:1,to:+v('dvPo')},fin:{bo:fin[0],to:fin[1]},...(v('dvWin')==='w2'?{w2:true}:{})},third:$('#dvThird').checked,unverified:false,custom:v('dvName').trim(),poSize:+v('dvPoSize')||0,poReview:$('#dvPoReview').checked};
+    score:{pool:{bo:1,to:+v('dvPool')},po:{bo:1,to:+v('dvPo')},fin:{bo:fin[0],to:fin[1]},...(v('dvWin')==='w2'?{w2:true}:{})},third:$('#dvThird').checked,unverified:false,poSize:+v('dvPoSize')||0,poReview:$('#dvPoReview').checked};
 }
+// show only the fields the chosen rules use
+function dvVis(){const f=$('#divForm');if(!f)return;const r=$('#dvRule').value,a=$('#dvAge').value;
+  f.querySelector('[data-dv=v]').hidden=r==='none';f.querySelector('[data-dv=v2]').hidden=r!=='range';f.querySelector('[data-dv=age]').hidden=a==='none';
+  $('#dvVLab').textContent=r==='range'?'DUPR from':r==='sum'?'Combined limit':'DUPR limit'}
 const poLabel=d=>d.poSize===8?'Top 8: quarterfinals':d.poSize===4?'Top 4: semifinals':'Top 2 per pool';
 function adminDivs(){
-  return App.pageHead('Tournament · '+esc(S.t.name),'Divisions','')+`<div class="stack">${divForm()}<div class="divcards">${S.divs.map(d=>{const n=active(d.id).length,w=S.entries.filter(e=>e.div===d.id&&e.status==='wait').length;
+  const showForm=editDiv||addDiv||!S.divs.length;
+  return App.pageHead('Tournament · '+esc(S.t.name),'Divisions',showForm?'':'<button class="btn primary" data-act="newDiv">Add division</button>')+`<div class="stack">${showForm?divForm():''}<div class="divcards">${S.divs.map(d=>{const n=active(d.id).length,w=S.entries.filter(e=>e.div===d.id&&e.status==='wait').length;
     return `<section class="panel divcard"><div class="row"><h3>${esc(dname(d))}</h3><span class="pill p-${d.status}" style="margin-left:auto">${{open:'Registration open',live:'Live',done:'Finished'}[d.status]}</span></div>
      <div class="rules">${ruleText(d).map(t=>`<span class="pill p-muted">${esc(t)}</span>`).join('')}</div>
      <div class="li-m">${poLabel(d)} · Pool: ${scoreText(d.score.pool)} · Playoffs: ${scoreText(d.score.po)} · Semis/final: ${scoreText(d.score.fin)}${d.third?' · 3rd place match':''} · ${d.score.w2?'Win by 2':'First to the target wins'}</div>
@@ -4345,15 +4362,15 @@ function adminDraw(){
   return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="muted">${es.length} entries → ${es.length<3?'need at least 3':(pools.length>1?pools.length+' pools':'1 round robin')+(needsPo(d)?' → '+(d.poSize?'top '+Math.min(d.poSize,es.length)+(Math.min(d.poSize,es.length)>4?' (quarterfinals)':' (semifinals)'):'top 2 per pool'):'')}</span>`)+`
   <div class="two"><section class="panel"><h2>Seeding <small>by ${d.type} DUPR${d.type==='doubles'?' (team average)':''}</small></h2><ul class="list">${es.map((e,i)=>`<li><div class="li-main"><span class="li-t">${e.seed}. ${esc(ename(e.id))}</span><div class="li-m">${erate(e).toFixed(3)}${isNR(e)?' · NR':''}${blocking(e).length?' · <span style="color:var(--bad)">needs review</span>':''}</div></div><div class="row"><button class="btn sm" data-act="seedUp" data-id="${e.id}" ${i?'':'disabled'} aria-label="Move up">↑</button><button class="btn sm" data-act="seedDown" data-id="${e.id}" ${i<es.length-1?'':'disabled'} aria-label="Move down">↓</button></div></li>`).join('')}</ul>
    <div class="row" style="margin-top:10px"><button class="btn" data-act="reseed">Re-seed by rating</button></div></section>
-   <div class="stack">${es.length>=3?(()=>{const n=es.length,mx=maxPools(n),au=autoPools(n),cur=d.poolN&&d.poolN<=mx?d.poolN:0,po=d.poSize||0;
+   <div class="stack">${es.length>=3?(()=>{const n=es.length,mx=maxPools(n),au=autoPools(n),cur=d.poolN&&d.poolN<=mx&&n%d.poolN===0?d.poolN:0,po=d.poSize||0,auEven=n%au===0;
       const opt=k=>{const sz=sizesFor(n,k),even=Math.max(...sz)===Math.min(...sz),g=sz.reduce((a,x)=>a+x*(x-1)/2,0),lo=Math.min(...sz)-1,hi=Math.max(...sz)-1;
         const q=k===1?(po?Math.min(po,n):0):(po||k*2),wild=k>1&&po&&po%k!==0,fair=even&&!wild;
         return{k,sz,g,txt:(k===1?'1 round robin':k+' pools')+' · '+(k===1?n+' teams':sz.join(', ')+' teams'),sub:(lo===hi?lo+' games each':lo+'–'+hi+' games each')+' · '+g+' pool games'+(k===1&&!po?' · no playoffs':'')+(wild?' · '+(po-k*Math.floor(po/k))+' wildcard spot'+((po-k*Math.floor(po/k))>1?'s':''):''),fair}};
-      const list=Array.from({length:mx},(_,i)=>opt(i+1)).filter(o=>o.sz.every(x=>x>=3));
+      const list=evenKs(n).map(opt).filter(o=>o.k!==au);
       return `<section class="panel"><h2>Pools <small>how ${n} entries are split</small></h2><fieldset class="pool-opts"><legend class="sr-only">Number of pools</legend>
-        <label class="check pool-o"><input type="radio" name="poolN" value="0" data-div="${d.id}" ${cur?'':'checked'}><span><b>Auto</b> <span class="muted">(${au===1?'1 round robin':au+' pools'}: pools of 3–4)</span></span></label>
-        ${list.map(o=>`<label class="check pool-o"><input type="radio" name="poolN" value="${o.k}" data-div="${d.id}" ${cur===o.k?'checked':''}><span><b>${esc(o.txt)}</b>${o.fair?' <span class="pill p-ok">Even</span>':''}<br><span class="muted">${esc(o.sub)}</span></span></label>`).join('')}</fieldset>
-        <p class="tb" style="margin:8px 0 0">Even pools mean every team plays the same number of games${po?'; with Top '+po+', pools that divide '+po+' evenly need no wildcards':''}. More games per team means a longer day: check the Schedule tab after you choose.</p></section>`})():''}
+        <label class="check pool-o"><input type="radio" name="poolN" value="0" data-div="${d.id}" ${cur?'':'checked'}><span><b>Recommended · ${esc(opt(au).txt)}</b><br><span class="muted">${esc(opt(au).sub)}${auEven?'':' · '+n+' entries can\'t be split into equal pools, so pools differ by one team'}</span></span></label>
+        ${list.map(o=>`<label class="check pool-o"><input type="radio" name="poolN" value="${o.k}" data-div="${d.id}" ${cur===o.k?'checked':''}><span><b>${esc(o.txt)}</b><br><span class="muted">${esc(o.sub)}</span></span></label>`).join('')}</fieldset>
+        <p class="tb" style="margin:8px 0 0">Only equal pools are offered, so every team plays the same number of games. More games per team means a longer day: check the Schedule tab after you choose.</p></section>`})():''}
    <section class="panel"><h2>Pools preview <small>snake by seed</small></h2><div class="pools">${pools.map(p=>`<div><div class="eyebrow">${pools.length>1?'Pool '+p.name:'Round robin'}</div><ul class="list">${p.entries.map(id=>`<li><span>${E(id).seed}. ${esc(ename(id))}</span></li>`).join('')}</ul></div>`).join('')}</div></section>
    <section class="panel"><h2>Lock draw</h2><p style="margin:0 0 10px">Locking creates all pool matches and adds them to the court queue. Registration for this division closes and waitlisted entries are dropped.</p>
    ${blk.length?`<p class="err">${blk.length} entr${blk.length>1?'ies need':'y needs'} review in Registrations first.</p>`:''}
@@ -4363,21 +4380,22 @@ function adminSetup(){
   return App.pageHead('Tournament · '+esc(S.t.name),'Setup','')+`<div class="two"><div class="stack"><section class="panel"><h2>Tournament</h2><form id="tForm" class="grid-form">
    <label class="f">Name<input type="text" id="tName2" value="${esc(S.t.name)}"></label><label class="f">Venue<input type="text" id="tVenue" value="${esc(S.t.venue)}"></label><label class="f">Dates<input type="text" id="tDates" value="${esc(S.t.dates)}"></label>
    <label class="f">Forfeit after (min)<input type="number" id="tForf" min="1" value="${S.cfg.forfeit}"></label><label class="f">Rest between matches (min)<input type="number" id="tRest" min="0" value="${S.cfg.rest}"></label><label class="f">Referee game timer (min, 0 = off)<input type="number" id="tGame" min="0" value="${S.cfg.gameMin}"></label>
-   <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">Save</button><span class="muted">Courts: ${S.courts.length}</span><button class="btn sm" type="button" data-act="addCourt">Add court</button><button class="btn sm" type="button" data-act="removeCourt">Remove last</button></div></form></section>
+   <div class="f courts-f" style="grid-column:1/-1"><span>Courts</span><div class="row"><button class="btn sm" type="button" data-act="removeCourt" aria-label="Remove a court" ${S.courts.length>1?'':'disabled'}>−</button><b class="num courts-n">${S.courts.length}</b><button class="btn sm" type="button" data-act="addCourt" aria-label="Add a court">+</button><span class="muted">Changes right away</span></div></div>
+   <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">Save</button></div></form></section>
    <section class="panel"><h2>Public listing <small>shown on the Tournaments page</small></h2><form id="tPub" class="grid-form">
    <label class="f">First day<input type="date" id="tStart" value="${esc(S.t.start||'')}"></label><label class="f">Entry fee per player (₱)<input type="number" id="tFee" min="0" step="1" value="${S.t.fee!=null?S.t.fee:''}" placeholder="Leave blank to hide"></label>
    <label class="f">Registration closes<input type="date" id="tRegClose" value="${esc(S.t.regClose||'')}"></label><label class="f" style="grid-column:1/-1">Registration form link<input type="url" id="tFormUrl" value="${esc(S.t.form||'')}" placeholder="https://forms.gle/…"></label>
    <label class="f" style="grid-column:1/-1">About this tournament<textarea id="tAbout" rows="4" placeholder="Format, prizes, what's included">${esc(S.t.about||'')}</textarea></label>
    <p class="tb" style="grid-column:1/-1;margin:0">With a form link and an open division, the listing shows <b>Registration open</b> and a Register button until the closing date.</p>
    <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">Save listing</button><a class="btn" href="#t=${esc(S.id)}" target="_blank" rel="noopener">View public page</a></div></form></section>
-   <section class="panel"><h2>Referees</h2><p class="muted" style="margin:0">Referees are shared by all events. Add them and set their PINs under <b>All events → Referees</b>. ${S.officials.length} on the list.</p></section></div>
+   <section class="panel"><h2>Referees</h2><p class="muted" style="margin:0">Referees are shared by all events. Add them and set their PINs under <b>Staff &amp; players</b>. ${S.officials.length} on the list.</p></section></div>
    <section class="panel guide"><h2>How the pieces fit</h2><ol><li><b>Divisions:</b> build each one from rules (type, gender, rating, age, size, scoring).</li><li><b>Registrations:</b> import Google Form responses. Each is checked against its division's rules.</li><li><b>Draw:</b> seed by DUPR, adjust, then lock. Pool matches join the court queue.</li><li><b>Live:</b> free courts pull the next ready match. Players in two divisions are never on two courts at once, and everyone gets the rest time set here.</li><li>When pools finish, the bracket builds itself. When the final ends, the podium shows on Courtside.</li></ol></section></div>`;
 }
 
 /* ---------- render ---------- */
 function render(){App.render()}
 function html(v){view=v;if(!S.divs.length&&sub==='live')sub='divs';if(App.canAuto())autoCall();return v==='public'?renderPublic():v==='player'?renderPlayer():v==='ref'?renderRef():renderAdmin()}
-function after(v){applyRefFilter();App.alerts(v==='player'?tPlayerAlerts():v==='ref'?tRefAlerts():null);renderModal()}
+function after(v){applyRefFilter();dvVis();App.alerts(v==='player'?tPlayerAlerts():v==='ref'?tRefAlerts():null);renderModal()}
 function tPlayerAlerts(){if(!me)return[];const mine=S.entries.filter(e=>e.status!=='out'&&(e.p||[]).includes(me)).map(e=>e.id);
   const called=S.matches.filter(m=>m.status==='called'&&(mine.includes(m.a)||mine.includes(m.b))).map(m=>{const opp=mine.includes(m.a)?m.b:m.a;
     return{key:'tp:'+S.id+':'+m.id+':'+m.court+':'+m.calledAt,title:'Go to court now',big:'Court '+m.court,sub:'vs '+ename(opp)+' · '+dname(D(m.div))+' · '+stageLabel(m),btn:"I'm on my way",ev:S.id,mid:m.id}});
@@ -4626,8 +4644,9 @@ document.addEventListener('click',e=>{
     case 'skip':S.offset+=5*60000;toast('Skipped 5 minutes.');break;
     case 'playAll':{const n=playCourts();toast(n?'Finished '+n+' match'+(n>1?'es':'')+'.':'No matches on court.');break}
     case 'playMany':{let n=0;for(let i=0;i<10;i++){autoCall();const c=S.courts.find(c=>c.match);if(!c)break;const mm=M(c.match);if(mm.status==='called')startMatch(mm);S.offset+=3*60000;randGames(mm);finish(mm,decided(mm),'Demo',true);n++}toast('Played '+n+' match'+(n===1?'':'es')+'.');break}
-    case 'editDiv':editDiv=id;App.fresh();render();window.scrollTo({top:0});return;
-    case 'cancelEdit':App.fresh();editDiv=null;render();return;
+    case 'editDiv':editDiv=id;addDiv=false;App.fresh();render();window.scrollTo({top:0});return;
+    case 'cancelEdit':App.fresh();editDiv=null;addDiv=false;render();return;
+    case 'newDiv':App.fresh();editDiv=null;addDiv=true;render();window.scrollTo({top:0});return;
     case 'delDiv':S.divs=S.divs.filter(d=>d.id!==id);break;
     case 'goDraw':drawDiv=id;sub='draw';break;
     case 'goPub':pubDiv=id;App.go('public');return;
@@ -4702,9 +4721,9 @@ document.addEventListener('change',e=>{
   if(t.id==='drawDiv'){drawDiv=t.value;render();return}
   if(t.id==='dvLevel'){const L=LV[t.value],r=$('#dvRule'),cv=+$('#dvV').value,cv2=+$('#dvV2').value,isPreset=r.value==='none'||(r.value==='range'&&LEVELS.some(x=>x[2]!=null&&Math.abs(x[2]-cv)<1e-9&&Math.abs(x[3]-cv2)<1e-9));
     if(L&&isPreset){if(L[2]==null)r.value='none';else{r.value='range';$('#dvV').value=L[2].toFixed(1);$('#dvV2').value=L[3].toFixed(2)}}}
-  if(t.closest&&t.closest('#divForm')){try{$('#dvPreview').textContent=readDivForm().custom||autoName(readDivForm())}catch(_){}}
+  if(t.closest&&t.closest('#divForm')){dvVis();try{$('#dvPreview').textContent=autoName(readDivForm())}catch(_){}}
 });
-document.addEventListener('input',e=>{if(!App.isActive('tournament'))return;if(e.target.id==='refSearch'){applyRefFilter();return}if(e.target.closest&&e.target.closest('#divForm')){const f=readDivForm();$('#dvPreview').textContent=f.custom||autoName(f)}});
+document.addEventListener('input',e=>{if(!App.isActive('tournament'))return;if(e.target.id==='refSearch'){applyRefFilter();return}if(e.target.closest&&e.target.closest('#divForm')){$('#dvPreview').textContent=autoName(readDivForm())}});
 document.addEventListener('toggle',e=>{if(!App.isActive('tournament'))return;if(e.target.id==='resPanel'){S.ui=S.ui||{};S.ui.res=e.target.open;save();return}if(e.target.id==='demoPanel'){S.ui=S.ui||{};S.ui.demo=e.target.open;save()}},true);
 document.addEventListener('submit',e=>{
   if(!App.isActive('tournament'))return;
@@ -4722,8 +4741,8 @@ document.addEventListener('submit',e=>{
     else if(d.rating.rule!=='none'&&!(d.rating.v>=2&&d.rating.v<=8&&(d.rating.rule!=='range'||d.rating.v2<=8))){$('#dvErr').textContent='DUPR ratings run from 2.0 to 8.0. Check the rating value.';return}
     if(d.age.rule!=='none'&&!(Number.isInteger(d.age.v)&&d.age.v>=5&&d.age.v<=99)){$('#dvErr').textContent='Enter an age between 5 and 99.';return}
     if(!(Number.isInteger(d.cap)&&d.cap<=128)){$('#dvErr').textContent='Max entries must be a whole number up to 128.';return}
-    if(editDiv){Object.assign(D(editDiv),d);audit('Admin','Edited division rules: '+dname(D(editDiv)));toast('Division updated. Entries re-checked.');editDiv=null;App.fresh()}
-    else{S.divs.push({id:App.uid('d'),...d,status:'open',pools:[],bracket:null});audit('Admin','Created division '+(d.custom||autoName(d)));toast('Division added. Add entries under Registrations.')}
+    if(editDiv){Object.assign(D(editDiv),d);delete D(editDiv).custom;audit('Admin','Edited division rules: '+dname(D(editDiv)));toast('Division updated. Entries re-checked.');editDiv=null;App.fresh()}
+    else{S.divs.push({id:App.uid('d'),...d,status:'open',pools:[],bracket:null});addDiv=false;App.fresh();audit('Admin','Created division '+autoName(d));toast('Division added. Add entries under Registrations.')}
     commit();return}
   if(f.id==='tPub'){const u=$('#tFormUrl').value.trim(),fee=$('#tFee').value.trim();
     if(u&&!/^https?:\/\/\S+$/i.test(u)){toast('The form link must start with https://');return}

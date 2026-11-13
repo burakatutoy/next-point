@@ -1,6 +1,31 @@
-// Next Point Pickleball: shows phone alerts. It doesn't cache anything, so updates to the site show up right away.
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+// Next Point Pickleball: phone alerts, and opening the site without signal.
+// Pages are fetched from the network first (so updates show up right away) and kept as a copy for when the signal is gone.
+const CACHE = 'np-pages-v1';
+const SHELL = ['./', 'index.html', 'scoresheet.html', 'manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png'];
+self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {}).then(() => self.skipWaiting())));
+self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('np-pages-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())));
+
+self.addEventListener('fetch', e => {
+  const req = e.request, url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return;   // the database and fonts go straight to the network
+  e.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    try {
+      const net = await Promise.race([fetch(req), new Promise((_, no) => setTimeout(() => no(new Error('slow')), req.mode === 'navigate' ? 6000 : 8000))]);
+      if (net && net.ok && net.type === 'basic') cache.put(req, net.clone()).catch(() => {});
+      return net;
+    } catch (err) {
+      const hit = await cache.match(req, { ignoreSearch: true });
+      if (hit) return hit;
+      if (req.mode === 'navigate') {
+        const page = url.pathname.endsWith('scoresheet.html') ? 'scoresheet.html' : 'index.html';
+        const shell = await cache.match(page);
+        if (shell) return shell;
+      }
+      throw err;
+    }
+  })());
+});
 
 self.addEventListener('push', e => {
   let d = {};

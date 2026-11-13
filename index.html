@@ -1497,6 +1497,30 @@ input[type=date]:focus-visible{outline:none;border-color:var(--accent);box-shado
 
 /* v39: offline scoresheet entry */
 .sheetbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-weight:500}.sheetbar span{flex:1 1 220px}
+
+/* v40: polish */
+.tm-sl{color:var(--muted)}
+@media (max-width:600px){table.pt .pfpa{display:none}table.pt td.tm{min-width:8.5em}table.pt td.tm .tm-sl{display:none}table.pt td.tm .tm-p{display:block}table.pt td.tm{line-height:1.3}}
+@media (max-width:600px){table.pt td.tm{white-space:normal}table.pt td.tm>.skill{margin-left:2px}}
+.sm-note{font-size:12.5px;color:var(--muted);margin-top:2px}
+.tv-closed{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:center;padding:clamp(24px,5vh,64px) clamp(20px,3vw,48px);border-radius:20px;background:var(--surface);border:1px solid var(--line);min-height:55vh}
+.tv-closed h2{font-family:var(--f-display);font-size:clamp(36px,5vw,72px);line-height:1;margin:8px 0 14px}.tv-closed p{font-size:clamp(16px,1.6vw,22px);color:var(--muted);margin:0}
+.tv-closed h3{margin:0 0 10px;font-size:clamp(18px,1.6vw,24px)}
+.tv-closed~.tv-body,.tv-closed~.tv-foot{display:none}
+@media (max-width:720px){.tv-closed{grid-template-columns:1fr}}
+/* TV: courts fill the screen whatever the number */
+.kiosk .courts.big[data-n="2"],.kiosk .courts.big[data-n="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kiosk .courts.big[data-n="3"],.kiosk .courts.big[data-n="5"],.kiosk .courts.big[data-n="6"],.kiosk .courts.big[data-n="9"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kiosk .courts.big[data-n="7"],.kiosk .courts.big[data-n="8"],.kiosk .courts.big[data-n="10"],.kiosk .courts.big[data-n="11"],.kiosk .courts.big[data-n="12"]{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+/* v41: live scores from the scoresheet */
+.ct2-fresh{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.ct2-fresh::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good,#2f9e44)}
+.ct2-fresh.stale{color:var(--warn-ink,#9a6700)}.ct2-fresh.stale::before{background:var(--ball,#e6c300)}
+.sheetcard{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.sheet-sc{display:grid;grid-template-columns:minmax(0,1fr) auto auto minmax(0,1fr);gap:10px;align-items:center;font-weight:600}
+.sheet-sc b{font-size:40px;line-height:1;font-family:var(--f-display);min-width:1.4em;text-align:center}.sheet-sc span:last-child{text-align:right}
+.kiosk .ct2-fresh{font-size:14px}
 </style>
 
 <header class="top">
@@ -1533,6 +1557,125 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 <script>window.NP_CLOUD={url:'https://onwtqtpoljqruyuwdiat.supabase.co',key:'sb_publishable_xMdprQtDUH_3y2wjASY-Bw_vHgUpmFP'};</script>
 <script>/*! qrcode-generator 1.4.4 | (c) 2009 Kazuhiko Arase | MIT license */
 var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
+</script>
+<script id="np-core">
+/* Next Point scoring core: the score is never stored, it is rebuilt by replaying an append-only list of events.
+   Pure functions, no DOM, no storage, no network. Used by the referee scoresheet and (later) by the displays.
+   Event: {id, seq, epoch, type, p (payload), ts (ms, the scoring device's clock)}
+   Types: game_start, game_reset, rally, replay, timeout, timeout_end, ends_switched, timer, correction, undo, game_end, match_end */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.NPScore=api})(typeof self!=='undefined'?self:this,function(){
+'use strict';
+const oth=s=>s==='a'?'b':'a',ix=s=>s==='a'?0:1;
+const partner=p=>p[0]+(p[1]==='0'?'1':'0');
+const isDbl=c=>c.type==='doubles';
+const switchAt=to=>Math.ceil(to/2);
+const toLimit=to=>to===11?2:3;
+const wins=g=>g.reduce((w,x)=>(x[0]>x[1]?w[0]++:w[1]++,w),[0,0]);
+const need=c=>Math.ceil(c.bo/2);
+function decided(c,games){const w=wins(games),n=need(c);return w[0]>=n?'a':w[1]>=n?'b':null}
+// open play and most tournaments: first to the target wins (11-10 ends it); win by 2 only when the division says so
+const gameWon=(c,x,y)=>c.w2?(x>=c.to&&x-y>=2):x>=c.to;
+// each player's court depends only on their own side's score: whoever started on the right is on the right when it is even
+const rightP=(c,L,s)=>isDbl(c)?(L.score[ix(s)]%2===0?L.sr[s]:partner(L.sr[s])):s+'0';
+const tmLeft=(L,now)=>L.tm.total-L.tm.used-(L.tm.since?now-L.tm.since:0);
+function tmPause(L,now){if(L.tm.since){L.tm.used+=Math.max(0,now-L.tm.since);L.tm.since=null}}
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+function setupLive(c,game,prev){
+  return{setup:true,game,first:prev?oth(prev.first):'a',sr:prev?{a:prev.sr.a,b:prev.sr.b}:{a:'a0',b:'b0'},aLeft:prev?!prev.aLeft:true,
+    score:[0,0],serving:'a',num:2,server:null,to:{a:0,b:0},toUntil:null,toTeam:null,rallies:0,replays:0,switched:false,switchPrompt:false,
+    over:null,start:null,tm:{total:((c&&c.timer)||0)*60000,used:0,since:null}};
+}
+// who serves, from which side, to whom: everything the referee calls out
+function view(c,L){
+  let serving=L.serving,num=L.num,server=L.server;
+  if(L.setup){serving=L.first;num=isDbl(c)?2:1;server=rightP(c,L,serving)}
+  const rcv=oth(serving);
+  const side=isDbl(c)?(server===rightP(c,L,serving)?'right':'left'):(L.score[ix(serving)]%2===0?'right':'left');
+  const receiver=isDbl(c)?(side==='right'?rightP(c,L,rcv):partner(rightP(c,L,rcv))):rcv+'0';
+  return{serving,num,server,rcv,side,receiver};
+}
+function callText(c,L){const v=view(c,L),a=L.score[ix(v.serving)],b=L.score[ix(v.rcv)];return isDbl(c)?a+'–'+b+'–'+v.num:a+'–'+b}
+function pointState(c,games,L){
+  const v=view(c,L),s=L.score[ix(v.serving)],r=L.score[ix(v.rcv)];
+  if(c.w2?(s>=c.to-1&&s>r):s===c.to-1){const g=[...games,v.serving==='a'?[s+1,r]:[r,s+1]];return decided(c,g)?'Match point':'Game point'}
+  return '';
+}
+// why a typed-in score can't be right for this format ('' = fine)
+function scoreError(c,a,b){
+  if(!(Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0))return 'Enter both scores.';
+  const to=c.to,hi=Math.max(a,b),lo=Math.min(a,b);
+  if(!c.w2)return hi>to?'Games stop at '+to+'. No side can have more than '+to+'.':lo===to?'Only one side can reach '+to+'.':'';
+  return hi>to&&hi-lo>2?'Past '+to+', the game ends as soon as one side leads by 2.':'';
+}
+
+function init(cfg,base){
+  const c=cfg?clone(cfg):null;
+  return{cfg:c,games:base&&base.games?clone(base.games):[],live:c?setupLive(c,(base&&base.games?base.games.length:0)+1,null):null,
+    status:'play',result:null,start:null,end:null,stack:[],n:0,last:0,seen:Object.create(null),ignored:0};
+}
+const UNDOABLE={rally:1,timeout:1,correction:1};
+// apply one event. Events that make no sense in the current state are counted in st.ignored and change nothing.
+function apply(st,ev){
+  if(!ev||!ev.id||st.seen[ev.id])return st;          // the same event delivered twice changes nothing
+  st.seen[ev.id]=1;st.n++;const ts=ev.ts||0,p=ev.p||{};if(ts>st.last)st.last=ts;
+  const bad=()=>{st.ignored++;return st};
+  if(st.status==='done')return bad();
+  if(ev.type==='game_start'){
+    if(p.cfg)st.cfg=clone(p.cfg);const c=st.cfg;if(!c)return bad();
+    const L=setupLive(c,p.game||st.games.length+1,null);
+    Object.assign(L,{setup:false,first:p.first||'a',sr:{a:(p.sr&&p.sr.a)||'a0',b:(p.sr&&p.sr.b)||'b0'},aLeft:p.aLeft!==false,start:ts});
+    L.serving=L.first;L.num=isDbl(c)?2:1;L.server=rightP(c,L,L.first);if(L.tm.total)L.tm.since=ts;
+    st.live=L;st.stack=[];if(!st.start)st.start=ts;return st}
+  const c=st.cfg,L=st.live;if(!c||!L)return bad();
+  const push=()=>st.stack.push({id:ev.id,snap:clone(L)});
+  switch(ev.type){
+    case 'game_reset':st.live=setupLive(c,L.game,null);st.stack=[];return st;
+    case 'rally':{const w=p.w;if(L.setup||L.over||L.switchPrompt||(w!=='a'&&w!=='b'))return bad();
+      push();L.rallies++;
+      if(w===L.serving){L.score[ix(w)]++;const a=L.score[ix(w)],b=L.score[ix(oth(w))];
+        if(gameWon(c,a,b)){L.over=w;tmPause(L,ts)}
+        else if(c.switchEnds!==false&&(c.bo===1||L.game===c.bo)&&!L.switched&&a===switchAt(c.to)&&b<a){L.switched=true;L.switchPrompt=true}}
+      else if(isDbl(c)&&L.num===1){L.num=2;L.server=partner(L.server)}
+      else{L.serving=oth(L.serving);L.num=1;L.server=rightP(c,L,L.serving)}
+      return st}
+    case 'replay':if(L.setup||L.over)return bad();L.replays++;return st;
+    case 'timeout':{const s=p.side;if(L.setup||L.over||(s!=='a'&&s!=='b')||L.to[s]>=toLimit(c.to))return bad();push();L.to[s]++;L.toTeam=s;L.toUntil=ts+60000;return st}
+    case 'timeout_end':L.toUntil=null;return st;
+    case 'ends_switched':if(!L.switchPrompt)return bad();L.switchPrompt=false;L.aLeft=!L.aLeft;return st;
+    case 'timer':if(L.setup)return bad();if(p.op==='pause')tmPause(L,ts);else if(p.op==='resume'){if(!L.tm.since)L.tm.since=ts}else if(p.op==='reset'){L.tm.used=0;L.tm.since=null}else return bad();return st;
+    case 'correction':{if(L.setup||!Array.isArray(p.score)||scoreError(c,p.score[0],p.score[1]))return bad();
+      const serving=p.serving==='b'?'b':'a';let server=serving+'0',num=1;
+      if(isDbl(c)){server=p.server||rightP(c,L,serving);num=p.num===1?1:2;if(server[0]!==serving)return bad()}
+      push();L.score=[p.score[0],p.score[1]];L.serving=serving;L.num=num;
+      if(isDbl(c)&&p.swap){if(p.swap.a)L.sr.a=partner(L.sr.a);if(p.swap.b)L.sr.b=partner(L.sr.b)}
+      if(p.to){L.to={a:+p.to.a||0,b:+p.to.b||0}}
+      L.server=server;L.over=gameWon(c,L.score[0],L.score[1])?'a':gameWon(c,L.score[1],L.score[0])?'b':null;L.switchPrompt=false;if(L.over)tmPause(L,ts);
+      return st}
+    case 'undo':{let i=st.stack.length-1;while(i>=0&&st.stack[i].id!==p.target)i--;if(i<0)return bad();
+      const was=L.over,prev=st.stack[i].snap;st.stack.length=i;st.live={...prev,tm:L.tm};
+      if(st.live.over===null&&was&&st.live.tm.total&&tmLeft(st.live,ts)>0&&!st.live.tm.since)st.live.tm.since=ts;   // the game is back on: the clock runs again
+      return st}
+    case 'game_end':{if(L.setup)return bad();const sc=Array.isArray(p.score)?[p.score[0],p.score[1]]:[L.score[0],L.score[1]];
+      st.games.push(sc);tmPause(L,ts);st.stack=[];const w=decided(c,st.games);
+      if(w){st.status='done';st.end=ts;st.result={type:'played',winner:w,note:''}}else st.live=setupLive(c,st.games.length+1,L);
+      return st}
+    case 'match_end':{const lo=p.loser==='b'?'b':'a',w=oth(lo),type=p.type==='retired'?'retired':'forfeit';let note='';
+      if(type==='forfeit'){const wn=wins(st.games);while((w==='a'?wn[0]:wn[1])<need(c)){st.games.push(w==='a'?[c.to,0]:[0,c.to]);w==='a'?wn[0]++:wn[1]++}}
+      else if(!L.setup&&(L.score[0]||L.score[1])){st.games.push([L.score[0],L.score[1]]);note=L.score.join('–')+' in game '+L.game}
+      tmPause(L,ts);st.stack=[];st.status='done';st.end=ts;st.result={type,winner:w,note};return st}
+  }
+  return bad();
+}
+// order events the way they were scored: by claim epoch (a handoff starts a new one), then the device's own counter
+const ep=e=>e.epoch==null?1e9:e.epoch;
+const order=(x,y)=>(ep(x)-ep(y))||((x.seq||0)-(y.seq||0))||((x.ts||0)-(y.ts||0))||(x.id<y.id?-1:x.id>y.id?1:0);
+function fold(events,cfg,base){const st=init(cfg,base);[...events].sort(order).forEach(e=>apply(st,e));return st}
+const undoTarget=st=>st.stack.length?st.stack[st.stack.length-1].id:null;
+
+return{init,apply,fold,order,view,callText,pointState,scoreError,decided,gameWon,rightP,partner,switchAt,toLimit,tmLeft,wins,need,undoTarget,isDbl,oth,ix};
+});
+
 </script>
 <script>
 document.addEventListener('touchstart',()=>{},{passive:true});
@@ -1574,8 +1717,8 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-10a';
-  const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),pullT:null,rT:null,pollT:null,warned:0};
+  const BUILD='2026-11-12c';
+  const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
   const clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v));
@@ -1650,11 +1793,15 @@ const App=(()=>{
     for(const id of Object.keys(CL.revs))if(!seen.has(id))remoteDeleted(id)}
   const isStaff=()=>!!CL.tok.staff;
   CL.stale=new Set();
-  function queuePull(id){CL.pullQ.add(id);if(!isStaff()&&CL.pullT)return;clearTimeout(CL.pullT);CL.pullT=setTimeout(async()=>{CL.pullT=null;const ids=[...CL.pullQ];CL.pullQ.clear();let ch=false;
+  // staff screens, Courtside and the venue TV pull right away; a viewer's phone at most every ~15 s for the same tournament (a newly opened one straight away)
+  const pullWait=id=>isStaff()||view==='public'||(()=>{try{return kiosk.on}catch(e){return false}})()?120:Math.max(2500,15000-(Date.now()-(CL.lastPull[id]||0)));
+  function queuePull(id){CL.pullQ.add(id);const w=pullWait(id);if(!isStaff()&&CL.pullT&&CL.pullAt<=Date.now()+w)return;clearTimeout(CL.pullT);CL.pullAt=Date.now()+w;CL.pullT=setTimeout(async()=>{CL.pullT=null;const ids=[...CL.pullQ];CL.pullQ.clear();let ch=false;
     for(const x of ids){try{if(await pull(x))ch=true}catch(e){CL.offline=!!e.net;CL.pullQ.add(x)}}
-    if(CL.pullQ.size)CL.pullT=setTimeout(()=>{CL.pullT=null;queuePull([...CL.pullQ][0])},3000);if(ch)scheduleRender();setState()},isStaff()?120:2500)}
-  function onRev(id,rev,del){if(!id)return;if(del){if(id in CL.revs||docOf(id)){remoteDeleted(id);scheduleRender()}return}if((CL.revs[id]||0)<rev){if(!isStaff()&&id!=='club'&&(id in CL.revs)&&(id!=='ev:'+db.cur||document.visibilityState==='hidden')){CL.stale.add(id);return}CL.stale.delete(id);queuePull(id)}}
-  function pullStale(){if(!CL.on||!CL.ready||document.visibilityState==='hidden')return;const id='ev:'+db.cur;if(CL.stale.has(id)){CL.stale.delete(id);queuePull(id)}}
+    if(CL.pullQ.size)CL.pullT=setTimeout(()=>{CL.pullT=null;queuePull([...CL.pullQ][0])},3000);ids.forEach(x=>{CL.lastPull[x]=Date.now()});if(ch)scheduleRender();setState()},w)}
+  // the tournament on screen: the chosen event, or the one a public page (#t=, #s=) is showing
+  const onScreen=()=>{let x=db.cur;try{if(view==='intro'&&/^[ts]:/.test(pg))x=pg.slice(2)}catch(e){}return x?'ev:'+x:''};
+  function onRev(id,rev,del){if(!id)return;if(del){if(id in CL.revs||docOf(id)){remoteDeleted(id);scheduleRender()}return}if((CL.revs[id]||0)<rev){if(!isStaff()&&id!=='club'&&(id in CL.revs)&&(id!==onScreen()||document.visibilityState==='hidden')){CL.stale.add(id);return}CL.stale.delete(id);queuePull(id)}}
+  function pullStale(){if(!CL.on||!CL.ready||document.visibilityState==='hidden')return;const id=onScreen();if(id&&CL.stale.has(id)){CL.stale.delete(id);queuePull(id)}}
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullStale()});
   async function poll(){try{const {data,error}=await withTimeout(CL.sb.from('np_rev').select('id,rev,deleted'));if(error)throw appErr(error);CL.offline=false;(data||[]).forEach(r=>onRev(r.id,r.rev,r.deleted))}catch(e){CL.offline=!!e.net}setState()}
   async function loadSecrets(){if(!CL.tok.staff||CL.staffRole!=='admin')return;try{const r=await rpc('np_secrets_get',{p_token:CL.tok.staff});if(!r||!r.rows)return;
@@ -1696,8 +1843,10 @@ const App=(()=>{
     if(CL.tok.staff){CL.tok.staff=null;CL.staffRole=null;CL.pins=null;saveTokens();if(mode&&mode.id){mode=null;saveMode();view='intro';gate='signin';gateErr='Your sign-in expired. Please sign in again.'}}else{CL.tok.player=null;saveTokens()}}
   function setState(){const iv=document.querySelector('.intro-ver');if(iv){const want=CL.on?(CL.ready?'ok':CL.offline?'off':'wait'):'x';const d=iv.querySelector('.iv-dot');if(d&&CL.on&&d.dataset.s!==want&&!document.querySelector('.intro input:focus'))setTimeout(render,0)}
     const c=document.getElementById('syncChip');if(!c)return;if(!CL.on){c.hidden=true;return}
-    const st=!CL.ready?(CL.offline?'off':'wait'):CL.offline?'off':CL.err?'err':(CL.busy||CL.dirty)?'save':'live';
-    c.hidden=view==='intro';c.dataset.s=st;c.textContent={wait:'Connecting…',off:'Offline · saved here',save:'Saving…',err:'Not saved · tap',live:CL.live?'Live':'Online'}[st];
+    if(CL.offline){if(!CL.offSince){CL.offSince=Date.now();setTimeout(setState,20500)}}else CL.offSince=0;
+    const longOff=CL.offline&&Date.now()-CL.offSince>20000;
+    const st=!CL.ready?(longOff?'off':'wait'):CL.offline?(longOff?'off':'recon'):CL.err?'err':(CL.busy||CL.dirty)?'save':'live';
+    c.hidden=view==='intro';c.dataset.s=st==='recon'?'wait':st;c.textContent={wait:'Connecting…',recon:'Reconnecting…',off:'Offline · saved here',save:'Saving…',err:'Not saved · tap',live:CL.live?'Live':'Online'}[st];
     c.title=st==='off'?'No connection. Changes stay on this device and upload when the connection is back.':st==='err'?'Not saved: '+CL.err:''}
   document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#syncChip')&&CL.on){toast(CL.err?'Not saved: '+CL.err+'. Trying again now.':CL.offline?'Offline. Changes are kept on this device.':'Everything is saved.');if(CL.err||CL.offline){CL.fail=0;schedulePush(0)}}});
   let lastType=0,userAct=0;document.addEventListener('input',()=>{lastType=Date.now()},true);['pointerdown','keydown','submit','change'].forEach(t=>document.addEventListener(t,()=>{userAct=Date.now()},true));
@@ -1979,6 +2128,8 @@ const App=(()=>{
       html=view==='admin'?`<div class="dash">${sideNav(ev,m)}<div class="dash-main">${body}</div></div>`:view==='public'?(kiosk.on?body+kioskFoot():(mode&&(mode.role==='admin'||mode.role==='all')?tvBar():'')+body):body;
     }
     document.body.classList.toggle('kiosk',kiosk.on&&view==='public'&&!!ev);if(!(view==='player'||view==='ref'))alerts(null);
+    {const LF=window.LiveFeed,want=LF&&ev&&ev.type==='tournament'&&CL.on&&!(view==='admin'&&home)&&(view==='admin'||view==='ref'||(view==='public'&&(kiosk.on||!!CL.tok.staff)));
+      if(LF){if(want)LF.watch('ev:'+ev.id,()=>{const e2=cur();if(!e2||e2.type!=='tournament')return;const m2=mod(e2);m2.bind(e2);if(m2.feedChanged)m2.feedChanged();else render()});else LF.stop()}}
     const ae=document.activeElement,aeId=ae&&ae.id&&ae.closest&&ae.closest('#app')?ae.id:null,aeSel=aeId&&typeof ae.selectionStart==='number'?[ae.selectionStart,ae.selectionEnd]:null;
     $('#app').innerHTML=html+(tbOn?tabBar():'');
     keep.forEach(([id,v])=>{const el=document.getElementById(id);if(el&&(!el.options||[...el.options].some(o=>o.value===v)))el.value=v});
@@ -2194,13 +2345,13 @@ const App=(()=>{
     const dd=etaDay(x),wy=x.why&&!/not started|scheduled for/i.test(x.why)?x.why:'';
     if(!x.a||!x.b)return{k:'tbd',t:x.eta!=null?fmtM(x.eta):'Later',sub:[x.eta!=null?'Estimate'+(dd?' · '+dd:''):'','Teams set by earlier results'].filter(Boolean).join(' · ')};
     if(x.ready&&x.line&&!schCtx.planning)return{k:'line',t:x.line<=2?'Up next':'#'+x.line+' in line',sub:et?cap(et):''};
-    if(x.eta!=null)return{k:'est',t:fmtM(x.eta),sub:['Estimate'+(dd?' · '+dd:''),x.line?'#'+x.line+' in line':'',wy].filter(Boolean).join(' · ')};
+    if(x.eta!=null)return{k:'est',t:fmtM(x.eta),sub:'Estimate'+(dd?' · '+dd:''),note:[x.line?'#'+x.line+' in line':'',wy].filter(Boolean).join(' · ')};
     if(x.why)return{k:'wait',t:'In line'+(x.line?' #'+x.line:''),sub:x.why};
     return{k:'later',t:'Later',sub:'Not in line yet'};
   }
   function smRow(x,me){const st=smState(x),mine=s0=>me&&x[s0]&&x[s0].p.includes(me),nm=s0=>x[s0]?esc(x[s0].name):'<span class="muted">TBD</span>',w=s0=>x.winner&&x[s0]&&x.winner===x[s0].id;
     return `<li class="sm-row st-${st.k} ${mine('a')||mine('b')?'is-me':''}"><div class="sm-when"><b>${esc(st.t)}</b>${st.sub?`<span>${esc(st.sub)}</span>`:''}</div>
-      <div class="sm-what"><div class="sm-teams"><span class="${w('a')?'w':''} ${mine('a')?'me':''}">${nm('a')}</span><span class="muted sm-vs">vs</span><span class="${w('b')?'w':''} ${mine('b')?'me':''}">${nm('b')}</span></div><div class="sm-meta">${esc(x.divName)} · ${esc(x.stage)}</div></div></li>`}
+      <div class="sm-what"><div class="sm-teams"><span class="${w('a')?'w':''} ${mine('a')?'me':''}">${nm('a')}</span><span class="muted sm-vs">vs</span><span class="${w('b')?'w':''} ${mine('b')?'me':''}">${nm('b')}</span></div><div class="sm-meta">${esc(x.divName)} · ${esc(x.stage)}</div>${st.note?`<div class="sm-note">${esc(st.note)}</div>`:''}</div></li>`}
   function schedPage(id){const ev=tours().find(e=>e.id===id);
     if(!ev)return `<div class="site-page"><div class="sp-head"><h1>Schedule not found</h1><p>The link may be old, or the tournament was removed.</p></div><button class="btn primary" data-app="pg" data-pg="tours">All tournaments</button></div>`;
     const S2=TM.schedData&&TM.schedData(ev),t=ev.t||{},i=tInfo(ev);if(S2)schCtx={today:S2.planning?-2:S2.today,dayShort:S2.dayShort,planning:S2.planning};if(!S2)return '<div class="site-page"><p class="site-empty">The schedule couldn\'t load. Pull to refresh.</p></div>';
@@ -2363,6 +2514,7 @@ const App=(()=>{
   const standalone=()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}};
   const canPush=()=>CL.on&&window.isSecureContext&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
   let swR=null;
+  try{if(/^https?:$/.test(location.protocol)&&window.isSecureContext&&'serviceWorker' in navigator)window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}catch(e){}
   function swReg(){if(swR||!(CL.on&&window.isSecureContext&&'serviceWorker' in navigator))return swR;
     swR=navigator.serviceWorker.register('sw.js').catch(e=>{console.warn('sw',e);return null});
     navigator.serviceWorker.addEventListener('message',e=>{const u=e.data&&e.data.url;if(u&&/^#/.test(u)){deepLink(u.slice(1));render()}});return swR}
@@ -2607,6 +2759,60 @@ const App=(()=>{
   return{fresh:()=>{lastKey=''},db:()=>db,save,render,go,uid,newPin,addPlayer,ensureSkill,isActive,start,kpi,pageHead,icon,clubBoard,playerRank,sessionLeaders,tools,qrBlock,kioskPage,alerts,verifyPin,playerLogin,registerPlayer,pinErr,canAuto,cloud:()=>CL,forgetMe,ackMatch,acked:ackedM,pushCard,me:()=>lastMe};
 })();
 
+/* ---------- live scores from referee phones ----------
+   The scoresheet uploads each tap to np_score_events. The desk, the referee's own app and the venue TV read those
+   events (Realtime nudges, a small "everything after n" fetch does the work) and replay them with the same engine.
+   Players' phones don't: they get results when a game is saved. */
+window.LiveFeed=(()=>{
+  const NC=window.NP_CLOUD||null;let ev=null,last=0,evs=new Map(),claims=new Map(),seen=new Set(),chan=null,timer=null,busy=false,live=false,fails=0,cache=new Map(),pt=0,onChange=null;
+  const hdr=()=>({apikey:NC.key,Authorization:'Bearer '+NC.key});
+  const base=()=>NC.url.replace(/\/$/,'')+'/rest/v1/';
+  function stop(){if(timer){clearTimeout(timer);timer=null}if(chan){try{chan.unsubscribe()}catch(e){}chan=null}ev=null;last=0;evs.clear();claims.clear();seen.clear();cache.clear();live=false;fails=0}
+  function watch(id,cb){
+    onChange=cb||onChange;
+    if(!NC||typeof fetch!=='function'||id===ev)return;stop();ev=id;
+    const sb=App.cloud().sb;
+    if(sb&&sb.channel){try{chan=sb.channel('np-score-'+id)
+      .on('postgres_changes',{event:'*',schema:'public',table:'np_score_events',filter:'event_id=eq.'+id},()=>nudge())
+      .on('postgres_changes',{event:'*',schema:'public',table:'np_match_claims',filter:'event_id=eq.'+id},()=>nudge())
+      .subscribe(st=>{live=st==='SUBSCRIBED';if(live)nudge()})}catch(e){chan=null}}
+    pull();
+  }
+  function nudge(){if(!ev)return;if(timer)clearTimeout(timer);timer=setTimeout(pull,120)}
+  function later(){if(timer)clearTimeout(timer);if(!ev)return;const hid=typeof document!=='undefined'&&document.hidden;
+    timer=setTimeout(pull,hid?30000:fails?Math.min(30000,3000*2**Math.min(fails,3)):live?15000:3000)}
+  async function pull(){
+    if(!ev)return;if(busy){later();return}busy=true;const id=ev;let changed=false;
+    try{
+      const q=encodeURIComponent(id);
+      const [a,b]=await Promise.all([
+        fetch(base()+'np_score_events?select=id,n,match_id,epoch,seq,type,payload,client_ts,server_ts&event_id=eq.'+q+'&late=is.false&n=gt.'+last+'&order=n.asc',{headers:hdr()}),
+        fetch(base()+'np_match_claims?select=match_id,device_id,staff_id,staff_name,epoch,seen_at,pending&event_id=eq.'+q,{headers:hdr()})]);
+      if(!a.ok||!b.ok)throw new Error('http '+a.status+'/'+b.status);
+      const rows=await a.json(),cs=await b.json();
+      if(id===ev){
+        for(const r of rows){last=Math.max(last,+r.n||0);if(seen.has(r.id))continue;seen.add(r.id);
+          const e={id:r.id,epoch:r.epoch,seq:r.seq,type:r.type,p:r.payload||{},ts:Date.parse(r.client_ts)||0,at:Date.parse(r.server_ts)||0};
+          if(!evs.has(r.match_id))evs.set(r.match_id,[]);evs.get(r.match_id).push(e);cache.delete(r.match_id);changed=true}
+        const nc=new Map();cs.forEach(c=>nc.set(c.match_id,{dev:c.device_id,staff:c.staff_id,name:c.staff_name||'',epoch:c.epoch,seen:c.seen_at?Date.parse(c.seen_at):0,pend:c.pending||0}));
+        if(JSON.stringify([...nc])!==JSON.stringify([...claims])){claims=nc;changed=true}
+        fails=0}
+    }catch(e){fails++}
+    finally{busy=false;later()}
+    if(changed&&!pt)pt=setTimeout(()=>{pt=0;if(onChange)try{onChange()}catch(e){console.warn(e)}},200);
+  }
+  // the replayed match: prior = games already in the tournament before the scoresheet started
+  function state(mid,prior){const list=evs.get(mid);if(!list||!list.length)return null;
+    const k=list.length+'|'+(prior||[]).length,c=cache.get(mid);if(c&&c.k===k)return c.v;
+    const gs=list.filter(e=>e.type==='game_start').sort(NPScore.order)[0],n0=gs&&gs.p&&gs.p.game?gs.p.game-1:(prior||[]).length;
+    const st=NPScore.fold(list,null,{games:(prior||[]).slice(0,n0)});
+    const v={st,lastAt:Math.max(...list.map(e=>e.at||0))};cache.set(mid,{k,v});return v}
+  const claim=mid=>claims.get(mid)||null;
+  function fresh(mid){const c=claims.get(mid),l=evs.get(mid);let t=c&&c.seen||0;if(l)for(const e of l)if(e.at>t)t=e.at;return t}
+  async function release(tok,mid){try{const r=await fetch(base()+'rpc/np_score_release',{method:'POST',headers:{...hdr(),'Content-Type':'application/json'},body:JSON.stringify({p_token:tok,p_event:ev,p_match:mid})});const j=r.ok?await r.json():null;nudge();return j}catch(e){return null}}
+  return{watch,stop,state,claim,fresh,release,nudge,on:()=>!!ev,ok:()=>fails===0,event:()=>ev}
+})();
+
 const OPM=(()=>{
 
 let S, view='admin', me=null, modal=null, opSub='live';
@@ -2800,12 +3006,14 @@ function renderTV(){
   if(App.kioskPage()==='board')return tvBoard(head);
   return `<section class="tv">
     ${head}
-    <div class="tv-body"><div class="courts big">${S.courts.map(c=>courtTile(c,'tv')).join('')}</div>
+    ${!S.session.open&&!S.courts.some(c=>c.state==='play'||c.state==='assigned')?`<div class="tv-closed"><div><span class="eyebrow">Session closed</span><h2>Thanks for playing</h2><p><b class="num">${k.games}</b> games tonight · <b class="num">${k.here}</b> players</p></div>
+      ${(()=>{const L=App.sessionLeaders(S.id,5);return L.length?`<div><h3>Tonight's leaders</h3><ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(short(r.id))}</span><span class="lead-s num">${r.w}–${r.g-r.w}</span></li>`).join('')}</ol></div>`:''})()}</div>`:''}
+    <div class="tv-body"><div class="courts big" data-n="${S.courts.length}">${S.courts.map(c=>courtTile(c,'tv')).join('')}</div>
     <aside class="upnext"><h2>Up next</h2>${rows.join('')||'<span class="muted">Nobody waiting. Check in to play.</span>'}
     ${pos>10?`<span class="muted">+ ${pos-10} more in line</span>`:''}
     ${(()=>{const L=App.sessionLeaders(S.id,5);return L.length?`<h2 class="tl-lead">Tonight's leaders</h2><ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(short(r.id))}</span><span class="lead-s num">${r.w}–${r.g-r.w}</span></li>`).join('')}</ol>`:''})()}</aside></div>
     <div class="tv-foot">
-    <span><b class="num">${k.here}</b> players here</span><span><b class="num">${k.games}</b> games played</span><span>${k.waiting?`Next game in about <b class="num">${mins(estWait(0))}</b> min`:'Nobody waiting'}</span>
+    <span><b class="num">${k.here}</b> players here</span><span><b class="num">${k.games}</b> games played</span><span>${k.waiting?(mins(estWait(0))<1?'Next game any moment':`Next game in about <b class="num">${mins(estWait(0))}</b> min`):'Nobody waiting'}</span>
     <span>${S.session.rule==='winners'?'Winners stay on (max 2 games)':'Everyone rotates off after each game'}</span></div>
   </section>`;
 }
@@ -3680,15 +3888,36 @@ function addPlayer(o){
 const stageLabel=m=>m.stage==='pool'?(D(m.div).pools.length>1?'Pool '+m.pool+' · ':'')+'Round '+m.round:m.label;
 const gamesStr=m=>m.games.map(g=>g[0]+'–'+g[1]).join(', ');
 function chips(eid,here){if(!eid)return '<span class="chip">TBD</span>';const e=E(eid);return e.p.map(p=>`<span class="chip ${here?'ok':''}">${esc(D(e.div).type==='singles'?PL(p).name:pshort(p))}</span>`).join('')}
+// the scoresheet's events for a match (desk, referee app, TV only)
+function feedOf(m){const LF=window.LiveFeed;return LF&&LF.on()&&LF.event()==='ev:'+S.id?LF.state(m.id,m.games):null}
+function feedAgo(t){const s=Math.max(0,Math.round((Date.now()-t)/1000));   // server times are real time, not the desk's practice clock
+return s<5?'just now':s<60?s+' sec ago':Math.round(s/60)+' min ago'}
+// saved games and finished matches from the scoresheet go into the tournament (any signed-in staff screen does it; repeats change nothing)
+function fileFeed(){
+  const cl=App.cloud();if(!cl.on||!cl.tok.staff)return false;let ch=false;
+  for(const m of S.matches){if(m.status!=='called'&&m.status!=='play')continue;const f=feedOf(m);if(!f)continue;
+    const st=f.st,c=window.LiveFeed.claim(m.id),by=(c&&c.name)||'Referee';
+    if(m.status==='called'&&st.start){startMatch(m);m.start=st.start;delete m.live;m.sheet=true;ch=true;audit(by,'Started on the scoresheet: '+ename(m.a)+' vs '+ename(m.b))}
+    else if(!m.sheet&&st.start){m.sheet=true;delete m.live;ch=true}
+    const done=st.status==='done',ret=done&&st.result.type==='retired'&&st.result.note,target=ret?st.games.length-1:st.games.length;
+    while(m.status==='play'&&m.games.length<target){const g=st.games[m.games.length],er=saveGame(m,g[0],g[1],by,true);
+      if(er){m.flag=true;audit(by,'Scoresheet game '+g.join('–')+' not filed: '+er);break}
+      ch=true;audit(by,'Game '+m.games.length+' from the scoresheet: '+g.join('–')+' ('+dname(D(m.div))+')')}
+    if(done&&m.status==='play'&&st.result.type!=='played'){forfeit(m,st.result.winner==='a'?'b':'a',st.result.type,by);ch=true}
+  }
+  return ch;
+}
+function feedChanged(){if(fileFeed()){autoCall();save()}render()}
 function courtTile(ct,mode){
   const m=ct.match?M(ct.match):null,ref=m&&m.ref?OF(m.ref):null,big=mode==='public';
   const st=ct.hold&&ct.state==='free'?'hold':ct.state;
   const pill={free:'<span class="pill p-free">Open</span>',hold:'<span class="pill p-hold">On hold</span>',called:'<span class="pill p-called">Called</span>',play:'<span class="pill p-play">In play</span>'}[st];
   let clock='',what='',board='',meta='';
   if(m){
-    const sc=stageScore(m),L=m.live&&!m.live.setup?m.live:null,srv=L&&m.status==='play'?liveView(m).serving:null;
+    const sc=stageScore(m),fd=feedOf(m),FL=fd&&fd.st.live&&!fd.st.live.setup&&fd.st.cfg?fd.st.live:null,
+      L=FL||(m.live&&!m.live.setup?m.live:null),srv=FL&&m.status==='play'?NPScore.view(fd.st.cfg,FL).serving:L&&m.status==='play'?liveView(m).serving:null;
     what=`${esc(dname(D(m.div)))} · ${stageLabel(m)}`;
-    if(m.status==='called'){const due=m.calledAt+S.cfg.forfeit*60000;clock=`<span class="ct2-clock"><span class="clock" data-due="${due}">${fmt(due-now())}</span><small>forfeit timer</small></span>`}
+    if(m.status==='called'){const due=m.calledAt+S.cfg.forfeit*60000;clock=`<span class="ct2-clock"><span class="clock" data-due="${due}" ${due>now()?'':'style="color:var(--bad)"'}>${due>now()?fmt(due-now()):'Overdue'}</span><small>forfeit timer</small></span>`}
     else clock=`<span class="ct2-clock"><span class="clock" data-since="${m.start}">${fmt(now()-m.start)}</span><small>match time</small></span>`;
     const okp=p=>m.status==='called'&&m.ok&&m.ok[p]===m.calledAt;
     const names=eid=>{if(!eid)return '<span class="nm tbd">TBD</span>';const e=E(eid);return e.p.map(p=>`<span class="nm ${okp(p)?'omw':''}">${esc(big||D(e.div).type==='singles'?PL(p).name:pshort(p))}${okp(p)?'<span class="omw-t" title="Tapped I\'m on my way"> ✓</span>':''}</span>`).join('')};
@@ -3700,7 +3929,10 @@ function courtTile(ct,mode){
     const refPart=mode==='admin'?`<label class="ct2-lvl">Ref <select data-ref="${m.id}" aria-label="Referee for court ${ct.no}"><option value="">No referee</option>${S.officials.map(o=>`<option value="${o.id}" ${m.ref===o.id?'selected':''}>${esc(o.name)}</option>`).join('')}</select></label>`:`<span>${ref?'Ref: '+esc(ref.name):'No referee'}</span>`;
     const silent=m.status==='called'?['a','b'].filter(s=>!m.here[s]).flatMap(s=>E(m[s]).p).filter(p=>!okp(p)):[];
     if(mode==='admin'&&silent.length&&now()-m.calledAt>90000)board+=`<div class="ct2-silent">No reply yet: ${silent.map(p=>esc(PL(p).name)).join(', ')} · call on the mic</div>`;
-    meta=[refPart,`<span>${L?'Game '+L.game+(sc.bo>1?' of '+sc.bo:'')+' · to '+sc.to:scoreText(sc)}</span>`,m.games.length?`<span>Games ${gamesStr(m)}</span>`:'',m.manual?'<span class="pill p-hold">Admin pick</span>':''].filter(Boolean).join('');
+    const cm=fd&&window.LiveFeed.claim(m.id),ft=fd?window.LiveFeed.fresh(m.id):0;
+    const freshP=fd&&m.status==='play'?`<span class="ct2-fresh" data-fresh="${ft}" title="Last time the scoring phone reached the server">${cm&&cm.pend?cm.pend+' waiting on the phone · ':''}updated ${feedAgo(ft)}</span>`:'';
+    const hand=mode==='admin'&&cm&&cm.dev&&m.status!=='done'?`<button class="btn sm" data-act="handOver" data-id="${m.id}" title="Use this if the scoring phone died or a different referee takes over">Hand over</button>`:'';
+    meta=[refPart,`<span>${L?'Game '+L.game+(sc.bo>1?' of '+sc.bo:'')+' · to '+sc.to:scoreText(sc)}</span>`,m.games.length?`<span>Games ${gamesStr(m)}</span>`:'',m.manual?'<span class="pill p-hold">Admin pick</span>':'',cm&&cm.name&&mode!=='public'?`<span>Scoring phone: ${esc(cm.name)}</span>`:'',freshP,hand].filter(Boolean).join('');
   }else{
     const nx=queue()[0];
     board=`<div class="ct2-empty"><span class="ct2-empty-t">${ct.hold?'Held by the desk':'Waiting for the next match'}</span>${nx?`<span class="ct2-next">Next up: ${esc(ename(nx.m.a))} vs ${esc(ename(nx.m.b))}${nx.ok?'':' · '+esc(nx.why)}</span>`:''}</div>`;
@@ -3716,8 +3948,8 @@ function courtTile(ct,mode){
 }
 function poolTable(d,p,hl){
   const st=standings(d,p),qs=needsPo(d)?new Set(d.bracket&&d.bracket.seeds?d.bracket.seeds:d.poDraft?d.poDraft.ids:qualifiers(d).ids):new Set(),adv=qs.size;
-  return `<div class="tablebox"><table class="t"><thead><tr><th>#</th><th>${d.type==='singles'?'Player':'Team'}</th><th class="n">W</th><th class="n">L</th><th class="n">PF</th><th class="n">PA</th><th class="n">+/–</th></tr></thead><tbody>
-  ${st.map((r,i)=>`<tr class="${qs.has(r.id)?'q':''}" ${hl&&hl===r.id?'style="background:var(--ball-soft)"':''}><td class="num">${i+1}</td><td>${esc(ename(r.id))} <span class="skill">#${r.seed}</span>${r.tb?`<div class="tb">Tiebreak: ${r.tb}</div>`:''}</td><td class="n">${r.w}</td><td class="n">${r.l}</td><td class="n">${r.pf}</td><td class="n">${r.pa}</td><td class="n">${r.diff>0?'+':''}${r.diff}</td></tr>`).join('')}</tbody></table></div>
+  return `<div class="tablebox"><table class="t pt"><thead><tr><th>#</th><th>${d.type==='singles'?'Player':'Team'}</th><th class="n">W</th><th class="n">L</th><th class="n pfpa">PF</th><th class="n pfpa">PA</th><th class="n">+/–</th></tr></thead><tbody>
+  ${st.map((r,i)=>`<tr class="${qs.has(r.id)?'q':''}" ${hl&&hl===r.id?'style="background:var(--ball-soft)"':''}><td class="num">${i+1}</td><td class="tm">${ename(r.id).split(' / ').map(n=>`<span class="tm-p">${esc(n)}</span>`).join('<span class="tm-sl"> / </span>')} <span class="skill">#${r.seed}</span>${r.tb?`<div class="tb">Tiebreak: ${r.tb}</div>`:''}</td><td class="n">${r.w}</td><td class="n">${r.l}</td><td class="n pfpa">${r.pf}</td><td class="n pfpa">${r.pa}</td><td class="n">${r.diff>0?'+':''}${r.diff}</td></tr>`).join('')}</tbody></table></div>
   ${adv?`<p class="tb" style="margin:6px 0 0">${d.bracket||d.poDraft?'In the playoffs':'In the playoffs if pools ended now'} (green bar). ${poLabel(d)}.</p>`:''}`;
 }
 function bracketView(d){
@@ -3754,7 +3986,7 @@ function renderPublic(){
   if(!pubDiv||!D(pubDiv))pubDiv=(live[0]||S.divs[0]).id;
   const d=D(pubDiv),kp=App.kioskPage();
   const head=`<div class="pub-head"><img class="pub-logo" src="${LOGO_LOCK}" alt="Next Point Pickleball"><div><div class="eyebrow">${esc(S.t.venue)} · ${esc(S.t.dates)}</div><h1>${esc(S.t.name)}</h1></div><div class="pub-clock" id="pubClock">${clockStr(now())}</div>${App.qrBlock('Scan for your matches')}</div>`;
-  const courtsHtml=`<div class="two pub-two"><div class="courts big">${S.courts.map(c=>courtTile(c,'public')).join('')}</div>
+  const courtsHtml=`<div class="two pub-two"><div class="courts big" data-n="${S.courts.length}">${S.courts.map(c=>courtTile(c,'public')).join('')}</div>
     <div class="stack"><section class="panel"><h2>Upcoming games <small>${queue().length} waiting</small></h2>${upcomingList(10,false)}</section>${publicSchedule()}</div></div>`;
   if(kp&&kp!=='courts'&&D(kp)){const x=D(kp);return `<section class="pub kpage">${head}<section class="panel kdiv"><h2>${esc(dname(x))} <span class="pill p-${x.status}">${{open:'Registration open',live:'In progress',done:'Final'}[x.status]}</span></h2>${divResults(x)}</section></section>`}
   if(kp==='courts')return `<section class="pub">${head}${courtsHtml}</section>`;
@@ -3933,7 +4165,13 @@ function refCard(m){
      <div class="row"><span class="clock" data-due="${due}">${fmt(due-now())}</span><span class="muted">until forfeit</span></div>
      <div class="row"><button class="btn primary big" style="flex:1" data-act="start" data-id="${m.id}" ${m.here.a&&m.here.b?'':'disabled'}>Start match</button><button class="btn danger" data-act="forfeitModal" data-id="${m.id}">Forfeit…</button></div>
      <div class="row"><button class="btn sm" data-act="refRelease" data-id="${m.id}">Give back to the desk</button></div></div>`}
-  const cl=App.cloud(),sheet=cl.on&&cl.tok.staff&&refMe?`<div class="banner sheetbar"><span><b>Offline scoresheet (testing).</b> Scores every tap on this phone first and uploads in the background. The result is not filed in the tournament yet.</span><button class="btn primary" data-act="openSheet" data-id="${m.id}">Open scoresheet</button></div>`:'';
+  const cl=App.cloud(),fd=feedOf(m),cm=fd&&window.LiveFeed.claim(m.id);
+  if(cl.on&&cl.tok.staff&&refMe&&(m.sheet||fd)){const FL=fd&&fd.st.live&&!fd.st.live.setup?fd.st.live:null;
+    return `<div class="refcourt">${head}<div class="sheetcard"><p class="eyebrow">On the scoresheet${cm&&cm.name?' · '+esc(cm.name)+'\'s phone':''}</p>
+      <div class="sheet-sc"><span>${esc(ename(m.a))}</span><b class="num">${FL?FL.score[0]:winsOf(m.games)[0]}</b><b class="num">${FL?FL.score[1]:winsOf(m.games)[1]}</b><span>${esc(ename(m.b))}</span></div>
+      <p class="muted" style="margin:0">${FL?'Game '+FL.game+' · updated '+feedAgo(window.LiveFeed.fresh(m.id)):'Saved games: '+(m.games.length?gamesStr(m):'none yet')}. Every tap is saved on the scoring phone first, and saved games go into the tournament by themselves.</p>
+      <button class="btn primary big" data-act="openSheet" data-id="${m.id}">Open scoresheet</button></div></div>`}
+  const sheet=cl.on&&cl.tok.staff&&refMe?`<div class="banner sheetbar"><span><b>Scoresheet.</b> Saves every tap on this phone first, keeps working without signal, and uploads in the background.</span><button class="btn primary" data-act="openSheet" data-id="${m.id}">Open scoresheet</button></div>`:'';
   return `<div class="refcourt">${head}${sheet}${liveCard(m)}</div>`;
 }
 function applyRefFilter(){
@@ -4207,6 +4445,8 @@ function renderModal(){
     h=`<h3>Put a match on Court ${modal.c}</h3><p class="muted" style="margin:0">Only matches with all players free are listed. This skips the queue order.</p>
      <div class="picklist">${q.map((x,i)=>`<label><input type="radio" name="plc" value="${x.m.id}" ${i?'':'checked'}> <span>${esc(ename(x.m.a))} vs ${esc(ename(x.m.b))}<div class="tb">${esc(dname(D(x.m.div)))} · ${stageLabel(x.m)} · ${x.why}</div></span></label>`).join('')||'<span class="muted">No match is ready right now.</span>'}</div>
      <div class="row" style="justify-content:flex-end"><button class="btn" data-act="closeModal">Cancel</button><button class="btn primary" data-act="savePlace" ${q.length?'':'disabled'}>Call to court</button></div>`}
+  if(modal.type==='handOver'){const m=M(modal.id),cm=window.LiveFeed.claim(m.id);
+    h=`<h3>Hand over court ${m.court}?</h3><p style="margin:0">${cm&&cm.name?esc(cm.name)+'\'s phone':'The scoring phone'} stops scoring this match. The next referee to open it on the scoresheet continues from the last score that reached the server${cm&&cm.pend?` (that phone still had <b>${cm.pend}</b> taps waiting; they will show as late and not count)`:''}. Fix the score there if needed.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-act="closeModal">Cancel</button><button class="btn primary" data-act="handOver" data-id="${m.id}">Hand over</button></div>`}
   if(modal.type==='fix'){const m=M(modal.id),L=m.live,v=liveView(m),dbl=isDbl(m);
     h=`<h3>Fix score and positions</h3><p class="muted" style="margin:0">Use this when the score or a player's position is wrong. Correct it before the next serve. The change is logged for the admin.</p>
      <div class="scorebox"><label class="f">${esc(ename(m.a))} score<input type="number" min="0"${maxAttr(m)} inputmode="numeric" id="fxA" value="${L.score[0]}"></label><label class="f">${esc(ename(m.b))} score<input type="number" min="0"${maxAttr(m)} inputmode="numeric" id="fxB" value="${L.score[1]}"></label></div>
@@ -4368,6 +4608,9 @@ document.addEventListener('click',e=>{
         teams:{a:nm('a'),b:nm('b')},games:m.games||[],auth:{token:cl.tok.staff,staff:refMe,name:OF(refMe).name,role:cl.staffRole||'ref'},back:location.href.split('#')[0]};
       try{localStorage.setItem('np-score-open',JSON.stringify(pk))}catch(err){toast('This phone blocked storage, so the scoresheet can\'t open.');return}
       location.href='scoresheet.html';return}
+    case 'handOver':{if(modal&&modal.type==='handOver'&&modal.id===m.id){const cl=App.cloud();modal=null;render();
+        window.LiveFeed.release(cl.tok.staff,m.id).then(j=>{toast(j&&j.ok?'Handed over. The next phone to open this match continues from the last score that reached the server.':'Couldn\'t hand over: '+((j&&j.error)||'no connection')+'.');render()});return}
+      openModal({type:'handOver',id:m.id});return}
     case 'refTake':m.ref=refMe;refSel=m.id;audit(OF(refMe).name,'Took '+ename(m.a)+' vs '+ename(m.b));toast('Added to your matches.');break;
     case 'refCall':{const ct=CT(t.dataset.c);if(ct.state!=='free'){toast('Court '+ct.no+' is no longer free.');break}call(ct,m,true);audit(OF(refMe).name,'Called '+ename(m.a)+' vs '+ename(m.b)+' to Court '+ct.no);break}
     case 'refRelease':m.ref=null;refSel='list';audit(refMe?OF(refMe).name:'Referee','Gave back '+ename(m.a)+' vs '+ename(m.b));break;
@@ -4520,6 +4763,7 @@ document.addEventListener('submit',e=>{
 setInterval(()=>{
   if(!S||!App.isActive('tournament'))return;
   document.querySelectorAll('[data-since]').forEach(el=>el.textContent=fmt(now()-(+el.dataset.since)));
+  document.querySelectorAll('[data-fresh]').forEach(el=>{const t=+el.dataset.fresh,txt=el.textContent.replace(/updated .*$/,'updated '+feedAgo(t));if(el.textContent!==txt)el.textContent=txt;el.classList.toggle('stale',Date.now()-t>45000)});
   document.querySelectorAll('[data-due]').forEach(el=>{const d=(+el.dataset.due)-now();el.textContent=d>0?fmt(d):'Overdue';el.style.color=d>0?'':'var(--bad)'});
   let up=false;document.querySelectorAll('[data-cd]').forEach(el=>{const d=(+el.dataset.cd)-now();el.textContent=fmt(Math.max(0,d));if(d<=0)up=true});if(up&&!modal)render();
   const c=$('#pubClock');if(c)c.textContent=clockStr(now());
@@ -4528,7 +4772,7 @@ setInterval(()=>{
 return{
   type:'tournament',
   bind(ev){S=ev;S.players=App.db().players;S.officials=App.db().officials},
-  html,after,nav,tvPages,notices,calls,
+  html,after,nav,tvPages,notices,calls,feedChanged,
   signOut(){me=null;refMe=null;refSel=null},
   setMe(id){if(App.db().players.some(p=>p.id===id))me=id},
   refAs(id){if(!refMe){refMe=id;refSel=null}},

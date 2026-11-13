@@ -798,6 +798,8 @@ setInterval(()=>{
 window.addEventListener('pagehide',()=>{if(idb&&journal.length)putEvents(journal.filter(e=>e.sync!==1))});
 
 /* one scoring tab per phone: a second tab would number its taps separately */
+// once opened here, the scoresheet opens again without signal (same helper as the main site)
+try{if(/^https?:$/.test(location.protocol)&&window.isSecureContext&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 function start(){boot().catch(err=>{console.warn('boot',err);ready=true;refresh();render();storeErr('idb')})}
 if(navigator.locks&&navigator.locks.request){
   navigator.locks.request('np-score-writer',{ifAvailable:true},lock=>{

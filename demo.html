@@ -1644,6 +1644,40 @@ a.btn{text-decoration:none}
 .page-head{align-items:flex-end}
 .page-head h1{letter-spacing:-.025em}
 .panel>h2{letter-spacing:-.01em}
+
+/* ---------- v48: player sign-in ---------- */
+.pauth{display:grid;gap:14px;padding:22px 20px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1);max-width:520px;margin:0 auto}
+.pa-h{margin:0;font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:clamp(24px,5vw,30px);letter-spacing:-.02em;line-height:1.1}
+.pa-sub{margin:-6px 0 0;color:var(--muted);font-size:15px;line-height:1.45}
+.pa-who{margin:0;font-size:14.5px;color:var(--muted)}.pa-who b{color:var(--ink)}
+.pa-ways{display:grid;gap:12px}
+.pauth .gate-google,.pa-save .gate-google{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:52px;border-radius:12px;background:#fff;border:1px solid #dadce0;color:#1f1f1f;font-weight:600;font-size:16px;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.pa-save .gate-google{width:auto;min-height:44px;font-size:15px;padding:0 16px}
+@media (hover:hover) and (pointer:fine){.pauth .gate-google:not([disabled]):hover,.pa-save .gate-google:not([disabled]):hover{background:#f6f8fc}}
+.pa-or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.1em}
+.pa-or::before,.pa-or::after{content:"";flex:1;height:1px;background:var(--line)}
+.pa-f{display:grid;gap:10px}.pa-f .btn{min-height:48px}
+.pa-row{grid-template-columns:minmax(0,1fr) auto;align-items:center}.pa-row input{min-height:48px}
+.pa-links{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0}
+.pa-pin,.pa-more{border-top:1px solid var(--line);padding-top:12px}.pa-pin>summary,.pa-more>summary{cursor:pointer;font-weight:600;color:var(--muted);min-height:44px;display:flex;align-items:center}
+.pa-pin[open]>summary,.pa-more[open]>summary{margin-bottom:10px}
+.pa-legal{margin:0;font-size:13px;color:var(--muted)}.pa-legal .btn{font-size:13px;padding:0;min-height:0}
+.pa-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:18px}.pa-two h3{margin:0 0 8px;font-size:16px}
+.pa-pick{display:grid;gap:8px}.pa-me{min-height:52px;justify-content:flex-start;font-size:16px}
+.pa-go{min-height:52px;font-size:16px}
+.pa-spin{width:32px;height:32px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:pa-spin .8s linear infinite;margin:6px auto}
+@keyframes pa-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.pa-spin{animation-duration:2.4s}}
+.pa-save{display:grid;gap:10px;padding:14px 16px;border-radius:16px;border:1px dashed color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--accent-soft);margin-bottom:14px}
+.pa-save p{margin:2px 0 0;color:var(--muted);font-size:14px}.pa-save .row{gap:8px;flex-wrap:wrap}
+
+/* ---------- v49: username sign-up ---------- */
+.pa-who-f{border:0;margin:4px 0 0;padding:0;display:grid;gap:8px}.pa-who-f legend{font-weight:700;font-size:15px;margin-bottom:6px;padding:0}
+.pa-rad{display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;cursor:pointer;font-weight:600}
+.pa-rad input{width:20px;height:20px;accent-color:var(--accent);margin:0}.pa-rad:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.pa-grp{display:grid;gap:10px;padding:4px 2px 2px}.pa-grp[hidden]{display:none}
+.pa-links span{color:var(--muted);font-size:14.5px;align-self:center}.pa-links{align-items:center}
+.pa-forgot{margin:-4px 0 0;font-size:13px;color:var(--muted)}
 </style>
 
 <header class="top">
@@ -1818,7 +1852,7 @@ const App=(()=>{
   const mod=ev=>ev.type==='openplay'?OPM:TM;
   function newPin(){let p;do{p=String(Math.floor(100000+Math.random()*900000))}while(db.players.some(x=>x.pin===p));return p}
   function ensureSkill(p){if(p&&p.skill==null)p.skill=p.self??(p.d?Math.round(p.d*2)/2:(p.s?Math.round(p.s*2)/2:3))}
-  function addPlayer(o){const p={id:uid('p'),...o};ensureSkill(p);db.players.push(p);return p.id}
+  function addPlayer(o){const p={...o,id:o.id||uid('p')};ensureSkill(p);db.players.push(p);return p.id}
   function isActive(type){const ev=cur();return!!ev&&ev.type===type&&!(view==='admin'&&home)}
   function toast(t){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}
 
@@ -1827,7 +1861,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-13e';
+  const BUILD='2026-11-14a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -1837,7 +1871,10 @@ const App=(()=>{
   const dbg=(...a)=>{if(window.NP_DEBUG)console.log('[sync '+(window.NP_DEBUG)+']',...a)};
   const cloudRole=()=>CL.tok.staff?CL.staffRole:CL.tok.player?'player':null;
   function evDoc(ev){return JSON.parse(JSON.stringify(ev,function(k,v){return this===ev&&(k==='players'||k==='officials')?undefined:v}))}
-  const noPin=a=>(a||[]).map(x=>{const r={...x};delete r.pin;return r});
+  // PINs, emails and mobiles stay off the public doc. Mobiles used to be in it: keep them there only until the
+  // updated setup SQL has moved them (so nothing is lost if the site is updated before the SQL is run).
+  const keepMobile=()=>!CL.cx&&((CL.base.club||{}).players||[]).some(x=>x.mobile);
+  const noPin=a=>(a||[]).map(x=>{const r={...x};delete r.pin;delete r.email;if(!keepMobile())delete r.mobile;return r});
   function docOf(id){
     if(id==='club')return{players:noPin(db.players),officials:noPin(db.officials),...(db.settings&&Object.keys(db.settings).length?{settings:clone(db.settings)}:{})};
     const ev=db.events.find(e=>'ev:'+e.id===id);return ev?evDoc(ev):undefined}
@@ -1873,7 +1910,9 @@ const App=(()=>{
   function writeDoc(id,d){
     if(id==='club'){
       const pin=new Map([...db.players,...db.officials].filter(x=>x.pin).map(x=>[x.id,x.pin]));
-      const withPin=a=>(a||[]).map(x=>{const y={...x},pv=(CL.pins&&CL.pins[x.id]&&CL.pins[x.id].pin)||pin.get(x.id);if(pv)y.pin=pv;return y});
+      const loc=new Map(db.players.map(x=>[x.id,x]));
+      const priv=(y,k)=>{const l=loc.get(y.id);const v=l&&(k in l)?l[k]:CL.cx&&CL.cx[y.id]?CL.cx[y.id][k]:undefined;if(v!=null&&v!=='')y[k]=v;else if(l&&(k in l))y[k]=l[k]};
+      const withPin=a=>(a||[]).map(x=>{const y={...x},pv=(CL.pins&&CL.pins[x.id]&&CL.pins[x.id].pin)||pin.get(x.id);if(pv)y.pin=pv;if(loc.has(y.id)||CL.cx){priv(y,'email');if(!y.mobile)priv(y,'mobile')}return y});
       recon(db.players,withPin(d.players));recon(db.officials,withPin(d.officials));db.settings=clone(d.settings||{});db.players.forEach(ensureSkill);return}
     const evId=id.slice(3),i=db.events.findIndex(e=>e.id===evId);
     if(i>-1)reconcile(db.events[i],d,true);
@@ -1915,7 +1954,11 @@ const App=(()=>{
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullStale()});
   async function poll(){try{const {data,error}=await withTimeout(CL.sb.from('np_rev').select('id,rev,deleted'));if(error)throw appErr(error);CL.offline=false;(data||[]).forEach(r=>onRev(r.id,r.rev,r.deleted))}catch(e){CL.offline=!!e.net}setState()}
   async function loadSecrets(){if(!CL.tok.staff||CL.staffRole!=='admin')return;try{const r=await rpc('np_secrets_get',{p_token:CL.tok.staff});if(!r||!r.rows)return;
-    CL.pins={};r.rows.forEach(x=>{CL.pins[x.id]=x});acctList();[...db.players,...db.officials].forEach(x=>{if(CL.pins[x.id])x.pin=CL.pins[x.id].pin});save(true);scheduleRender()}catch(e){}}
+    CL.pins={};r.rows.forEach(x=>{CL.pins[x.id]=x});acctList();await loadContacts();[...db.players,...db.officials].forEach(x=>{if(CL.pins[x.id])x.pin=CL.pins[x.id].pin});save(true);scheduleRender()}catch(e){}}
+  async function loadContacts(){try{const c=await rpc('np_contacts_get',{p_token:CL.tok.staff});if(!c||!c.rows)return;CL.plog={};(c.logins||[]).forEach(x=>{CL.plog[x.id]=x.username});
+      CL.cx={};c.rows.forEach(x=>{CL.cx[x.id]={email:x.email||'',mobile:x.mobile||''}});CL.pacct={};(c.accounts||[]).forEach(x=>{CL.pacct[x.id]=x});
+      db.players.forEach(x=>{const v=CL.cx[x.id];if(!v)return;if(!x.email&&v.email)x.email=v.email;if(!x.mobile&&v.mobile)x.mobile=v.mobile})}
+    catch(e){if(!e.net&&!CL.cxWarned){CL.cxWarned=true;toast('Run the updated setup SQL in Supabase to turn on player sign-in with Google or email.')}}}
   async function pushSecrets(){
     if(!CL.pins||CL.staffRole!=='admin')return;const tok=CL.tok.staff,want=new Map();
     db.players.forEach(x=>{if(/^\d{6}$/.test(x.pin||''))want.set(x.id,{id:x.id,kind:'player',pin:x.pin})});
@@ -1924,7 +1967,10 @@ const App=(()=>{
     const known=new Set([...((CL.base.club||{}).players||[]),...((CL.base.club||{}).officials||[])].map(x=>x.id));
     const del=Object.keys(CL.pins).filter(id=>known.has(id)&&!want.has(id)&&!db.players.some(x=>x.id===id)&&!db.officials.some(x=>x.id===id));
     if(put.length){try{await rpc('np_secrets_put',{p_token:tok,p_rows:put});put.forEach(x=>{CL.pins[x.id]=x})}catch(e){if(e.net)throw e;toast('A PIN change was refused: '+e.message)}}
-    if(del.length){try{await rpc('np_secrets_del',{p_token:tok,p_ids:del});del.forEach(id=>delete CL.pins[id])}catch(e){if(e.net)throw e}}}
+    if(del.length){try{await rpc('np_secrets_del',{p_token:tok,p_ids:del});del.forEach(id=>delete CL.pins[id])}catch(e){if(e.net)throw e}}
+    if(!CL.cx&&!CL.cxTried){CL.cxTried=true;await loadContacts()}
+    if(CL.cx){const nm=v=>String(v||'').trim(),cx=db.players.map(x=>({id:x.id,email:nm(x.email).toLowerCase(),mobile:nm(x.mobile)})).filter(x=>{const c=CL.cx[x.id]||{email:'',mobile:''};return c.email!==x.email||c.mobile!==x.mobile});
+      if(cx.length){try{await rpc('np_contacts_put',{p_token:tok,p_rows:cx});cx.forEach(x=>{if(x.email||x.mobile)CL.cx[x.id]={email:x.email,mobile:x.mobile};else delete CL.cx[x.id]})}catch(e){if(e.net)throw e}}}}
   function revertDoc(id){if(CL.base[id]!==undefined)writeDoc(id,CL.base[id]);else dropDoc(id)}
   function schedulePush(ms){if(!CL.on)return;CL.dirty=true;clearTimeout(CL.pushT);CL.pushT=setTimeout(push,ms==null?250:ms);setState()}
   async function push(){
@@ -1970,7 +2016,12 @@ const App=(()=>{
     setState();
     try{
       if(CL.tok.staff){const w=await rpc('np_whoami',{p_token:CL.tok.staff});if(w&&w.role&&w.role!=='player')CL.staffRole=w.role;else{CL.tok.staff=null;CL.staffRole=null}}
-      if(CL.tok.player){const w=await rpc('np_whoami',{p_token:CL.tok.player});if(!(w&&w.role==='player')){CL.tok.player=null;remClear();if(mode&&mode.role==='player'&&lastMe){lastMe=null;[OPM,TM].forEach(m=>m.signOut());if(view==='public'&&!pubOk())view='player'}}}
+      {const r=remGet();if(r&&r.acct&&!CL.tok.player&&r.tok){CL.tok.player=r.tok}}
+      if(CL.tok.player){let w=await rpc('np_whoami',{p_token:CL.tok.player});
+        // signed in with Google or an email code: get a fresh player token instead of asking again
+        if(!(w&&w.role==='player')){const r=remGet(),k=pkeyGet();if(r&&r.acct&&k&&k.id===r.id&&k.key){try{const x=await rpc('np_player_resume',{p_key:k.key});if(x&&x.token&&x.subject===r.id){CL.tok.player=x.token;remSet(r.id,x.token,true);w={role:'player'}}else if(x&&x.error==='expired')pkeyClear()}catch(e){}}}
+        if(!(w&&w.role==='player')){const r=remGet();if(r&&r.acct&&!pkeyGet()){try{const x=await rpc('np_player_login',{});if(x&&x.token&&x.subject===r.id){CL.tok.player=x.token;remSet(r.id,x.token,true);w={role:'player'}}}catch(e){}}}
+        if(!(w&&w.role==='player')){CL.tok.player=null;remClear();if(mode&&mode.role==='player'&&lastMe){lastMe=null;[OPM,TM].forEach(m=>m.signOut());if(view==='public'&&!pubOk())view='player'}}}
       saveTokens();
       if(mode&&mode.id&&(!CL.tok.staff||(mode.role!==CL.staffRole))){mode=null;saveMode();if(view!=='intro')view='intro'}
       await pullAll();CL.ready=true;
@@ -2006,9 +2057,12 @@ const App=(()=>{
   function acctWatch(){if(!CL.sb||!CL.sb.auth)return;
     try{CL.sb.auth.onAuthStateChange((ev,ss)=>{AC.sess=ss||null;
       if(ev==='PASSWORD_RECOVERY'){view='intro';gate='reset';gateErr='';scheduleRender();return}
+      if(ev==='SIGNED_IN'&&AC.fromLink&&playerIntent()){AC.fromLink=false;pFromLink();return}
       if(ev==='SIGNED_IN'&&AC.fromLink&&!mode&&gate!=='reset'){AC.fromLink=false;view='intro';gate='signin';gateErr='';acctAuto()}
       if(gate||view==='intro')scheduleRender()})}catch(e){}
-    try{CL.sb.auth.getSession().then(r=>{AC.sess=(r&&r.data&&r.data.session)||null;if(AC.sess&&AC.fromLink&&!mode&&gate!=='reset'){AC.fromLink=false;view='intro';gate='signin';acctAuto()}if(gate||view==='intro')scheduleRender()},()=>{})}catch(e){}}
+    try{CL.sb.auth.getSession().then(r=>{AC.sess=(r&&r.data&&r.data.session)||null;if(AC.sess&&AC.fromLink&&playerIntent()){AC.fromLink=false;pFromLink();return}if(AC.sess&&AC.fromLink&&!mode&&gate!=='reset'){AC.fromLink=false;view='intro';gate='signin';acctAuto()}if(gate||view==='intro')scheduleRender()},()=>{})}catch(e){}}
+  // back from Google or the email link with a player sign-in
+  function pFromLink(){const it=intentGet();if(!(it&&it.k==='plink'&&lastMe)){mode={role:'player'};saveMode();gate=null;view='player'}pAfterAuth()}
   const acctEmail=()=>AC.sess&&AC.sess.user?AC.sess.user.email||'':'';
   function acctAuto(){let n=0;const go=()=>{if(mode||gate!=='signin')return;if(CL.ready&&AC.sess){acctGo();return}if(++n<60)setTimeout(go,250)};go()}
   // which sign-in methods are switched on in Supabase (Authentication > Sign In / Providers)
@@ -2025,6 +2079,91 @@ const App=(()=>{
     if(r&&r.error==='unlinked'){gate='link';render();return}
     if(r&&r.error==='offline'){gateErr=pinErr('offline');render();return}
     AC.sess=null;CL.sb.auth.signOut().catch(()=>{});gate='signin';gateErr='Your account session ended. Sign in again.';render()})}
+  /* ---------- player accounts: Google, or a username and password ----------
+     The player signs in with Supabase Auth; np_player_login turns that into a player token. First time, a matching
+     registration email links by itself; otherwise they link once with their PIN or make a new profile. */
+  const PA={st:'',email:'',ids:null,err:'',busy:false,save:false,who:''};
+  const PLKEY=KEY+'-pkey';
+  const pkeyGet=()=>{try{return JSON.parse(localStorage.getItem(PLKEY)||'null')}catch(e){return null}};
+  const pkeySet=(id,key)=>{try{localStorage.setItem(PLKEY,JSON.stringify({id,key}))}catch(e){}};
+  const pkeyClear=()=>{const k=pkeyGet();try{localStorage.removeItem(PLKEY)}catch(e){}if(k&&k.key&&CL.ready)rpc('np_player_signout',{p_key:k.key}).catch(()=>{})};
+  const INTENT=KEY+'-intent';
+  function intentSet(o){try{localStorage.setItem(INTENT,JSON.stringify({...o,at:Date.now()}))}catch(e){}}
+  function intentGet(){try{const o=JSON.parse(localStorage.getItem(INTENT)||'null');if(o&&Date.now()-(o.at||0)<30*60000)return o}catch(e){}return null}
+  function intentClear(){try{localStorage.removeItem(INTENT)}catch(e){}}
+  const playerIntent=()=>{const it=intentGet();return!!(it&&(it.k==='player'||it.k==='plink'))};
+  function pAfterAuth(){PA.busy=true;PA.err='';scheduleRender();let n=0;
+    const go=()=>{if(!CL.ready){if(++n<80)setTimeout(go,250);else{PA.busy=false;PA.err=pinErr('offline');scheduleRender()}return}
+      const it=intentGet();intentClear();
+      const call=it&&it.k==='plink'&&it.tok?rpc('np_player_link_token',{p_token:it.tok}).then(r=>r&&r.error==='expired'?rpc('np_player_login',{}):r):rpc('np_player_login',{});
+      call.then(r=>pResult(r,it&&it.k==='plink'),e=>{PA.busy=false;PA.err=e.net?pinErr('offline'):'Sign-in for players isn\'t switched on yet. Ask the desk.';render()})};go()}
+  function pResult(r,saved){PA.busy=false;PA.err='';
+    if(r&&r.token){pDone(r,saved);return}
+    const e=r&&r.error;
+    if(e==='choose'){PA.st='choose';PA.ids=r.ids||[]}
+    else if(e==='unlinked'){PA.st='unlinked'}
+    else if(e==='unverified'){PA.st='';PA.err='Open the code email and confirm your address first, then sign in again.'}
+    else if(e==='locked'||e==='wrong')PA.err=pinErr(e);
+    else if(e==='linked')PA.err='This account already has a profile. Sign out and in again to open it.';
+    else{PA.st='';AC.sess=null;if(CL.sb)CL.sb.auth.signOut().catch(()=>{});PA.err='Your sign-in ended. Sign in again.'}
+    render()}
+  function pDone(r,saved){const p=db.players.find(x=>x.id===r.subject);
+    if(!p){PA.st='unlinked';PA.err="We couldn't find your profile on this site anymore. Ask the desk.";render();return}
+    CL.tok.player=r.token;saveTokens();remSet(p.id,r.token,true);if(r.key)pkeySet(p.id,r.key);PA.st='';PA.ids=null;PA.save=false;
+    if(lastMe!==p.id)resume(p.id);
+    toast(saved?'Saved. Next time this phone signs you in by itself.':r.pin?'Welcome, '+p.name.split(' ')[0]+'. Your backup PIN is '+r.pin+'. Keep it in case you forget your password.':'Signed in as '+p.name+'.');render()}
+  const userErr=e=>({taken:'That username is taken. Try another.',username:'Usernames are 3 to 24 characters: letters, numbers, dots or underscores.',password:'Use at least 8 characters for the password.',
+    wrong:'Wrong username or password.',locked:pinErr('locked'),expired:'Your sign-in ended. Sign in again.',exists:'Something went wrong. Try again.'}[e]||'Something went wrong. Try again.');
+  const userIn=v=>String(v||'').trim().toLowerCase();
+  const pNames=ids=>ids.map(id=>db.players.find(x=>x.id===id)).filter(Boolean);
+  // the sign-in card players see before they're signed in (ctx 'open' or 'tour'); legacy = the module's PIN forms
+  function pAuth(ctx,legacy,names){
+    if(!acctOn())return null;if(!AC.prov)acctProviders();
+    const pv=AC.prov||{google:false,email:true},err=PA.err?`<div class="err" role="alert">${esc(PA.err)}</div>`:'';
+    const pinPart=String(legacy||'').replace(/^\s*<div class="hero">(?:<div[^>]*>[^<]*<\/div>)*<\/div>/,'');
+    const who=AC.sess?`<p class="pa-who">Signed in${AC.sess.user&&AC.sess.user.app_metadata&&AC.sess.user.app_metadata.provider==='google'?' with Google':''} as <b>${esc(acctEmail())}</b></p>`:'';
+    const out=`<button class="btn linkish" type="button" data-app="pOut">Use a different account</button>`;
+    const wrap=(h,sub,body)=>`<section class="pauth" aria-labelledby="paH"><h2 id="paH" class="pa-h">${h}</h2>${sub?`<p class="pa-sub">${sub}</p>`:''}${err}${body}</section>`;
+    if(PA.busy)return wrap('Signing you in…','','<div class="pa-spin" aria-hidden="true"></div>');
+    if(AC.sess&&PA.st==='choose'){const ps=pNames(PA.ids||[]);
+      return wrap('Which one is you?','This email is on more than one registration.',`${who}<div class="pa-pick">${ps.map(p=>`<button class="btn pa-me" type="button" data-app="pClaim" data-id="${esc(p.id)}">${esc(p.name)}</button>`).join('')}</div>${out}`)}
+    if(AC.sess&&PA.st==='unlinked'){const nm=(AC.sess.user&&AC.sess.user.user_metadata&&(AC.sess.user.user_metadata.full_name||AC.sess.user.user_metadata.name))||'';
+      const link=`<form id="paLink" class="pa-f"><label class="f">Your name<select id="paLinkId">${(names||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></label><label class="f">Your PIN<input type="password" id="paLinkPin" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label><button class="btn ${ctx==='tour'?'primary':''}" type="submit">Link my profile</button></form>`;
+      const mk=`<form id="paNew" class="pa-f"><label class="f">Full name<input type="text" id="paNewName" autocomplete="name" value="${esc(nm)}"></label><label class="f">Skill level<select id="paNewSkill">${[2.5,3,3.5,4,4.5,5].map(x=>`<option ${x===3?'selected':''}>${x.toFixed(1)}</option>`).join('')}</select></label><button class="btn ${ctx==='tour'?'':'primary'}" type="submit">Create my profile</button></form>`;
+      return wrap('Almost there',ctx==='tour'?"We couldn't match this email to a registration. If you're registered, pick your name and enter the PIN on your confirmation once.":'First time here? Make your profile. Played with us before? Link it with your PIN once.',
+        `${who}${ctx==='tour'?`${(names||[]).length?link:''}<details class="pa-more"><summary>Not registered? Make a club profile</summary>${mk}</details>`
+          :`<div class="pa-two"><div><h3>I'm new</h3>${mk}</div>${(names||[]).length?`<div><h3>I've played here before</h3>${link}</div>`:''}</div>`}${out}`)}
+    if(AC.sess)return wrap('Welcome back','',`${who}<button class="btn primary pa-go" type="button" data-app="pGo">Continue</button>${out}`);
+    const g=pv.google?`<button class="btn gate-google" type="button" data-app="pGoogle">${G_LOGO}<span>Continue with Google</span></button>`:'';
+    const pinNote=`<details class="pa-pin"><summary>${ctx==='open'?'Use a PIN or register without an account':'Sign in with a PIN instead'}</summary>${pinPart}</details>`;
+    if(PA.st==='signup'){const who=PA.who||(ctx==='tour'&&(names||[]).length?'old':'new');
+      return wrap('Create your account','Pick a username and password. You stay signed in on this phone.',
+        `<form id="paUp" class="pa-f" novalidate><label class="f">Username<input type="text" id="paUpUser" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24" placeholder="e.g. ana.reyes"></label>
+          <label class="f">Password <small>at least 8 characters</small><input type="password" id="paUpPass" autocomplete="new-password"></label>
+          <fieldset class="pa-who-f"><legend>Who are you?</legend>
+            <label class="pa-rad"><input type="radio" name="paWho" value="new" ${who==='new'?'checked':''}><span>${ctx==='tour'?'Not registered: make a club profile':"I'm new here"}</span></label>
+            ${(names||[]).length?`<label class="pa-rad"><input type="radio" name="paWho" value="old" ${who==='old'?'checked':''}><span>${ctx==='tour'?"I'm registered for this tournament":"I've played here before"}</span></label>`:''}
+            <div class="pa-grp" data-w="new" ${who==='new'?'':'hidden'}><label class="f">Full name<input type="text" id="paUpName" autocomplete="name"></label><label class="f">Skill level<select id="paUpSkill">${[2.5,3,3.5,4,4.5,5].map(x=>`<option ${x===3?'selected':''}>${x.toFixed(1)}</option>`).join('')}</select></label></div>
+            ${(names||[]).length?`<div class="pa-grp" data-w="old" ${who==='old'?'':'hidden'}><label class="f">Your name<select id="paUpId">${(names||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></label><label class="f">Your PIN <small>${ctx==='tour'?'from your registration confirmation':'from the desk'}</small><input type="password" id="paUpPin" inputmode="numeric" maxlength="6" autocomplete="off"></label></div>`:''}
+          </fieldset>
+          <button class="btn primary" type="submit">Create account</button></form>
+         <p class="pa-links"><span>Already have an account?</span><button class="btn linkish" type="button" data-app="pBack">Sign in</button></p>${pinPart?pinNote:''}`)}
+    const inF=`<form id="paIn" class="pa-f" novalidate><label class="f">Username<input type="text" id="paInUser" autocomplete="username" autocapitalize="none" spellcheck="false"></label><label class="f">Password<input type="password" id="paInPass" autocomplete="current-password"></label><button class="btn ${pv.google?'':'primary'}" type="submit">Sign in</button></form>`;
+    return wrap(ctx==='tour'?'Sign in to see your matches':'Sign in to play',`${pv.google?'Use Google or your username.':'Use your username and password.'} You stay signed in on this phone.`,
+      `<div class="pa-ways">${g}${g?'<span class="pa-or">or</span>':''}${inF}</div>
+       <p class="pa-links"><span>New here?</span><button class="btn linkish" type="button" data-app="pUp">Create an account</button></p>
+       <p class="pa-forgot">Forgot your password? Sign in with your PIN from the desk, then make a new username.</p>
+       ${pinPart?pinNote:''}
+       <p class="pa-legal">By signing in you agree to our <button class="btn linkish" type="button" data-app="pg" data-pg="privacy">privacy notice</button>.</p>`)}
+  // signed in with a PIN or a join link: offer to remember them with Google or email
+  function pSaveCard(){
+    if(!acctOn()||!CL.tok.player||!lastMe)return '';const r=remGet();if(r&&r.acct)return '';
+    try{if(Date.now()-(+localStorage.getItem(KEY+'-saveno')||0)<14*864e5)return ''}catch(e){}
+    if(!AC.prov)acctProviders();const pv=AC.prov||{google:false};
+    const err=PA.err&&PA.save?`<div class="err" role="alert">${esc(PA.err)}</div>`:'';
+    return `<section class="pa-save" aria-label="Skip the PIN next time"><div class="pa-save-t"><b>Skip the PIN next time</b><p>Connect Google or make a username and this phone signs you in by itself.</p></div>${err}
+      ${PA.save?`<form id="paSave" class="pa-f" novalidate><label class="f">Username<input type="text" id="paSaveUser" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24"></label><label class="f">Password <small>at least 8 characters</small><input type="password" id="paSavePass" autocomplete="new-password"></label><div class="row"><button class="btn primary" type="submit">Save</button><button class="btn linkish" type="button" data-app="pSaveNo">Not now</button></div></form>`
+        :`<div class="row">${pv.google?`<button class="btn gate-google sm" type="button" data-app="pGoogle" data-k="plink">${G_LOGO}<span>Google</span></button>`:''}<button class="btn sm" type="button" data-app="pSaveUser">Make a username</button><button class="btn sm linkish" type="button" data-app="pSaveNo">Not now</button></div>`}</section>`}
   const authMsg=e=>{const m=(e&&(e.code||'')+' '+(e.message||'')).toLowerCase();
     return /not.?confirmed/.test(m)?'Confirm your email first: open the link we sent you, then sign in.':/invalid|credential/.test(m)?"That email and password don't match.":/already|registered|exists/.test(m)?'That email already has an account. Sign in instead.':/weak|least|short/.test(m)?'Choose a longer password (at least 8 characters).':/rate|limit|too many/.test(m)?'Too many emails were sent. Wait a few minutes and try again.':/fetch|network|offline/.test(m)?pinErr('offline'):(e&&e.message)||'Something went wrong. Try again.'};
 
@@ -2183,7 +2322,7 @@ const App=(()=>{
   function homePeople(){
     const club=db.players.filter(p=>p.club).sort((a,b)=>a.name.localeCompare(b.name)),temp=db.players.filter(p=>!p.club);
     const evName=id=>{const ev=db.events.find(e=>e.id===id);return ev?(ev.type==='openplay'?ev.session.name:ev.t.name):'Old tournament'};
-    const row=p=>`<li data-s="${esc(p.name.toLowerCase())}"><div class="li-main"><span class="li-t">${esc(p.name)}</span><div class="li-m">${p.pin?`PIN <b class="num">${esc(p.pin)}</b>`:'PIN set on their phone'}${p.d!=null?' · Doubles DUPR '+(+p.d).toFixed(3):''}${p.s!=null?' · Singles DUPR '+(+p.s).toFixed(3):''}${p.mobile?' · '+esc(p.mobile):''}</div></div><span style="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">${p.club?`<button class="btn sm ${p.hideRank?'on':''}" data-app="hideRank" data-id="${p.id}" aria-pressed="${!!p.hideRank}">${p.hideRank?'Hidden in rankings':'Hide in rankings'}</button>`:''}<button class="btn sm" data-app="newPin" data-id="${p.id}">New PIN</button><button class="btn sm danger" data-app="delPlModal" data-id="${p.id}" aria-label="Delete ${esc(p.name)}">Delete</button></span></li>`;
+    const row=p=>`<li data-s="${esc(p.name.toLowerCase())}"><div class="li-main"><span class="li-t">${esc(p.name)}</span><div class="li-m">${p.pin?`PIN <b class="num">${esc(p.pin)}</b>`:'PIN set on their phone'}${p.d!=null?' · Doubles DUPR '+(+p.d).toFixed(3):''}${p.s!=null?' · Singles DUPR '+(+p.s).toFixed(3):''}${p.mobile?' · '+esc(p.mobile):''}${p.email?' · '+esc(p.email):''}${CL.pacct&&CL.pacct[p.id]?' · <span class="pill p-ok">Google: '+esc(CL.pacct[p.id].email||'linked')+'</span>':''}${CL.plog&&CL.plog[p.id]?' · <span class="pill p-ok">Username: '+esc(CL.plog[p.id])+'</span>':''}</div></div><span style="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">${p.club?`<button class="btn sm ${p.hideRank?'on':''}" data-app="hideRank" data-id="${p.id}" aria-pressed="${!!p.hideRank}">${p.hideRank?'Hidden in rankings':'Hide in rankings'}</button>`:''}${(CL.pacct&&CL.pacct[p.id])||(CL.plog&&CL.plog[p.id])?`<button class="btn sm" data-app="pUnlink" data-id="${p.id}">Remove sign-in</button>`:''}<button class="btn sm" data-app="newPin" data-id="${p.id}">New PIN</button><button class="btn sm danger" data-app="delPlModal" data-id="${p.id}" aria-label="Delete ${esc(p.name)}">Delete</button></span></li>`;
     const groups={};temp.forEach(p=>(groups[p.tmp||'']=groups[p.tmp||'']||[]).push(p));
     return pageHead('Admin','Staff &amp; players','')+
      `<div class="kpis">${kpi('Club members',club.length,'kept for open play and the leaderboard')}${kpi('Tournament players',temp.length,'removed when their tournament is deleted')}${kpi('Referees',db.officials.length,'sign in with their PIN')}</div>
@@ -2209,7 +2348,9 @@ const App=(()=>{
       </section></div>`;
   }
   function pickEvent(){
-    return `<section class="panel" style="max-width:620px"><h2>Pick an event</h2>${db.events.length?`<ul class="list">${[...db.events].reverse().map(ev=>`<li><div class="li-main"><span class="li-t">${esc(ev.type==='openplay'?ev.session.name:ev.t.name)}</span><div class="li-m">${ev.type==='openplay'?'Open play':'Tournament'}</div></div><button class="btn sm primary" data-app="pick" data-id="${ev.id}">Open</button></li>`).join('')}</ul>`:'<p class="muted" style="margin:0">No events yet. An admin creates one under Admin.</p>'}</section>`;
+    // a player who isn't signed in yet signs in first; their event then opens by itself
+    const pa=view==='player'&&!lastMe?pAuth('open','',db.players.filter(p=>p.club).sort((x,y)=>x.name.localeCompare(y.name))):'';
+    return (pa?`<div style="max-width:620px;margin-bottom:16px">${pa}</div>`:'')+`<section class="panel" style="max-width:620px"><h2>${pa?'Or pick an event':'Pick an event'}</h2>${db.events.length?`<ul class="list">${[...db.events].reverse().map(ev=>`<li><div class="li-main"><span class="li-t">${esc(ev.type==='openplay'?ev.session.name:ev.t.name)}</span><div class="li-m">${ev.type==='openplay'?'Open play':'Tournament'}</div></div><button class="btn sm primary" data-app="pick" data-id="${ev.id}">Open</button></li>`).join('')}</ul>`:'<p class="muted" style="margin:0">No events yet. An admin creates one under Admin.</p>'}</section>`;
   }
 
   /* ---------- render ---------- */
@@ -2280,7 +2421,11 @@ const App=(()=>{
   const homeView=()=>!mode?'intro':mode.role==='player'||mode.role==='viewer'?(pubOk()?'public':'player'):mode.role==='ref'?'ref':'admin';
   function saveMode(){try{mode&&mode.role!=='all'?sessionStorage.setItem(KEY+'-mode',JSON.stringify(mode)):sessionStorage.removeItem(KEY+'-mode')}catch(e){}}
   function pickLive(){if(!cur()){const lv=db.events.filter(liveNow);if(lv.length)db.cur=lv[0].id}}
-  function enterPlayer(v){if(v==='public'&&csLocked()&&!lastMe)v='player';mode={role:v==='public'?'viewer':'player'};saveMode();gate=null;[OPM,TM].forEach(m=>m.signOut());pickLive();home=false;pendingTop=true;save();go(v)}
+  function enterPlayer(v){
+    // signed in with Google or an email code: straight back in
+    if(v==='player'&&acctOn()&&!lastMe){const r=remGet();if(r&&r.acct&&db.players.some(x=>x.id===r.id)){resume(r.id);render();return}
+      if(AC.sess&&!PA.st){mode={role:'player'};saveMode();gate=null;[OPM,TM].forEach(m=>m.signOut());pickLive();home=false;pendingTop=true;save();go('player');intentSet({k:'player'});pAfterAuth();return}}
+    if(v==='public'&&csLocked()&&!lastMe)v='player';mode={role:v==='public'?'viewer':'player'};saveMode();gate=null;[OPM,TM].forEach(m=>m.signOut());pickLive();home=false;pendingTop=true;save();go(v)}
   function enterStaff(o,srvRole){mode={role:srvRole||roleOf(o),id:o.id};saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pickLive();
     if(mode.role==='admin'){home=true;homeSec='events';pendingTop=true;save();go('admin')}else{const c=cur();if(!c||c.type!=='tournament'){const ts=db.events.filter(e=>e.type==='tournament');const t=ts.find(liveNow)||ts[ts.length-1];if(t)db.cur=t.id}home=false;pendingTop=true;save();go('ref')}}
   function exitMode(){if(AC.sess&&CL.sb){CL.sb.auth.signOut().catch(()=>{});AC.sess=null}lastMe=null;remClear();if(kiosk.on)kioskOff();if(CL.on){const t=[CL.tok.staff,CL.tok.player].filter(Boolean);t.forEach(x=>{rpc('np_logout',{p_token:x}).catch(()=>{})});CL.tok.staff=null;CL.tok.player=null;CL.staffRole=null;CL.pins=null;saveTokens();[...db.players,...db.officials].forEach(x=>{delete x.pin});save(true)}mode=null;saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pendingTop=true;go('intro')}
@@ -2384,13 +2529,13 @@ const App=(()=>{
   // staff signed in on this device (or the practice copy, where everything is open)
   const staffIn=()=>{const me=staffMe();if(mode&&(mode.role==='all'||(me&&(mode.role==='admin'||mode.role==='ref'))))return{name:me?me.name:'',role:mode.role};
     // an email or Google sign-in is remembered by the browser: a new tab is one tap from the workspace, so say so
-    if(!mode&&acctOn()&&AC.sess&&acctEmail())return{name:acctEmail(),role:'acct'};return null};
-  const playerIn=()=>mode&&mode.role==='player'&&mode.id?db.players.find(x=>x.id===mode.id)||null:null;
+    if(!mode&&acctOn()&&AC.sess&&acctEmail()&&!(remGet()||{}).acct)return{name:acctEmail(),role:'acct'};return null};
+  const playerIn=()=>{const id=mode&&mode.role==='player'?lastMe:(!mode&&(remGet()||{}).acct?remGet().id:null);return id?db.players.find(x=>x.id===id)||null:null};
   function siteNav(){const on=k=>pg===k||(k==='tours'&&(pg.startsWith('t:')||pg.startsWith('s:')))?'aria-current="page"':'';const st=staffIn(),pl=playerIn();
     return `<header class="site-nav"><div class="sn-in"><button class="sn-brand" data-app="pg" data-pg="home" aria-label="Next Point Pickleball home"><img src="${LOGO_TILE}" alt="" width="36" height="36"><span class="bn"><b>Next Point</b><small>Pickleball</small></span></button>
       <nav class="sn-links" aria-label="Site"><button data-app="pg" data-pg="home" ${gate?'':on('home')}>Home</button><button data-app="pg" data-pg="open" ${gate?'':on('open')}>Open play</button><button data-app="pg" data-pg="tours" ${gate?'':on('tours')}>Tournaments</button><button data-app="pg" data-pg="ranks" ${gate?'':on('ranks')}>Rankings</button></nav>
       <div class="sn-acts">${st?`${st.name?`<span class="sn-me" title="Signed in as ${esc(st.name)}"><span class="sn-av" aria-hidden="true">${esc(Array.from(st.name.trim())[0]||'?').toUpperCase()}</span><span class="sn-who"><small>${st.role==='ref'?'Referee':st.role==='acct'?'Signed in':'Admin'}</small><b>${esc(st.name)}</b></span></span><button class="btn sn-out" data-app="exitMode">Sign out</button>`:''}<button class="btn sn-play" data-app="enter" data-v="staff">${st.role==='ref'?'My matches':'Workspace'}</button>`
-        :`<button class="btn sn-staff" data-app="enter" data-v="staff">Staff sign-in</button><button class="btn sn-play" data-app="${pl?'myGames':'enter'}" data-v="player">${pl?'My games':"I'm playing"}</button>`}</div></div></header>`}
+        :`${pl?`<span class="sn-me" title="Signed in as ${esc(pl.name)}"><span class="sn-av" aria-hidden="true">${esc(Array.from(pl.name.trim())[0]||'?').toUpperCase()}</span><span class="sn-who"><small>Player</small><b>${esc(pl.name)}</b></span></span>`:`<button class="btn sn-staff" data-app="enter" data-v="staff">Staff sign-in</button>`}<button class="btn sn-play" data-app="${pl?'myGames':'enter'}" data-v="player">${pl?'My games':"I'm playing"}</button>`}</div></div></header>`}
   function tabBar(){const play=view==='player'||view==='public'||view==='ref';const on=k=>(k==='play'?play:view==='intro'&&!gate&&(pg===k||(k==='tours'&&(pg.startsWith('t:')||pg.startsWith('s:')))))?'aria-current="page"':'';
     const it=(k,ic,l,attrs)=>`<button class="tb-i" ${attrs} ${on(k)}>${icon(ic)}<span>${l}</span></button>`;
     const st=staffIn();
@@ -2623,10 +2768,10 @@ const App=(()=>{
   function csLocked(){return!DEMO&&((db.settings&&db.settings.courtside)||'players')==='players'}
   function pubOk(){return!(mode&&(mode.role==='viewer'||mode.role==='player')&&csLocked()&&!lastMe)}
   const REM=KEY+'-me';
-  function remGet(){try{const r=JSON.parse(localStorage.getItem(REM)||'null');if(r&&r.id&&Date.now()-(r.at||0)<2*864e5)return r}catch(e){}return null}
-  function remSet(id,tok){try{localStorage.setItem(REM,JSON.stringify({id,tok:tok||null,at:Date.now()}))}catch(e){}}
+  function remGet(){try{const r=JSON.parse(localStorage.getItem(REM)||'null');if(r&&r.id&&Date.now()-(r.at||0)<(r.acct?180:2)*864e5)return r}catch(e){}return null}
+  function remSet(id,tok,acct){const o=remGet();try{localStorage.setItem(REM,JSON.stringify({id,tok:tok||null,at:Date.now(),acct:!!(acct||(o&&o.acct&&o.id===id))}))}catch(e){}}
   function remClear(){try{localStorage.removeItem(REM)}catch(e){}}
-  function forgetMe(){lastMe=null;remClear();if(CL.on&&CL.tok.player){const t=CL.tok.player;rpc('np_logout',{p_token:t}).catch(()=>{});CL.tok.player=null;saveTokens()}if(view==='public'&&!pubOk())view='player'}
+  function forgetMe(){const r=remGet();pkeyClear();if(r&&r.acct&&AC.sess&&CL.sb){CL.sb.auth.signOut().catch(()=>{});AC.sess=null}PA.st='';PA.ids=null;PA.err='';lastMe=null;remClear();if(CL.on&&CL.tok.player){const t=CL.tok.player;rpc('np_logout',{p_token:t}).catch(()=>{});CL.tok.player=null;saveTokens()}if(view==='public'&&!pubOk())view='player'}
   function evFor(pid){const has=e=>e.type==='tournament'?(e.entries||[]).some(x=>x.status!=='out'&&(x.p||[]).includes(pid)):!!(e.checkins&&e.checkins[pid]);
     const l=db.events.filter(has);return l.filter(liveNow).pop()||l[l.length-1]||null}
   function resume(id){const r=remGet();if(CL.on&&r&&r.id===id&&r.tok&&!CL.tok.player){CL.tok.player=r.tok;saveTokens()}
@@ -2789,6 +2934,17 @@ const App=(()=>{
       case 'gateBack':gate=null;gateErr='';AC.note='';render();return;
       case 'gateTo':gate=t.dataset.g;gateErr='';if(gate!=='sent')AC.note='';render();setTimeout(()=>{const f=document.querySelector('.gate input');f&&f.focus()},0);return;
       case 'acctGo':acctGo();return;
+      case 'pGoogle':{t.disabled=true;PA.err='';intentSet({k:t.dataset.k==='plink'?'plink':'player',tok:t.dataset.k==='plink'?CL.tok.player:null});
+        CL.sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:siteUrl(),skipBrowserRedirect:true,queryParams:{prompt:'select_account'}}}).then(({data,error})=>{
+          if(error||!data||!data.url){t.disabled=false;PA.err=authMsg(error);render();return}location.assign(data.url)},err=>{t.disabled=false;PA.err=authMsg(err);render()});return}
+      case 'pGo':intentSet({k:'player'});pAfterAuth();return;
+      case 'pOut':if(CL.sb)CL.sb.auth.signOut().catch(()=>{});AC.sess=null;PA.st='';PA.ids=null;PA.err='';render();return;
+      case 'pClaim':PA.busy=true;render();rpc('np_player_claim',{p_id:id}).then(r=>pResult(r),e=>{PA.busy=false;PA.err=pinErr(e.net?'offline':'wrong');render()});return;
+      case 'pUp':PA.st='signup';PA.err='';render();setTimeout(()=>{const f=document.querySelector('#paUpUser');f&&f.focus()},0);return;
+      case 'pBack':PA.st='';PA.err='';render();setTimeout(()=>{const f=document.querySelector('#paInUser');f&&f.focus()},0);return;
+      case 'pSaveUser':PA.save=true;PA.err='';render();setTimeout(()=>{const f=document.querySelector('#paSaveUser');f&&f.focus()},0);return;
+      case 'pSaveNo':try{localStorage.setItem(KEY+'-saveno',String(Date.now()))}catch(e){}PA.save=false;render();return;
+      case 'pUnlink':{if(!CL.tok.staff)return;rpc('np_player_unlink',{p_token:CL.tok.staff,p_player:id}).then(r=>{if(r&&r.ok){if(CL.pacct)delete CL.pacct[id];if(CL.plog)delete CL.plog[id];toast('Sign-in removed. They can use their PIN, then make a new username.');render()}},()=>toast('Couldn\'t remove it. Check the connection.'));return}
       case 'acctGoogle':{t.disabled=true;gateErr='';
         CL.sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:siteUrl(),skipBrowserRedirect:true,queryParams:{prompt:'select_account'}}}).then(({data,error})=>{
           if(error||!data||!data.url){t.disabled=false;gateErr=authMsg(error);render();return}location.assign(data.url)},err=>{t.disabled=false;gateErr=authMsg(err);render()});return}
@@ -2827,6 +2983,7 @@ const App=(()=>{
     save();render();
   });
   document.addEventListener('change',e=>{
+    if(e.target.name==='paWho'){PA.who=e.target.value;document.querySelectorAll('#paUp [data-w]').forEach(g=>g.hidden=g.dataset.w!==PA.who);PA.err='';const er=document.querySelector('.pauth .err');if(er)er.remove();return}
     if(e.target.id==='toolsOn'){db.tools=e.target.checked;save();return}
     if(e.target.id==='tvRot'){db.tvRot=e.target.checked;save();return}
     if(e.target.id==='tvCall'){db.tvCall=e.target.checked;save();return}
@@ -2854,6 +3011,26 @@ const App=(()=>{
       const ev=type==='openplay'?OPM.create({...base,rule:$('#evRule').value,teams:$('#evTeams').value,gameTo:+$('#evTo').value,noShow:+$('#evNoShow').value})
         :TM.create({...base,forfeit:Math.min(60,Math.max(1,Math.round(+$('#evForf').value)||10)),rest:Math.min(120,Math.max(0,Math.round(+$('#evRest').value)||0)),gameMin:Math.min(60,Math.max(0,Math.round(+$('#evTimer').value)||0))});
       db.events.push(ev);db.cur=ev.id;home=false;homeSec='events';[OPM,TM].forEach(m=>m.signOut());save();toast((type==='openplay'?'Session':'Tournament')+' created.');render();return}
+    if(f.id==='paIn'){e.preventDefault();const u=userIn($('#paInUser').value),pw=$('#paInPass').value||'';if(!u||!pw){PA.err='Enter your username and password.';render();return}
+      PA.busy=true;PA.err='';render();rpc('np_player_signin',{p_user:u,p_pass:pw}).then(r=>{PA.busy=false;if(r&&r.token){pDone(r);return}PA.err=userErr(r&&r.error);render()},e=>{PA.busy=false;PA.err=e.net?pinErr('offline'):'Accounts aren\'t switched on yet. Ask the desk.';render()});return}
+    if(f.id==='paUp'){e.preventDefault();const u=userIn($('#paUpUser').value),pw=$('#paUpPass').value||'',who=(document.querySelector('input[name=paWho]:checked')||{}).value||'new';PA.who=who;
+      if(!/^[a-z0-9._]{3,24}$/.test(u)){PA.err=userErr('username');render();return}if(pw.length<8){PA.err=userErr('password');render();return}
+      let args,nm='',sk=3;
+      if(who==='new'){nm=($('#paUpName').value||'').trim().replace(/\s+/g,' ');sk=+$('#paUpSkill').value||3;if(nm.length<2){PA.err='Enter your full name.';render();return}args={p_user:u,p_pass:pw,p_id:uid('p'),p_pin:null,p_new:true}}
+      else{const pin=($('#paUpPin').value||'').trim();if(!/^\d{6}$/.test(pin)){PA.err='The PIN is 6 digits.';render();return}args={p_user:u,p_pass:pw,p_id:$('#paUpId').value,p_pin:pin,p_new:false}}
+      PA.busy=true;PA.err='';render();
+      rpc('np_player_signup',args).then(r=>{PA.busy=false;if(!(r&&r.token)){PA.err=r&&(r.error==='wrong'||r.error==='locked')?pinErr(r.error):userErr(r&&r.error);render();return}
+        if(who==='new'){CL.tok.player=r.token;saveTokens();addPlayer({id:args.p_id,name:nm,skill:sk,club:true});save()}
+        PA.who='';pDone(r)},e=>{PA.busy=false;PA.err=e.net?pinErr('offline'):'Accounts aren\'t switched on yet. Ask the desk.';render()});return}
+    if(f.id==='paSave'){e.preventDefault();const u=userIn($('#paSaveUser').value),pw=$('#paSavePass').value||'';
+      if(!/^[a-z0-9._]{3,24}$/.test(u)){PA.err=userErr('username');render();return}if(pw.length<8){PA.err=userErr('password');render();return}
+      rpc('np_player_signup_token',{p_token:CL.tok.player,p_user:u,p_pass:pw}).then(r=>{if(r&&r.token){pDone(r,true);return}PA.err=userErr(r&&r.error);render()},e=>{PA.err=e.net?pinErr('offline'):userErr('');render()});return}
+    if(f.id==='paLink'){e.preventDefault();const pid=$('#paLinkId').value,pin=($('#paLinkPin').value||'').trim();if(!/^\d{6}$/.test(pin)){PA.err='The PIN is 6 digits.';render();return}
+      PA.busy=true;render();rpc('np_player_link',{p_id:pid,p_pin:pin}).then(r=>pResult(r),e=>{PA.busy=false;PA.err=pinErr(e.net?'offline':'wrong');render()});return}
+    if(f.id==='paNew'){e.preventDefault();const n=($('#paNewName').value||'').trim().replace(/\s+/g,' '),sk=+$('#paNewSkill').value||3;if(n.length<2){PA.err='Enter your full name.';render();return}
+      const nid=uid('p');PA.busy=true;render();
+      rpc('np_player_new',{p_id:nid}).then(r=>{if(!(r&&r.token)){pResult(r);return}CL.tok.player=r.token;saveTokens();addPlayer({id:nid,name:n,skill:sk,club:true});save();
+        PA.busy=false;pDone(r);toast('Welcome, '+n.split(' ')[0]+'. Your backup PIN is '+r.pin+'.')},e=>{PA.busy=false;PA.err=pinErr(e.net?'offline':'wrong');render()});return}
     if(f.id==='gateEmail'){e.preventDefault();AC.mailOpen=true;const em=$('#geEmail').value.trim(),pw=$('#gePass').value;if(!em||!pw){gateErr='Enter your email and password.';render();return}
       const btn=f.querySelector('button[type=submit]');if(btn)btn.disabled=true;
       CL.sb.auth.signInWithPassword({email:em,password:pw}).then(({data,error})=>{if(error||!data||!data.session){gateErr=authMsg(error);render();return}AC.sess=data.session;acctGo()},err=>{gateErr=authMsg(err);render()});return}
@@ -2906,7 +3083,7 @@ const App=(()=>{
     window.addEventListener('hashchange',()=>{deep(location.hash.slice(1));render()});
     render();
   }
-  return{fresh:()=>{lastKey=''},db:()=>db,save,render,go,uid,newPin,addPlayer,ensureSkill,isActive,start,kpi,pageHead,icon,clubBoard,playerRank,sessionLeaders,tools,qrBlock,kioskPage,alerts,verifyPin,playerLogin,registerPlayer,pinErr,canAuto,cloud:()=>CL,forgetMe,ackMatch,acked:ackedM,pushCard,me:()=>lastMe};
+  return{fresh:()=>{lastKey=''},db:()=>db,save,render,go,uid,newPin,addPlayer,ensureSkill,isActive,start,kpi,pageHead,icon,clubBoard,playerRank,sessionLeaders,tools,qrBlock,kioskPage,alerts,verifyPin,playerLogin,registerPlayer,pinErr,pAuth,pSaveCard,canAuto,cloud:()=>CL,forgetMe,ackMatch,acked:ackedM,pushCard,me:()=>lastMe};
 })();
 
 /* ---------- live scores from referee phones ----------
@@ -3249,6 +3426,7 @@ function renderPlayer(){
       <label class="f">Skill level<select id="regSkill">${[2.5,3,3.5,4,4.5,5].map(s=>`<option ${s===3?'selected':''}>${s.toFixed(1)}</option>`).join('')}</select></label>
       <label class="f">Choose a 6-digit PIN<input type="password" id="regPin" inputmode="numeric" maxlength="6"></label>
       <div class="err" id="regErr"></div><button class="btn" type="submit" style="padding:10px">Register</button></form></details>`;
+    body=App.pAuth('open',body,S.players.filter(p=>p.club||C(p.id)).sort((a,b)=>a.name.localeCompare(b.name)))||body;
   }else{
     const p=PL(me),c=C(me);let hero,acts='';
     const m=S.matches.find(x=>(x.status==='assigned'||x.status==='play')&&[...x.a,...x.b].includes(me));
@@ -3285,7 +3463,7 @@ function renderPlayer(){
     const hist=mine.length?`<table class="mini-table"><thead><tr><th>Court</th><th>Partner</th><th>Score</th><th></th></tr></thead><tbody>${mine.map(x=>{const inA=x.a.includes(me),my=inA?x.sa:x.sb,th=inA?x.sb:x.sa,mt=(inA?x.a:x.b).find(i=>i!==me);return `<tr><td>${x.court}</td><td>${esc(short(mt))}</td><td class="num">${my}–${th}</td><td><span class="pill ${my>th?'p-waiting':'p-left'}">${my>th?'Won':'Lost'}</span></td></tr>`}).join('')}</tbody></table>`:'<span class="muted">No games yet today.</span>';
     const rk=App.playerRank(me);
     const rankCard=rk?`<div class="rankcard"><div><span class="eyebrow">Club leaderboard</span><div class="rk-big">${rk.rank?'#'+rk.rank+' <small>of '+rk.of+'</small>':'Not ranked yet'}</div><div class="li-m">${rk.rank?'':'Play '+Math.max(0,5-rk.g)+' more game'+(5-rk.g===1?'':'s')+' to get a rank · '}${rk.g} game${rk.g===1?'':'s'} · ${Math.round(rk.wp*100)}% wins</div></div><div class="rk-r"><span class="eyebrow">Rating</span><b class="num">${rk.rating}</b></div></div>`:'';
-    body=`${App.pushCard(me)}${hero}<div class="pacts">${acts}</div>${pairBox}${rankCard}<div style="display:grid;gap:6px"><span class="eyebrow">Today · ${c?c.games:0} game${c&&c.games===1?'':'s'}, ${c?c.wins:0} win${c&&c.wins===1?'':'s'}</span>${hist}</div>`;
+    body=`${App.pSaveCard()}${App.pushCard(me)}${hero}<div class="pacts">${acts}</div>${pairBox}${rankCard}<div style="display:grid;gap:6px"><span class="eyebrow">Today · ${c?c.games:0} game${c&&c.games===1?'':'s'}, ${c?c.wins:0} win${c&&c.wins===1?'':'s'}</span>${hist}</div>`;
   }
   return `<div class="phone-wrap"><div class="phone"><div class="phone-top"><img class="logo-sm" src="${LOGO_TILE}" alt=""><b>Next Point</b>${me?`<span class="muted" style="margin-left:auto">${esc(PL(me).name)}</span><button class="btn sm" data-act="logout">Switch</button>`:''}</div>${body}</div>
   <div class="guide panel"><h2>What players see</h2>
@@ -4062,8 +4240,9 @@ function pointState(m){
 
 /* ---------- players ---------- */
 function addPlayer(o){
-  const ex=S.players.find(p=>(o.dupr&&p.dupr&&p.dupr.toUpperCase()===o.dupr.toUpperCase())||(o.mobile&&p.mobile===o.mobile));
-  if(ex){['g','by','d','s','self','dupr','mobile'].forEach(k=>{if(o[k]!=null&&o[k]!=='')ex[k]=o[k]});return ex.id}
+  const ex=S.players.find(p=>(o.dupr&&p.dupr&&p.dupr.toUpperCase()===o.dupr.toUpperCase())||(o.mobile&&p.mobile===o.mobile)||(o.email&&p.email&&p.email.toLowerCase()===o.email&&p.name.toLowerCase()===o.name.toLowerCase()));
+  if(ex){['g','by','d','s','self','dupr','mobile','email'].forEach(k=>{if(o[k]!=null&&o[k]!=='')ex[k]=o[k]});return ex.id}
+  if(!o.email)delete o.email;
   return App.addPlayer({...o,pin:App.newPin(),tmp:S.id});
 }
 
@@ -4188,10 +4367,11 @@ function renderPlayer(){
     body=`<div class="hero"><div class="eyebrow">Sign in</div><div>Pick your name and enter the 6-digit PIN you got after registering.</div></div>
      <form id="pLogin" style="display:grid;gap:10px"><label class="f">Name<select id="pId">${inEntries.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label>
      <label class="f">PIN<input type="password" id="pPin" inputmode="numeric" maxlength="6"></label><div class="err" id="pErr"></div><button class="btn primary big" type="submit">Sign in</button></form>`;
+    body=App.pAuth('tour',body,inEntries)||body;
   }else{
     const p=PL(me),my=S.entries.filter(e=>e.p.includes(me)&&e.status!=='out');
     const q=queue();
-    body=App.pushCard(me)+my.map(e=>{const d=D(e.div),partner=e.p.find(x=>x!==me);
+    body=App.pSaveCard()+App.pushCard(me)+my.map(e=>{const d=D(e.div),partner=e.p.find(x=>x!==me);
       const cur=S.matches.find(m=>(m.status==='called'||m.status==='play')&&[m.a,m.b].includes(e.id));
       let hero;
       if(e.status==='wait')hero=`<div class="hero"><div class="eyebrow">Waitlist</div><div class="big">#${S.entries.filter(x=>x.div===e.div&&x.status==='wait').indexOf(e)+1}</div><div>You'll move in if an entry withdraws before the draw.</div></div>`;
@@ -4677,7 +4857,7 @@ function renderModal(){
       <label class="f">DUPR rating<input type="number" step="0.001" min="2" max="8" id="en${n}R" placeholder="Blank if none"></label>
       <label class="f">Self-rating (no DUPR)<select id="en${n}Self">${[2.5,3,3.5,4,4.5,5].map(s=>`<option ${s===3.5?'selected':''}>${s.toFixed(1)}</option>`).join('')}</select></label>
       <label class="f">DUPR ID<input type="text" id="en${n}Id"></label>
-      <label class="f">Mobile<input type="text" id="en${n}M" inputmode="tel"></label></div></fieldset>`;
+      <label class="f">Mobile<input type="text" id="en${n}M" inputmode="tel"></label><label class="f">Email <small>for sign-in, kept private</small><input type="email" id="en${n}E" inputmode="email" autocomplete="off"></label></div></fieldset>`;
     h=`<h3>Add entry</h3><label class="f">Division<select id="enDiv">${open.map(d=>`<option value="${d.id}" data-type="${d.type}">${esc(dname(d))}</option>`).join('')}</select></label>
       ${pf(1)}${pf(2)}<p class="tb" style="margin:0">The DUPR rating used matches the division: doubles rating for doubles, singles rating for singles.</p>
       <div class="err" id="enErr"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-act="closeModal">Cancel</button><button class="btn" data-act="saveEntry" data-more="1">Save and add another</button><button class="btn primary" data-act="saveEntry">Save entry</button></div>`}
@@ -4697,7 +4877,7 @@ const openModal=o=>{modal={...o,key:o.type+Math.random()};renderModal()};
 const closeModal=()=>{modal=null;renderModal()};
 
 /* ---------- registration entry + CSV ---------- */
-const CSV_HEAD='Division,P1 Name,P1 Gender,P1 Birth Year,P1 DUPR,P1 DUPR ID,P1 Self Rating,P1 Mobile,P2 Name,P2 Gender,P2 Birth Year,P2 DUPR,P2 DUPR ID,P2 Self Rating,P2 Mobile';
+const CSV_HEAD='Division,P1 Name,P1 Gender,P1 Birth Year,P1 DUPR,P1 DUPR ID,P1 Self Rating,P1 Mobile,P1 Email,P2 Name,P2 Gender,P2 Birth Year,P2 DUPR,P2 DUPR ID,P2 Self Rating,P2 Mobile,P2 Email';
 /* ---- minimal .xlsx reader: unzip with the browser's DecompressionStream, read the sheet XML ---- */
 async function unzipEntries(buf){
   const v=new DataView(buf),u8=new Uint8Array(buf),dec=new TextDecoder();let e=-1;
@@ -4740,12 +4920,13 @@ function parseCSV(text){const rows=[];let row=[],f='',q=false;
   if(f!==''||row.length){row.push(f);rows.push(row)}
   return rows.filter(r=>r.some(x=>x.trim()!==''));
 }
+const okMail=v=>{v=String(v||'').trim().toLowerCase();return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)?v:''};
 function personFrom(get,pre,type){
   const name=(get(pre+' Name')||'').trim();if(!name)return null;
   const g=(get(pre+' Gender')||'').trim().toUpperCase()[0];
   const num=v=>{v=parseFloat(v);return isNaN(v)?null:v};
   const r=num(get(pre+' DUPR')),self=num(get(pre+' Self Rating'));
-  const o={name,g:g==='F'||g==='W'?'F':'M',by:parseInt(get(pre+' Birth Year'),10)||null,dupr:(get(pre+' DUPR ID')||'').trim(),mobile:(get(pre+' Mobile')||'').trim(),self:self??(r?Math.round(r*2)/2:3)};
+  const o={name,g:g==='F'||g==='W'?'F':'M',by:parseInt(get(pre+' Birth Year'),10)||null,dupr:(get(pre+' DUPR ID')||'').trim(),mobile:(get(pre+' Mobile')||'').trim(),email:okMail(get(pre+' Email')),self:self??(r?Math.round(r*2)/2:3)};
   if(type==='singles')o.s=r;else o.d=r;
   return o;
 }
@@ -4875,7 +5056,7 @@ document.addEventListener('click',e=>{
     case 'csvModal':openModal({type:'csv'});return;
     case 'saveEntry':{const dv=$('#enDiv').value,d=D(dv);if(!d){$('#enErr').textContent='Pick a division.';return}
       const get=n=>{const name=$('#en'+n+'Name').value.trim();if(!name)return null;const r=parseFloat($('#en'+n+'R').value);
-        const o={name,g:$('#en'+n+'G').value,by:parseInt($('#en'+n+'By').value,10)||null,dupr:$('#en'+n+'Id').value.trim(),mobile:$('#en'+n+'M').value.trim(),self:+$('#en'+n+'Self').value};
+        const o={name,g:$('#en'+n+'G').value,by:parseInt($('#en'+n+'By').value,10)||null,dupr:$('#en'+n+'Id').value.trim(),mobile:$('#en'+n+'M').value.trim(),email:okMail($('#en'+n+'E')&&$('#en'+n+'E').value),self:+$('#en'+n+'Self').value};
         if(d.type==='singles')o.s=isNaN(r)?null:r;else o.d=isNaN(r)?null:r;return o};
       const p1=get(1),p2=d.type==='doubles'?get(2):null;
       if(!p1||(d.type==='doubles'&&!p2)){$('#enErr').textContent=d.type==='doubles'?'Enter both players\' names.':'Enter the player\'s name.';return}

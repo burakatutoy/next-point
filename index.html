@@ -1692,6 +1692,33 @@ a.btn{text-decoration:none}
 .pa-grp{display:grid;gap:10px;padding:4px 2px 2px}.pa-grp[hidden]{display:none}
 .pa-links span{color:var(--muted);font-size:14.5px;align-self:center}.pa-links{align-items:center}
 .pa-forgot{margin:-4px 0 0;font-size:13px;color:var(--muted)}
+
+/* ---------- v50: seamless first sign-in ---------- */
+.pa-br{display:grid;gap:8px;max-width:520px;margin:0 auto 14px;padding:16px 18px;border-radius:16px;background:color-mix(in srgb,var(--warn,#d9a21b) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--warn,#d9a21b) 55%,var(--line))}
+.pa-br b{font-size:16px}.pa-br p{margin:0;font-size:14.5px;line-height:1.45}.pa-br .row{gap:8px;flex-wrap:wrap;margin-top:4px}.pa-br .btn{min-height:46px}
+.pa-br-tip{color:var(--muted);font-size:13px!important}.pa-br-tip b{font-size:inherit}
+.pa-ck{display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 14px;border-radius:12px;background:var(--surface-2);font-weight:600;cursor:pointer}
+.pa-ck input{width:20px;height:20px;accent-color:var(--accent);margin:0;flex:none}
+.pa-dup{display:grid;gap:8px;padding:14px;border-radius:12px;border:1px solid var(--accent);background:var(--accent-soft)}.pa-dup p{margin:0;font-size:14.5px}.pa-dup .row{gap:8px;flex-wrap:wrap}.pa-dup .btn{min-height:44px}
+.pa-nopin{color:var(--muted);font-size:13px}
+.modal.pqr{text-align:center;max-width:380px}.pqr-code{background:#fff;border-radius:16px;padding:14px;margin:4px auto;width:min(100%,280px)}.pqr-code svg{display:block;width:100%;height:auto}
+.pqr-how{margin:0;font-size:15px}.pqr-pin{margin:0;color:var(--muted)}.pqr-pin b{color:var(--ink);font-size:20px;letter-spacing:.08em}
+
+/* ---------- v51: dual meet ---------- */
+.club-tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.02em;vertical-align:1px;white-space:nowrap;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.club-tag.ct0,.meet-c.ct0{--cc:#6f55b8}.club-tag.ct1,.meet-c.ct1{--cc:#1f8a5b}.club-tag.ct2,.meet-c.ct2{--cc:#c2571a}.club-tag.ct3,.meet-c.ct3{--cc:#1d6fb8}
+.club-tag[class*=" ct"]:not(.ct-none){background:color-mix(in srgb,var(--cc) 14%,var(--surface));color:color-mix(in srgb,var(--cc) 72%,var(--ink));border-color:color-mix(in srgb,var(--cc) 40%,var(--line))}
+.club-tag.ct-none{background:var(--bad-soft,color-mix(in srgb,var(--bad) 12%,transparent));color:var(--bad);border-color:transparent}
+.club-sel{display:block;margin:4px 0 2px}.club-sel select{min-height:36px;padding:4px 28px 4px 10px;font-size:13.5px;border-radius:9px;max-width:200px}.club-sel select.none{border-color:var(--bad);color:var(--bad)}
+.clubs li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px;align-items:center}.clubs input{min-height:42px}
+.meet-row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch}
+.meet-row:not([data-n="2"]){grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.meet-row:not([data-n="2"]) .meet-vs{display:none}
+.meet-c{display:grid;gap:2px;justify-items:center;text-align:center;padding:14px 10px;border-radius:14px;border:1px solid color-mix(in srgb,var(--cc) 35%,var(--line));background:color-mix(in srgb,var(--cc) 8%,var(--surface));min-width:0}
+.meet-c.lead{border-color:var(--cc);box-shadow:inset 0 0 0 1px var(--cc)}
+.meet-n{font-weight:700;font-size:15px;overflow-wrap:anywhere}.meet-w{font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:clamp(40px,6vw,64px);line-height:1;color:color-mix(in srgb,var(--cc) 75%,var(--ink))}
+.meet-s{font-size:13px;color:var(--muted)}.meet-vs{align-self:center;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-size:13px}
+.kiosk .meet-w{font-size:clamp(56px,7vw,110px)}
+.panel.meet{margin-bottom:16px}
 </style>
 
 <header class="top">
@@ -1888,7 +1915,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-14a';
+  const BUILD='2026-11-15a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2054,7 +2081,7 @@ const App=(()=>{
       await pullAll();CL.ready=true;
       if(CL.staffRole==='admin')await loadSecrets();
       swReg();if(CL.staffRole==='admin')pushCheck();
-      setTimeout(()=>{doJoin();doAck()},0);
+      setTimeout(()=>{doJoin();doGo();doAck()},0);
       CL.sb.channel('np-rev').on('postgres_changes',{event:'*',schema:'public',table:'np_rev'},pl=>{const r=pl.new||{};onRev(r.id,r.rev,r.deleted)}).subscribe(st=>{CL.live=st==='SUBSCRIBED';setState();if(CL.live)poll()});
       clearInterval(CL.pollT);CL.pollT=setInterval(()=>{if(!CL.live||Date.now()-(CL.lastPoll||0)>30000){CL.lastPoll=Date.now();poll()}},4000);
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')poll()});
@@ -2067,7 +2094,9 @@ const App=(()=>{
     if(!CL.ready)return Promise.resolve({ok:false,err:'offline'});
     return rpc('np_login',{p_kind:kind,p_id:id,p_pin:pin}).then(r=>r&&r.token?{ok:true,token:r.token,role:r.role}:{ok:false,err:r&&r.error}).catch(e=>({ok:false,err:e.net?'offline':'wrong'}))}
   let lastMe=null;
-  function playerLogin(id,pin){return verifyPin('player',id,pin).then(r=>{if(r.ok){lastMe=id;if(CL.on){CL.tok.player=r.token;saveTokens()}remSet(id,CL.on?r.token:null)}return r})}
+  function playerLogin(id,pin){return verifyPin('player',id,pin).then(r=>{if(r.ok){lastMe=id;if(CL.on){CL.tok.player=r.token;saveTokens()}remSet(id,CL.on?r.token:null);if(CL.on&&acctOn())pKeep(id,r.token)}return r})}
+  // the phone keeps a stay-signed-in key, so a PIN, join link or desk QR is only needed once
+  function pKeep(id,tok){rpc('np_player_keep',{p_token:tok}).then(k=>{if(!(k&&k.key)||lastMe!==id)return;pkeySet(id,k.key);remSet(id,tok,true);linkedSet(k.linked?id:null);scheduleRender()},()=>{})}
   function registerPlayer(o){
     if(!CL.on){const nid=addPlayer(o);lastMe=nid;remSet(nid,null);return sync1(nid)}
     if(!CL.ready)return Promise.resolve(null);
@@ -2094,7 +2123,7 @@ const App=(()=>{
   function acctAuto(){let n=0;const go=()=>{if(mode||gate!=='signin')return;if(CL.ready&&AC.sess){acctGo();return}if(++n<60)setTimeout(go,250)};go()}
   // which sign-in methods are switched on in Supabase (Authentication > Sign In / Providers)
   function acctProviders(){if(AC.prov||!CFG||AC.provBusy)return;if(typeof fetch!=='function'){AC.prov={google:false,email:true};return}AC.provBusy=true;
-    fetch(CFG.url.replace(/\/$/,'')+'/auth/v1/settings',{headers:{apikey:CFG.key}}).then(r=>r.ok?r.json():null).then(j=>{AC.prov={google:!!(j&&j.external&&j.external.google),email:!(j&&j.external&&j.external.email===false)};AC.provBusy=false;if(gate)render()},()=>{AC.prov={google:false,email:true};AC.provBusy=false;if(gate)render()})}
+    fetch(CFG.url.replace(/\/$/,'')+'/auth/v1/settings',{headers:{apikey:CFG.key}}).then(r=>r.ok?r.json():null).then(j=>{AC.prov={google:!!(j&&j.external&&j.external.google),email:!(j&&j.external&&j.external.email===false)};AC.provBusy=false;if(gate)render();else scheduleRender()},()=>{AC.prov={google:false,email:true};AC.provBusy=false;if(gate)render();else scheduleRender()})}
   const G_LOGO='<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
   function acctToken(){return rpc('np_account_login',{}).catch(e=>({error:e.net?'offline':'auth'}))}
   async function acctList(){if(!acctOn()||CL.staffRole!=='admin'||!CL.tok.staff)return;try{const r=await rpc('np_accounts_get',{p_token:CL.tok.staff});if(r&&r.rows){AC.accts={};r.rows.forEach(x=>{AC.accts[x.staff_id]=x});scheduleRender()}}catch(e){}}
@@ -2112,7 +2141,7 @@ const App=(()=>{
   const PA={st:'',email:'',ids:null,err:'',busy:false,save:false,who:''};
   const PLKEY=KEY+'-pkey';
   const pkeyGet=()=>{try{return JSON.parse(localStorage.getItem(PLKEY)||'null')}catch(e){return null}};
-  const pkeySet=(id,key)=>{try{localStorage.setItem(PLKEY,JSON.stringify({id,key}))}catch(e){}};
+  const pkeySet=(id,key)=>{const o=pkeyGet();if(o&&o.key&&o.key!==key&&CL.ready)rpc('np_player_signout',{p_key:o.key}).catch(()=>{});try{localStorage.setItem(PLKEY,JSON.stringify({id,key}))}catch(e){}};
   const pkeyClear=()=>{const k=pkeyGet();try{localStorage.removeItem(PLKEY)}catch(e){}if(k&&k.key&&CL.ready)rpc('np_player_signout',{p_key:k.key}).catch(()=>{})};
   const INTENT=KEY+'-intent';
   function intentSet(o){try{localStorage.setItem(INTENT,JSON.stringify({...o,at:Date.now()}))}catch(e){}}
@@ -2136,9 +2165,35 @@ const App=(()=>{
     render()}
   function pDone(r,saved){const p=db.players.find(x=>x.id===r.subject);
     if(!p){PA.st='unlinked';PA.err="We couldn't find your profile on this site anymore. Ask the desk.";render();return}
-    CL.tok.player=r.token;saveTokens();remSet(p.id,r.token,true);if(r.key)pkeySet(p.id,r.key);PA.st='';PA.ids=null;PA.save=false;
+    CL.tok.player=r.token;saveTokens();remSet(p.id,r.token,true);if(r.key)pkeySet(p.id,r.key);linkedSet(r.linked===false?null:p.id);PA.st='';PA.ids=null;PA.save=false;PA.dup=null;PA.dupOk='';PA.ho=null;
     if(lastMe!==p.id)resume(p.id);
-    toast(saved?'Saved. Next time this phone signs you in by itself.':r.pin?'Welcome, '+p.name.split(' ')[0]+'. Your backup PIN is '+r.pin+'. Keep it in case you forget your password.':'Signed in as '+p.name+'.');render()}
+    let inNow='';{const ev=PA.ck&&db.events.find(e=>e.id===PA.ck&&e.type==='openplay'&&e.session.open);PA.ck=null;
+      if(ev){db.cur=ev.id;home=false;OPM.bind(ev);OPM.setMe(p.id);if(OPM.selfIn(p.id)){save();inNow=" You're checked in."}}}
+    toast(saved?'Saved. Next time this phone signs you in by itself.':r.pin?'Welcome, '+p.name.split(' ')[0]+'.'+inNow+' Your backup PIN is '+r.pin+'. Keep it in case you forget your password.':'Signed in as '+p.name+'.'+inNow);render()}
+  // built-in browsers of chat apps: Google refuses to sign in there, and they forget the player when the app closes
+  const inApp=()=>{const u=navigator.userAgent||'';if(!/FBAN|FBAV|FB_IAB|FB4A|FBIOS|Messenger|Instagram|Line\/|TikTok|musical_ly|MicroMessenger|Viber|Snapchat/i.test(u))return '';
+    return /Instagram/i.test(u)?'Instagram':/TikTok|musical_ly/i.test(u)?'TikTok':/Line\//i.test(u)?'LINE':/Viber/i.test(u)?'Viber':/Messenger|Orca/i.test(u)?'Messenger':'Facebook'};
+  const outBase=()=>(joinBase()||location.href.split('#')[0]).split('?')[0];
+  const outPlain=()=>outBase()+(PA.ho&&CL.tok.player?'?go='+PA.ho.code:'?play=1');
+  function outUrl(){const x=new URL(outPlain());return isIOS?'x-safari-'+x.href:'intent://'+x.host+x.pathname+x.search+'#Intent;scheme=https;S.browser_fallback_url='+encodeURIComponent(x.href)+';end'}
+  function pBrowserCard(){const app=inApp();if(!app||!acctOn())return '';try{if(sessionStorage.getItem(KEY+'-brno'))return ''}catch(e){}
+    // signed in here: fetch a one-time code so the real browser opens already signed in
+    if(CL.tok.player&&lastMe&&CL.ready&&!PA.hoBusy&&(!PA.ho||PA.ho.tok!==CL.tok.player||Date.now()-PA.ho.at>4*60000)&&!PA.hoOff){PA.hoBusy=true;const tk=CL.tok.player;
+      rpc('np_player_handoff',{p_token:tk}).then(r=>{PA.hoBusy=false;if(r&&r.code){PA.ho={code:r.code,at:Date.now(),tok:tk};scheduleRender()}else PA.hoOff=true},()=>{PA.hoBusy=false;PA.hoOff=true})}
+    return `<section class="pa-br" role="note"><b>You're in ${esc(app)}'s browser</b><p>Open this page in ${isIOS?'Safari':'your browser'} so your phone stays signed in${lastMe?'':' and Google sign-in works'}.</p>
+      <div class="row"><a class="btn primary" href="${esc(outUrl())}" data-app="pOutOpen">Open in ${isIOS?'Safari':'my browser'}</a><button class="btn" type="button" data-app="pOutCopy">Copy link</button><button class="btn linkish" type="button" data-app="pOutNo">Stay here</button></div>
+      <p class="pa-br-tip">Nothing happened? Tap the <b>⋯</b> menu and choose <b>Open in browser</b>, or paste the copied link into ${isIOS?'Safari':'Chrome'}.</p></section>`}
+  const LINKED=KEY+'-plinked';
+  const linkedSet=id=>{try{id?localStorage.setItem(LINKED,id):localStorage.removeItem(LINKED)}catch(e){}};
+  const linkedIs=id=>{try{return localStorage.getItem(LINKED)===id}catch(e){return false}};
+  // an open session the new player can be checked in to straight away
+  const ckEvent=()=>{const c=cur();if(c&&c.type==='openplay'&&c.session.open)return c;const o=db.events.filter(e=>e.type==='openplay'&&e.session.open);return o.length===1?o[0]:null};
+  const ckBox=()=>{const e=ckEvent();return e?`<label class="pa-ck"><input type="checkbox" id="paCk" data-ev="${esc(e.id)}" checked><span>Check me in to ${esc(e.session.name)} now</span></label>`:''};
+  const ckRead=()=>{const b=document.querySelector('#paCk');PA.ck=b&&b.checked?b.dataset.ev:null};
+  // typing a name that already has a profile: ask before making a second one
+  const dupOf=n=>{const k=n.toLowerCase();if(PA.dupOk===k)return null;return db.players.find(x=>x.name.trim().replace(/\s+/g,' ').toLowerCase()===k)||null};
+  const dupHtml=()=>PA.dup?`<div class="pa-dup" role="alert"><b>There's already a profile for ${esc(PA.dup.name)}.</b><p>If that's you, link it so you keep your games and ranking.</p><div class="row"><button class="btn primary" type="button" data-app="pDupYes">That's me</button><button class="btn" type="button" data-app="pDupNo">I'm someone else</button></div></div>`:'';
+  const noPinTip='<small class="pa-nopin">No PIN? Ask the desk to show your sign-in QR.</small>';
   const userErr=e=>({taken:'That username is taken. Try another.',username:'Usernames are 3 to 24 characters: letters, numbers, dots or underscores.',password:'Use at least 8 characters for the password.',
     wrong:'Wrong username or password.',locked:pinErr('locked'),expired:'Your sign-in ended. Sign in again.',exists:'Something went wrong. Try again.'}[e]||'Something went wrong. Try again.');
   const userIn=v=>String(v||'').trim().toLowerCase();
@@ -2150,18 +2205,18 @@ const App=(()=>{
     const pinPart=String(legacy||'').replace(/^\s*<div class="hero">(?:<div[^>]*>[^<]*<\/div>)*<\/div>/,'');
     const who=AC.sess?`<p class="pa-who">Signed in${AC.sess.user&&AC.sess.user.app_metadata&&AC.sess.user.app_metadata.provider==='google'?' with Google':''} as <b>${esc(acctEmail())}</b></p>`:'';
     const out=`<button class="btn linkish" type="button" data-app="pOut">Use a different account</button>`;
-    const wrap=(h,sub,body)=>`<section class="pauth" aria-labelledby="paH"><h2 id="paH" class="pa-h">${h}</h2>${sub?`<p class="pa-sub">${sub}</p>`:''}${err}${body}</section>`;
+    const wrap=(h,sub,body)=>pBrowserCard()+`<section class="pauth" aria-labelledby="paH"><h2 id="paH" class="pa-h">${h}</h2>${sub?`<p class="pa-sub">${sub}</p>`:''}${err}${body}</section>`;
     if(PA.busy)return wrap('Signing you in…','','<div class="pa-spin" aria-hidden="true"></div>');
     if(AC.sess&&PA.st==='choose'){const ps=pNames(PA.ids||[]);
       return wrap('Which one is you?','This email is on more than one registration.',`${who}<div class="pa-pick">${ps.map(p=>`<button class="btn pa-me" type="button" data-app="pClaim" data-id="${esc(p.id)}">${esc(p.name)}</button>`).join('')}</div>${out}`)}
     if(AC.sess&&PA.st==='unlinked'){const nm=(AC.sess.user&&AC.sess.user.user_metadata&&(AC.sess.user.user_metadata.full_name||AC.sess.user.user_metadata.name))||'';
-      const link=`<form id="paLink" class="pa-f"><label class="f">Your name<select id="paLinkId">${(names||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></label><label class="f">Your PIN<input type="password" id="paLinkPin" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label><button class="btn ${ctx==='tour'?'primary':''}" type="submit">Link my profile</button></form>`;
-      const mk=`<form id="paNew" class="pa-f"><label class="f">Full name<input type="text" id="paNewName" autocomplete="name" value="${esc(nm)}"></label><label class="f">Skill level<select id="paNewSkill">${[2.5,3,3.5,4,4.5,5].map(x=>`<option ${x===3?'selected':''}>${x.toFixed(1)}</option>`).join('')}</select></label><button class="btn ${ctx==='tour'?'':'primary'}" type="submit">Create my profile</button></form>`;
+      const link=`<form id="paLink" class="pa-f"><label class="f">Your name<select id="paLinkId">${(names||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></label><label class="f">Your PIN<input type="password" id="paLinkPin" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label>${noPinTip}<button class="btn ${ctx==='tour'?'primary':''}" type="submit">Link my profile</button></form>`;
+      const mk=`<form id="paNew" class="pa-f"><label class="f">Full name<input type="text" id="paNewName" autocomplete="name" value="${esc(nm)}"></label><label class="f">Skill level<select id="paNewSkill">${[2.5,3,3.5,4,4.5,5].map(x=>`<option ${x===3?'selected':''}>${x.toFixed(1)}</option>`).join('')}</select></label>${dupHtml()}${ckBox()}<button class="btn ${ctx==='tour'?'':'primary'}" type="submit">Create my profile</button></form>`;
       return wrap('Almost there',ctx==='tour'?"We couldn't match this email to a registration. If you're registered, pick your name and enter the PIN on your confirmation once.":'First time here? Make your profile. Played with us before? Link it with your PIN once.',
         `${who}${ctx==='tour'?`${(names||[]).length?link:''}<details class="pa-more"><summary>Not registered? Make a club profile</summary>${mk}</details>`
           :`<div class="pa-two"><div><h3>I'm new</h3>${mk}</div>${(names||[]).length?`<div><h3>I've played here before</h3>${link}</div>`:''}</div>`}${out}`)}
     if(AC.sess)return wrap('Welcome back','',`${who}<button class="btn primary pa-go" type="button" data-app="pGo">Continue</button>${out}`);
-    const g=pv.google?`<button class="btn gate-google" type="button" data-app="pGoogle">${G_LOGO}<span>Continue with Google</span></button>`:'';
+    const g=pv.google&&!inApp()?`<button class="btn gate-google" type="button" data-app="pGoogle">${G_LOGO}<span>Continue with Google</span></button>`:'';
     const pinNote=`<details class="pa-pin"><summary>${ctx==='open'?'Use a PIN or register without an account':'Sign in with a PIN instead'}</summary>${pinPart}</details>`;
     if(PA.st==='signup'){const who=PA.who||(ctx==='tour'&&(names||[]).length?'old':'new');
       return wrap('Create your account','Pick a username and password. You stay signed in on this phone.',
@@ -2171,12 +2226,13 @@ const App=(()=>{
             <label class="pa-rad"><input type="radio" name="paWho" value="new" ${who==='new'?'checked':''}><span>${ctx==='tour'?'Not registered: make a club profile':"I'm new here"}</span></label>
             ${(names||[]).length?`<label class="pa-rad"><input type="radio" name="paWho" value="old" ${who==='old'?'checked':''}><span>${ctx==='tour'?"I'm registered for this tournament":"I've played here before"}</span></label>`:''}
             <div class="pa-grp" data-w="new" ${who==='new'?'':'hidden'}><label class="f">Full name<input type="text" id="paUpName" autocomplete="name"></label><label class="f">Skill level<select id="paUpSkill">${[2.5,3,3.5,4,4.5,5].map(x=>`<option ${x===3?'selected':''}>${x.toFixed(1)}</option>`).join('')}</select></label></div>
-            ${(names||[]).length?`<div class="pa-grp" data-w="old" ${who==='old'?'':'hidden'}><label class="f">Your name<select id="paUpId">${(names||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></label><label class="f">Your PIN <small>${ctx==='tour'?'from your registration confirmation':'from the desk'}</small><input type="password" id="paUpPin" inputmode="numeric" maxlength="6" autocomplete="off"></label></div>`:''}
+            ${(names||[]).length?`<div class="pa-grp" data-w="old" ${who==='old'?'':'hidden'}><label class="f">Your name<select id="paUpId">${(names||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></label><label class="f">Your PIN <small>${ctx==='tour'?'from your registration confirmation':'from the desk'}</small><input type="password" id="paUpPin" inputmode="numeric" maxlength="6" autocomplete="off"></label>${noPinTip}</div>`:''}
           </fieldset>
-          <button class="btn primary" type="submit">Create account</button></form>
+          ${dupHtml()}${ckBox()}
+          <button class="btn primary" type="submit">${ckEvent()?'Create account and check in':'Create account'}</button></form>
          <p class="pa-links"><span>Already have an account?</span><button class="btn linkish" type="button" data-app="pBack">Sign in</button></p>${pinPart?pinNote:''}`)}
-    const inF=`<form id="paIn" class="pa-f" novalidate><label class="f">Username<input type="text" id="paInUser" autocomplete="username" autocapitalize="none" spellcheck="false"></label><label class="f">Password<input type="password" id="paInPass" autocomplete="current-password"></label><button class="btn ${pv.google?'':'primary'}" type="submit">Sign in</button></form>`;
-    return wrap(ctx==='tour'?'Sign in to see your matches':'Sign in to play',`${pv.google?'Use Google or your username.':'Use your username and password.'} You stay signed in on this phone.`,
+    const inF=`<form id="paIn" class="pa-f" novalidate><label class="f">Username<input type="text" id="paInUser" autocomplete="username" autocapitalize="none" spellcheck="false"></label><label class="f">Password<input type="password" id="paInPass" autocomplete="current-password"></label><button class="btn ${g?'':'primary'}" type="submit">Sign in</button></form>`;
+    return wrap(ctx==='tour'?'Sign in to see your matches':'Sign in to play',`${g?'Use Google or your username.':'Use your username and password.'} You stay signed in on this phone.`,
       `<div class="pa-ways">${g}${g?'<span class="pa-or">or</span>':''}${inF}</div>
        <p class="pa-links"><span>New here?</span><button class="btn linkish" type="button" data-app="pUp">Create an account</button></p>
        <p class="pa-forgot">Forgot your password? Sign in with your PIN from the desk, then make a new username.</p>
@@ -2184,13 +2240,13 @@ const App=(()=>{
        <p class="pa-legal">By signing in you agree to our <button class="btn linkish" type="button" data-app="pg" data-pg="privacy">privacy notice</button>.</p>`)}
   // signed in with a PIN or a join link: offer to remember them with Google or email
   function pSaveCard(){
-    if(!acctOn()||!CL.tok.player||!lastMe)return '';const r=remGet();if(r&&r.acct)return '';
+    if(!acctOn()||!CL.tok.player||!lastMe)return '';const br=pBrowserCard();if(br)return br;if(linkedIs(lastMe))return '';const kept=!!((remGet()||{}).acct);
     try{if(Date.now()-(+localStorage.getItem(KEY+'-saveno')||0)<14*864e5)return ''}catch(e){}
     if(!AC.prov)acctProviders();const pv=AC.prov||{google:false};
     const err=PA.err&&PA.save?`<div class="err" role="alert">${esc(PA.err)}</div>`:'';
-    return `<section class="pa-save" aria-label="Skip the PIN next time"><div class="pa-save-t"><b>Skip the PIN next time</b><p>Connect Google or make a username and this phone signs you in by itself.</p></div>${err}
+    return `<section class="pa-save" aria-label="Skip the PIN next time"><div class="pa-save-t"><b>${kept?'This phone will remember you':'Skip the PIN next time'}</b><p>${kept?'For a new phone, make a username or connect Google so you never need the PIN.':'Connect Google or make a username and this phone signs you in by itself.'}</p></div>${err}
       ${PA.save?`<form id="paSave" class="pa-f" novalidate><label class="f">Username<input type="text" id="paSaveUser" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24"></label><label class="f">Password <small>at least 8 characters</small><input type="password" id="paSavePass" autocomplete="new-password"></label><div class="row"><button class="btn primary" type="submit">Save</button><button class="btn linkish" type="button" data-app="pSaveNo">Not now</button></div></form>`
-        :`<div class="row">${pv.google?`<button class="btn gate-google sm" type="button" data-app="pGoogle" data-k="plink">${G_LOGO}<span>Google</span></button>`:''}<button class="btn sm" type="button" data-app="pSaveUser">Make a username</button><button class="btn sm linkish" type="button" data-app="pSaveNo">Not now</button></div>`}</section>`}
+        :`<div class="row">${pv.google&&!inApp()?`<button class="btn gate-google sm" type="button" data-app="pGoogle" data-k="plink">${G_LOGO}<span>Google</span></button>`:''}<button class="btn sm" type="button" data-app="pSaveUser">Make a username</button><button class="btn sm linkish" type="button" data-app="pSaveNo">Not now</button></div>`}</section>`}
   const authMsg=e=>{const m=(e&&(e.code||'')+' '+(e.message||'')).toLowerCase();
     return /not.?confirmed/.test(m)?'Confirm your email first: open the link we sent you, then sign in.':/invalid|credential/.test(m)?"That email and password don't match.":/already|registered|exists/.test(m)?'That email already has an account. Sign in instead.':/weak|least|short/.test(m)?'Choose a longer password (at least 8 characters).':/rate|limit|too many/.test(m)?'Too many emails were sent. Wait a few minutes and try again.':/fetch|network|offline/.test(m)?pinErr('offline'):(e&&e.message)||'Something went wrong. Try again.'};
 
@@ -2254,6 +2310,8 @@ const App=(()=>{
           <label class="f">Forfeit after (min)<input type="number" id="evForf" min="1" value="10"></label>
           <label class="f">Rest between matches (min)<input type="number" id="evRest" min="0" value="5"></label>
           <label class="f">Referee game timer (min, 0 = off)<input type="number" id="evTimer" min="0" value="15"></label>
+          <label class="f">Format<select id="evFormat"><option value="std">Standard: everyone in a pool plays each other</option><option value="meet">Dual meet: club against club</option></select></label>
+          <label class="f" id="evClubsF" hidden>Clubs <small>separate with commas</small><input type="text" id="evClubs" placeholder="e.g. Next Point, Riverside"></label>
         </div>
         <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">Create event</button><span class="err" id="evErr"></span></div>
       </form></section>`;
@@ -2349,7 +2407,7 @@ const App=(()=>{
   function homePeople(){
     const club=db.players.filter(p=>p.club).sort((a,b)=>a.name.localeCompare(b.name)),temp=db.players.filter(p=>!p.club);
     const evName=id=>{const ev=db.events.find(e=>e.id===id);return ev?(ev.type==='openplay'?ev.session.name:ev.t.name):'Old tournament'};
-    const row=p=>`<li data-s="${esc(p.name.toLowerCase())}"><div class="li-main"><span class="li-t">${esc(p.name)}</span><div class="li-m">${p.pin?`PIN <b class="num">${esc(p.pin)}</b>`:'PIN set on their phone'}${p.d!=null?' · Doubles DUPR '+(+p.d).toFixed(3):''}${p.s!=null?' · Singles DUPR '+(+p.s).toFixed(3):''}${p.mobile?' · '+esc(p.mobile):''}${p.email?' · '+esc(p.email):''}${CL.pacct&&CL.pacct[p.id]?' · <span class="pill p-ok">Google: '+esc(CL.pacct[p.id].email||'linked')+'</span>':''}${CL.plog&&CL.plog[p.id]?' · <span class="pill p-ok">Username: '+esc(CL.plog[p.id])+'</span>':''}</div></div><span style="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">${p.club?`<button class="btn sm ${p.hideRank?'on':''}" data-app="hideRank" data-id="${p.id}" aria-pressed="${!!p.hideRank}">${p.hideRank?'Hidden in rankings':'Hide in rankings'}</button>`:''}${(CL.pacct&&CL.pacct[p.id])||(CL.plog&&CL.plog[p.id])?`<button class="btn sm" data-app="pUnlink" data-id="${p.id}">Remove sign-in</button>`:''}<button class="btn sm" data-app="newPin" data-id="${p.id}">New PIN</button><button class="btn sm danger" data-app="delPlModal" data-id="${p.id}" aria-label="Delete ${esc(p.name)}">Delete</button></span></li>`;
+    const row=p=>`<li data-s="${esc(p.name.toLowerCase())}"><div class="li-main"><span class="li-t">${esc(p.name)}</span><div class="li-m">${p.pin?`PIN <b class="num">${esc(p.pin)}</b>`:'PIN set on their phone'}${p.d!=null?' · Doubles DUPR '+(+p.d).toFixed(3):''}${p.s!=null?' · Singles DUPR '+(+p.s).toFixed(3):''}${p.mobile?' · '+esc(p.mobile):''}${p.email?' · '+esc(p.email):''}${CL.pacct&&CL.pacct[p.id]?' · <span class="pill p-ok">Google: '+esc(CL.pacct[p.id].email||'linked')+'</span>':''}${CL.plog&&CL.plog[p.id]?' · <span class="pill p-ok">Username: '+esc(CL.plog[p.id])+'</span>':''}</div></div><span style="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">${p.club?`<button class="btn sm ${p.hideRank?'on':''}" data-app="hideRank" data-id="${p.id}" aria-pressed="${!!p.hideRank}">${p.hideRank?'Hidden in rankings':'Hide in rankings'}</button>`:''}${(CL.pacct&&CL.pacct[p.id])||(CL.plog&&CL.plog[p.id])?`<button class="btn sm" data-app="pUnlink" data-id="${p.id}">Remove sign-in</button>`:''}<button class="btn sm" data-app="pQr" data-id="${p.id}">Sign-in QR</button><button class="btn sm" data-app="newPin" data-id="${p.id}">New PIN</button><button class="btn sm danger" data-app="delPlModal" data-id="${p.id}" aria-label="Delete ${esc(p.name)}">Delete</button></span></li>`;
     const groups={};temp.forEach(p=>(groups[p.tmp||'']=groups[p.tmp||'']||[]).push(p));
     return pageHead('Admin','Staff &amp; players','')+
      `<div class="kpis">${kpi('Club members',club.length,'kept for open play and the leaderboard')}${kpi('Tournament players',temp.length,'removed when their tournament is deleted')}${kpi('Referees',db.officials.length,'sign in with their PIN')}</div>
@@ -2645,7 +2703,7 @@ const App=(()=>{
       ${(()=>{const dv=i.ds.filter(d=>d.status!=='open');if(!dv.length)return '';const cur=dv.find(d=>d.id===resDiv[ev.id])||dv.find(d=>d.status==='live')||dv[0];
         return `<section class="hub-sec tp-res"><div class="hs-h"><h2 class="sp-h2">${i.st.k==='done'?'Results':'Results so far'}</h2>${i.st.k!=='done'?`<button class="btn linkish hs-more" data-app="pg" data-pg="s:${esc(ev.id)}">Full schedule</button>`:''}</div>
           ${dv.length>1?`<div class="seg-tabs res-tabs" role="tablist">${dv.map(d=>`<button role="tab" class="sg ${d.id===cur.id?'on':''}" aria-selected="${d.id===cur.id}" data-app="resDiv" data-id="${esc(ev.id)}" data-d="${esc(d.id)}">${esc(d.name)}</button>`).join('')}</div>`:''}
-          <div class="panel res-body">${TM.resultsHtml?TM.resultsHtml(ev,cur.id):''}</div></section>`})()}</div>`}
+          ${TM.meetHtml?TM.meetHtml(ev):''}<div class="panel res-body">${TM.resultsHtml?TM.resultsHtml(ev,cur.id):''}</div></section>`})()}</div>`}
   function ranksPage(){const R=ranks(rk.tab,rk.tab==='month'?rk.off:0);
     return `<div class="site-page"><div class="sp-head"><h1>Rankings</h1><p>From open play games scored at Next Point. Tournament games don't count.</p></div>
       <div class="rk-bar">${rkTabs()}${rk.tab==='month'?`<div class="rk-month"><button class="btn sm" data-app="rkMonth" data-d="-1" aria-label="Previous month">${icon('back')}</button><b>${esc(R.label)}</b><button class="btn sm rk-next" data-app="rkMonth" data-d="1" aria-label="Next month" ${rk.off>=0?'disabled':''}>${icon('back')}</button></div>`:''}</div>
@@ -2798,7 +2856,7 @@ const App=(()=>{
   function remGet(){try{const r=JSON.parse(localStorage.getItem(REM)||'null');if(r&&r.id&&Date.now()-(r.at||0)<(r.acct?180:2)*864e5)return r}catch(e){}return null}
   function remSet(id,tok,acct){const o=remGet();try{localStorage.setItem(REM,JSON.stringify({id,tok:tok||null,at:Date.now(),acct:!!(acct||(o&&o.acct&&o.id===id))}))}catch(e){}}
   function remClear(){try{localStorage.removeItem(REM)}catch(e){}}
-  function forgetMe(){const r=remGet();pkeyClear();if(r&&r.acct&&AC.sess&&CL.sb){CL.sb.auth.signOut().catch(()=>{});AC.sess=null}PA.st='';PA.ids=null;PA.err='';lastMe=null;remClear();if(CL.on&&CL.tok.player){const t=CL.tok.player;rpc('np_logout',{p_token:t}).catch(()=>{});CL.tok.player=null;saveTokens()}if(view==='public'&&!pubOk())view='player'}
+  function forgetMe(){const r=remGet();pkeyClear();linkedSet(null);PA.ho=null;PA.hoOff=false;if(r&&r.acct&&AC.sess&&CL.sb){CL.sb.auth.signOut().catch(()=>{});AC.sess=null}PA.st='';PA.ids=null;PA.err='';lastMe=null;remClear();if(CL.on&&CL.tok.player){const t=CL.tok.player;rpc('np_logout',{p_token:t}).catch(()=>{});CL.tok.player=null;saveTokens()}if(view==='public'&&!pubOk())view='player'}
   function evFor(pid){const has=e=>e.type==='tournament'?(e.entries||[]).some(x=>x.status!=='out'&&(x.p||[]).includes(pid)):!!(e.checkins&&e.checkins[pid]);
     const l=db.events.filter(has);return l.filter(liveNow).pop()||l[l.length-1]||null}
   function resume(id){const r=remGet();if(CL.on&&r&&r.id===id&&r.tok&&!CL.tok.player){CL.tok.player=r.tok;saveTokens()}
@@ -2809,6 +2867,13 @@ const App=(()=>{
   function doJoin(){if(!pendJoin||(CL.on&&!CL.ready))return;const j=pendJoin;pendJoin=null;
     const p=db.players.find(x=>x.id===j.id);if(!p){toast("That player card isn't for an event on this site anymore. Ask the desk.");return}
     playerLogin(j.id,j.pin).then(r=>{if(!r.ok){toast(pinErr(r.err));return}resume(j.id);toast('Signed in as '+p.name+'.');render()})}
+  let pendGo=null;
+  function doGo(){if(!pendGo||!CL.ready)return;const c=pendGo;pendGo=null;PA.busy=true;render();
+    rpc('np_player_redeem',{p_code:c}).then(r=>{PA.busy=false;if(r&&r.token){pDone(r);return}PA.err='That link was already used or has run out. Sign in here instead.';render()},()=>{PA.busy=false;PA.err=pinErr('offline');render()})}
+  function fromQuery(){let q;try{q=new URLSearchParams(location.search)}catch(e){return}const go=q.get('go'),pl=q.get('play');if(!go&&!pl)return;
+    try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
+    if(mode&&mode.id)return;mode={role:'player'};saveMode();gate=null;view='player';
+    if(go&&/^[0-9a-f]{32}$/.test(go)&&CL.on){pendGo=go;setTimeout(doGo,0)}else{const r=remGet();if(r&&!lastMe)resume(r.id)}}
   function doAck(){if(!pendAck||(CL.on&&!CL.ready))return;const a=pendAck;pendAck=null;if(!lastMe){toast('Sign in, then tap "I\'m on my way".');return}ackMatch(a.ev,a.mid)}
   function deepLink(h){
     if(h==='home'||h==='openplay'||h==='tournaments'||h==='rankings'||h==='privacy'||h.startsWith('t=')||h.startsWith('s=')){pg=h==='home'?'home':h==='openplay'?'open':h==='tournaments'?'tours':h==='rankings'?'ranks':h==='privacy'?'privacy':h.startsWith('s=')?'s:'+h.slice(2):'t:'+h.slice(2);gate=null;view='intro';return}
@@ -2927,6 +2992,11 @@ const App=(()=>{
       root.innerHTML=block.length?`<div class="scrim" data-app="scrim"><div class="modal" role="dialog" aria-modal="true"><h3>${esc(p.name)} can't be deleted yet</h3><p style="margin:0">Their results are part of:</p><ul style="margin:8px 0 0;padding-left:20px">${block.map(b=>`<li>${esc(b)}</li>`).join('')}</ul><p class="muted" style="margin:10px 0 0">Deleting them would break those scores and the club leaderboard. Deleting the event itself also frees them.</p><div class="row" style="justify-content:flex-end"><button class="btn primary" data-app="closeModal">OK</button></div></div></div>`
       :`<div class="scrim" data-app="scrim"><div class="modal" role="dialog" aria-modal="true"><h3>Delete ${esc(p.name)}?</h3><p style="margin:0">Removes them from the player list and any open play check-in where they haven't played yet. Their PIN stops working. This can't be undone.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-app="closeModal">Cancel</button><button class="btn danger" data-app="delPlayer" data-id="${p.id}">Delete player</button></div></div></div>`;return}
     if(modal.iosHow){root.innerHTML=`<div class="scrim" data-app="scrim"><div class="modal" role="dialog" aria-modal="true"><h3>Alerts on iPhone</h3><ol style="margin:0;padding-left:20px;display:grid;gap:6px"><li>Open this page in <b>Safari</b>.</li><li>Tap the <b>Share</b> button, then <b>Add to Home Screen</b>, then <b>Add</b>.</li><li>Open <b>Next Point</b> from your home screen and sign in again.</li><li>Tap <b>Turn on alerts</b> and allow notifications.</li></ol><p class="muted" style="margin:10px 0 0">Needs iOS 16.4 or newer. Until then, keep this page open: it buzzes when you're up.</p><div class="row" style="justify-content:flex-end"><button class="btn primary" data-app="closeModal">Got it</button></div></div></div>`;return}
+    if(modal.pqr){const p=db.players.find(x=>x.id===modal.pqr),base=joinBase();if(!p){modal=null;root.innerHTML='';return}
+      root.innerHTML=`<div class="scrim" data-app="scrim"><div class="modal pqr" role="dialog" aria-modal="true" aria-label="Sign-in QR for ${esc(p.name)}"><h3>${esc(p.name)}</h3>
+        ${base&&p.pin?`<div class="pqr-code">${qrSVG(base+'#join='+p.id+'.'+p.pin)}</div><p class="pqr-how">Scan with the phone's camera. It signs in and that phone stays signed in.</p><p class="pqr-pin">Or PIN <b class="num">${esc(p.pin)}</b></p>`
+          :`<p style="margin:0">${p.pin?'Open this from the live site to show a QR.':'This player\'s PIN is still loading. Close this and try again in a moment.'}</p>`}
+        <div class="actions"><button class="btn primary" data-app="closeModal">Done</button></div></div></div>`;return}
     if(modal.cards){root.innerHTML=`<div class="scrim" data-app="scrim"><div class="modal mcards" role="dialog" aria-modal="true"><div class="row"><h3 style="margin:0">${modal.only?'Sign-in QR':'Player cards'}</h3><span style="margin-left:auto;display:flex;gap:8px"><button class="btn primary" data-app="printCards">Print</button><button class="btn" data-app="closeModal">Close</button></span></div><p class="muted" style="margin:0">${modal.only?'The player scans this with their phone camera. It signs them in and opens their match screen.':'Hand each player their card at check-in. Scanning the QR signs them in on their phone, no typing.'}</p><div id="printCards">${cardsHtml(modal.cards,modal.only)}</div></div></div>`;return}
     if(modal.sample){root.innerHTML=`<div class="scrim" data-app="scrim"><div class="modal" role="dialog" aria-modal="true"><h3>Load the sample tournament?</h3><p style="margin:0">Replaces everything in this demo with a club that has open play history, a live open play session and a tournament in progress.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-app="closeModal">Cancel</button><button class="btn primary" data-app="loadSample">Load sample</button></div></div></div>`;return}
     if(modal.clear){root.innerHTML=`<div class="scrim" data-app="scrim"><div class="modal" role="dialog" aria-modal="true"><h3>Clear all data?</h3><p style="margin:0">Removes every event, player and referee from this browser so you can start again. This can't be undone.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-app="closeModal">Cancel</button><button class="btn primary" data-app="clearAll">Clear everything</button></div></div></div>`;return}
@@ -2967,6 +3037,17 @@ const App=(()=>{
       case 'pGo':intentSet({k:'player'});pAfterAuth();return;
       case 'pOut':if(CL.sb)CL.sb.auth.signOut().catch(()=>{});AC.sess=null;PA.st='';PA.ids=null;PA.err='';render();return;
       case 'pClaim':PA.busy=true;render();rpc('np_player_claim',{p_id:id}).then(r=>pResult(r),e=>{PA.busy=false;PA.err=pinErr(e.net?'offline':'wrong');render()});return;
+      case 'pOutOpen':return;
+      case 'pOutCopy':{const u=outPlain();const done=()=>toast('Link copied. Paste it into '+(isIOS?'Safari':'Chrome')+'.');
+        if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done,()=>toast(u));else toast(u);return}
+      case 'pOutNo':try{sessionStorage.setItem(KEY+'-brno','1')}catch(e){}render();return;
+      case 'pDupYes':{const d=PA.dup;PA.dup=null;PA.err='';if(!d)return;if(PA.st==='signup')PA.who='old';render();
+        const sel=document.querySelector(PA.st==='signup'?'#paUpId':'#paLinkId');
+        if(sel&&[...sel.options].some(o=>o.value===d.id)){sel.value=d.id;const more=sel.closest('details');if(more)more.open=true;const pin=document.querySelector(PA.st==='signup'?'#paUpPin':'#paLinkPin');pin&&pin.focus()}
+        else{PA.err='Ask the desk to show the sign-in QR for '+d.name+'. Scanning it signs you in.';render()}return}
+      case 'pDupNo':{const d=PA.dup;PA.dup=null;if(d)PA.dupOk=d.name.trim().replace(/\s+/g,' ').toLowerCase();render();
+        const f2=document.querySelector(PA.st==='signup'?'#paUp':'#paNew');if(f2)f2.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));return}
+      case 'pQr':modal={pqr:id};renderAppModal();return;
       case 'pUp':PA.st='signup';PA.err='';render();setTimeout(()=>{const f=document.querySelector('#paUpUser');f&&f.focus()},0);return;
       case 'pBack':PA.st='';PA.err='';render();setTimeout(()=>{const f=document.querySelector('#paInUser');f&&f.focus()},0);return;
       case 'pSaveUser':PA.save=true;PA.err='';render();setTimeout(()=>{const f=document.querySelector('#paSaveUser');f&&f.focus()},0);return;
@@ -3020,6 +3101,7 @@ const App=(()=>{
     if(e.target.id==='tvLink'){const v=e.target.value.trim();db.playerUrl=v||null;save();render();return}
     if(e.target.id==='evPick'){db.cur=e.target.value||null;home=!db.cur;[OPM,TM].forEach(m=>m.signOut());save();render();return}
     if(e.target.name==='evType')syncEvForm();
+    if(e.target.id==='evFormat'){const c=document.querySelector('#evClubsF');if(c)c.hidden=e.target.value!=='meet';return}
     const lbk={lbPeriod:'period',lbSort:'sort',lbMin:'min',lbSkill:'skill'}[e.target.id];
     if(lbk){lb[lbk]=lbk==='min'?+e.target.value:e.target.value;render();return}
   });
@@ -3036,16 +3118,16 @@ const App=(()=>{
       const courts=Math.min(30,Math.max(1,parseInt($('#evCourts').value,10)||1));
       const base={id:uid('ev'),name,venue:$('#evVenue').value.trim(),date:$('#evDate').value.trim(),courts};
       const ev=type==='openplay'?OPM.create({...base,rule:$('#evRule').value,teams:$('#evTeams').value,gameTo:+$('#evTo').value,noShow:+$('#evNoShow').value})
-        :TM.create({...base,forfeit:Math.min(60,Math.max(1,Math.round(+$('#evForf').value)||10)),rest:Math.min(120,Math.max(0,Math.round(+$('#evRest').value)||0)),gameMin:Math.min(60,Math.max(0,Math.round(+$('#evTimer').value)||0))});
+        :TM.create({...base,forfeit:Math.min(60,Math.max(1,Math.round(+$('#evForf').value)||10)),rest:Math.min(120,Math.max(0,Math.round(+$('#evRest').value)||0)),gameMin:Math.min(60,Math.max(0,Math.round(+$('#evTimer').value)||0)),meet:$('#evFormat').value==='meet',clubs:$('#evClubs').value.split(/[,\n]/).map(x=>x.trim().replace(/\s+/g,' ')).filter(Boolean)});
       db.events.push(ev);db.cur=ev.id;home=false;homeSec='events';[OPM,TM].forEach(m=>m.signOut());save();toast((type==='openplay'?'Session':'Tournament')+' created.');render();return}
     if(f.id==='paIn'){e.preventDefault();const u=userIn($('#paInUser').value),pw=$('#paInPass').value||'';if(!u||!pw){PA.err='Enter your username and password.';render();return}
       PA.busy=true;PA.err='';render();rpc('np_player_signin',{p_user:u,p_pass:pw}).then(r=>{PA.busy=false;if(r&&r.token){pDone(r);return}PA.err=userErr(r&&r.error);render()},e=>{PA.busy=false;PA.err=e.net?pinErr('offline'):'Accounts aren\'t switched on yet. Ask the desk.';render()});return}
     if(f.id==='paUp'){e.preventDefault();const u=userIn($('#paUpUser').value),pw=$('#paUpPass').value||'',who=(document.querySelector('input[name=paWho]:checked')||{}).value||'new';PA.who=who;
       if(!/^[a-z0-9._]{3,24}$/.test(u)){PA.err=userErr('username');render();return}if(pw.length<8){PA.err=userErr('password');render();return}
       let args,nm='',sk=3;
-      if(who==='new'){nm=($('#paUpName').value||'').trim().replace(/\s+/g,' ');sk=+$('#paUpSkill').value||3;if(nm.length<2){PA.err='Enter your full name.';render();return}args={p_user:u,p_pass:pw,p_id:uid('p'),p_pin:null,p_new:true}}
+      if(who==='new'){nm=($('#paUpName').value||'').trim().replace(/\s+/g,' ');sk=+$('#paUpSkill').value||3;if(nm.length<2){PA.err='Enter your full name.';render();return}{const d=dupOf(nm);if(d){PA.dup={id:d.id,name:d.name};PA.err='';render();return}}args={p_user:u,p_pass:pw,p_id:uid('p'),p_pin:null,p_new:true}}
       else{const pin=($('#paUpPin').value||'').trim();if(!/^\d{6}$/.test(pin)){PA.err='The PIN is 6 digits.';render();return}args={p_user:u,p_pass:pw,p_id:$('#paUpId').value,p_pin:pin,p_new:false}}
-      PA.busy=true;PA.err='';render();
+      ckRead();PA.busy=true;PA.err='';render();
       rpc('np_player_signup',args).then(r=>{PA.busy=false;if(!(r&&r.token)){PA.err=r&&(r.error==='wrong'||r.error==='locked')?pinErr(r.error):userErr(r&&r.error);render();return}
         if(who==='new'){CL.tok.player=r.token;saveTokens();addPlayer({id:args.p_id,name:nm,skill:sk,club:true});save()}
         PA.who='';pDone(r)},e=>{PA.busy=false;PA.err=e.net?pinErr('offline'):'Accounts aren\'t switched on yet. Ask the desk.';render()});return}
@@ -3055,9 +3137,10 @@ const App=(()=>{
     if(f.id==='paLink'){e.preventDefault();const pid=$('#paLinkId').value,pin=($('#paLinkPin').value||'').trim();if(!/^\d{6}$/.test(pin)){PA.err='The PIN is 6 digits.';render();return}
       PA.busy=true;render();rpc('np_player_link',{p_id:pid,p_pin:pin}).then(r=>pResult(r),e=>{PA.busy=false;PA.err=pinErr(e.net?'offline':'wrong');render()});return}
     if(f.id==='paNew'){e.preventDefault();const n=($('#paNewName').value||'').trim().replace(/\s+/g,' '),sk=+$('#paNewSkill').value||3;if(n.length<2){PA.err='Enter your full name.';render();return}
-      const nid=uid('p');PA.busy=true;render();
+      {const d=dupOf(n);if(d){PA.dup={id:d.id,name:d.name};PA.err='';render();return}}
+      const nid=uid('p');ckRead();PA.busy=true;render();
       rpc('np_player_new',{p_id:nid}).then(r=>{if(!(r&&r.token)){pResult(r);return}CL.tok.player=r.token;saveTokens();addPlayer({id:nid,name:n,skill:sk,club:true});save();
-        PA.busy=false;pDone(r);toast('Welcome, '+n.split(' ')[0]+'. Your backup PIN is '+r.pin+'.')},e=>{PA.busy=false;PA.err=pinErr(e.net?'offline':'wrong');render()});return}
+        PA.busy=false;pDone(r)},e=>{PA.busy=false;PA.err=pinErr(e.net?'offline':'wrong');render()});return}
     if(f.id==='gateEmail'){e.preventDefault();AC.mailOpen=true;const em=$('#geEmail').value.trim(),pw=$('#gePass').value;if(!em||!pw){gateErr='Enter your email and password.';render();return}
       const btn=f.querySelector('button[type=submit]');if(btn)btn.disabled=true;
       CL.sb.auth.signInWithPassword({email:em,password:pw}).then(({data,error})=>{if(error||!data||!data.session){gateErr=authMsg(error);render();return}AC.sess=data.session;acctGo()},err=>{gateErr=authMsg(err);render()});return}
@@ -3100,7 +3183,7 @@ const App=(()=>{
     try{const m=JSON.parse(sessionStorage.getItem(KEY+'-mode')||'null');if(m&&ROLE_VIEWS[m.role]&&(m.role==='player'||m.role==='viewer'||db.officials.some(o=>o.id===m.id&&roleOf(o)===m.role)))mode=m}catch(e){}
     let boot=window.NP_BOOT;try{boot=boot||JSON.parse(localStorage.getItem(KEY+'-boot')||'null')}catch(e){}
     if(boot){mode={role:'all'};try{view=localStorage.getItem(KEY+'-view')||'admin'}catch(e){view='admin'}}
-    const deep=deepLink;
+    const deep=deepLink;fromQuery();
     home=!cur();
     if(mode&&mode.role!=='all'&&!location.hash.slice(1)){try{const pl=JSON.parse(sessionStorage.getItem(KEY+'-place')||'null');
       if(pl&&pl.me&&mode.role==='player')lastMe=pl.me;
@@ -3690,6 +3773,7 @@ return{
   bind(ev){S=ev;S.players=App.db().players},
   html,after,nav,tvPages,notices,calls,
   signOut(){me=null},
+  selfIn(id){if(!S||!S.session.open||!PL(id))return false;const c=C(id);if(c&&c.status!=='left')return false;checkIn(id);return true},
   setMe(id){if(S===undefined||!S||S.players&&S.players.some(p=>p.id===id)||App.db().players.some(p=>p.id===id))me=id},
   create(f){return{type:'openplay',id:f.id,offset:0,seq:0,
     session:{name:f.name,venue:f.venue,date:f.date,rule:f.rule,teams:f.teams,autoFill:true,noShow:f.noShow,gameTo:f.gameTo,open:true,openedAt:Date.now()},
@@ -3793,10 +3877,41 @@ function seeded(divId){const es=active(divId);if(es.some(e=>!e.seed)||new Set(es
 const evenKs=n=>{const ks=[];for(let k=1;k<=Math.floor(n/3);k++)if(n%k===0)ks.push(k);return ks};
 const autoPools=n=>{if(n<=5)return 1;for(const z of [4,3,5])if(n%z===0)return n/z;return Math.ceil(n/4)};
 const maxPools=n=>Math.max(1,Math.floor(n/3));
-function poolCount(d,n){return d&&d.poolN&&d.poolN<=maxPools(n)&&n%d.poolN===0?d.poolN:autoPools(n)}
+/* dual meet: every team has a club; in pool play a team only meets teams from other clubs */
+const isMeet=()=>!!(S&&S.t&&S.t.meet);
+const clubs=()=>S.clubs||(S.clubs=[]);
+const clubOf=eid=>{const e=eid&&E(eid);return e&&e.club&&clubs().some(c=>c.id===e.club)?e.club:null};
+const clubName=id=>{const c=clubs().find(x=>x.id===id);return c?c.name:''};
+const clubIx=id=>clubs().findIndex(c=>c.id===id);
+const clubTag=eid=>{if(!isMeet())return '';const c=clubOf(eid);return c?` <span class="club-tag ct${clubIx(c)%4}">${esc(clubName(c))}</span>`:' <span class="club-tag ct-none">No club</span>'};
+function clubByName(name,make){const k=String(name||'').trim().replace(/\s+/g,' ');if(!k)return null;let c=clubs().find(x=>x.name.toLowerCase()===k.toLowerCase());
+  if(!c&&make){c={id:App.uid('c'),name:k.slice(0,40)};clubs().push(c)}return c?c.id:null}
+const meetAuto=n=>n<=10?1:Math.round(n/6);
+const meetMax=n=>Math.max(1,Math.floor(n/4));
+const meetKs=n=>Array.from({length:meetMax(n)},(_,i)=>i+1);
+function poolCount(d,n){if(isMeet())return d&&d.poolN&&d.poolN<=meetMax(n)?d.poolN:meetAuto(n);return d&&d.poolN&&d.poolN<=maxPools(n)&&n%d.poolN===0?d.poolN:autoPools(n)}
+// games in one pool: everyone against everyone, or in a dual meet only against other clubs
+function poolRounds(ids){
+  if(!isMeet())return rr(ids);
+  const by={};ids.forEach(id=>{const c=clubOf(id)||'?';(by[c]=by[c]||[]).push(id)});const g=Object.values(by);
+  if(g.length===2){const [A,B]=g[0].length>=g[1].length?g:[g[1],g[0]],n=A.length,out=[];
+    for(let r=0;r<n;r++){const pr=[];for(let i=0;i<n;i++){const b=B[(i+r)%n];if(b)pr.push([A[i],b])}if(pr.length)out.push(pr)}return out}
+  return rr(ids).map(r=>r.filter(([a,b])=>(clubOf(a)||'?')!==(clubOf(b)||'?'))).filter(r=>r.length)}
+const poolGames=ids=>poolRounds(ids).reduce((a,r)=>a+r.length,0);
+// what stops a dual-meet draw ('' = fine)
+function meetBlock(d,pools){if(!isMeet())return '';const es=active(d.id),no=es.filter(e=>!clubOf(e.id)).length;
+  if(clubs().length<2)return 'Add at least two clubs under Setup first.';
+  if(no)return no+' entr'+(no>1?'ies have':'y has')+' no club. Set it under Registrations.';
+  if(new Set(es.map(e=>e.club)).size<2)return 'All entries are from one club. A dual meet needs teams from at least two.';
+  const lone=(pools||[]).find(p=>new Set(p.entries.map(clubOf)).size<2);
+  return lone?'Pool '+lone.name+' would only have one club. Use fewer pools.':''}
 const sizesFor=(n,np)=>{const sz=Array(np).fill(0);for(let i=0;i<n;i++)sz[i%np]++;return sz};
 function makePools(es,d){
   const n=es.length,np=poolCount(d,n),pools=Array.from({length:np},(_,i)=>({name:String.fromCharCode(65+i),entries:[]}));
+  if(isMeet()){   // each club's teams are spread over the pools by seed, so every pool has both sides
+    const by=new Map();es.forEach(e=>{const c=clubOf(e.id)||'?';if(!by.has(c))by.set(c,[]);by.get(c).push(e)});
+    [...by.values()].sort((a,b)=>b.length-a.length).forEach((list,ci)=>list.forEach((e,i)=>{const row=Math.floor(i/np),k=i%np,fwd=(row+ci)%2===0;pools[fwd?k:np-1-k].entries.push(e.id)}));
+    pools.forEach(p=>p.entries.sort((a,b)=>E(a).seed-E(b).seed));return pools.filter(p=>p.entries.length)}
   es.forEach((e,i)=>{const row=Math.floor(i/np),k=i%np;pools[row%2?np-1-k:k].entries.push(e.id)});
   return pools;
 }
@@ -3808,7 +3923,7 @@ function lockDraw(divId,base){
   const d=D(divId),es=seeded(divId);
   d.pools=makePools(es,d);d.status='live';d.bracket=null;
   base=base??queueBase();
-  d.pools.forEach((p,pi)=>rr(p.entries).forEach((round,ri)=>round.forEach(([a,b],k)=>mkMatch({div:divId,stage:'pool',pool:p.name,round:ri+1,a,b,ord:base+ri+1+pi*.1+k*.01+S.divs.indexOf(d)*.001}))));
+  d.pools.forEach((p,pi)=>poolRounds(p.entries).forEach((round,ri)=>round.forEach(([a,b],k)=>mkMatch({div:divId,stage:'pool',pool:p.name,round:ri+1,a,b,ord:base+ri+1+pi*.1+k*.01+S.divs.indexOf(d)*.001}))));
   S.entries.filter(e=>e.div===divId&&e.status==='wait').forEach(e=>{e.status='out';e.dropAtLock=true});
   audit('Admin','Locked draw for '+dname(d)+' ('+es.length+' entries, '+d.pools.length+' pool'+(d.pools.length>1?'s':'')+')');
 }
@@ -3831,7 +3946,8 @@ function standings(d,p){
   const row={};p.entries.forEach(id=>row[id]={id,p:0,w:0,l:0,pf:0,pa:0,diff:0,tb:'',seed:E(id).seed});
   ms.filter(m=>m.status==='done').forEach(m=>{const[a,b]=pts(m),A=row[m.a],B=row[m.b];A.p++;B.p++;A.pf+=a;A.pa+=b;B.pf+=b;B.pa+=a;if(m.winner===m.a){A.w++;B.l++}else{B.w++;A.l++}});
   const rows=Object.values(row);rows.forEach(r=>r.diff=r.pf-r.pa);
-  const byW={};rows.forEach(r=>(byW[r.w]=byW[r.w]||[]).push(r));
+  const tot={};ms.forEach(m=>{tot[m.a]=(tot[m.a]||0)+1;tot[m.b]=(tot[m.b]||0)+1});const uneven=isMeet()&&new Set(rows.map(r=>tot[r.id]||0)).size>1;
+  const byW={};rows.forEach(r=>{const k=uneven?Math.round(r.w/Math.max(1,tot[r.id]||1)*1e4)/1e4:r.w;(byW[k]=byW[k]||[]).push(r)});
   const out=[];
   Object.keys(byW).map(Number).sort((a,b)=>b-a).forEach(w=>{
     const g=byW[w];
@@ -4057,6 +4173,7 @@ function blockWork(b){
   const d=D(b.div);
   if(b.stage==='pool'){
     const L=matchLen(d,'pool');
+    if(d.status==='open'&&isMeet()){const es=active(d.id).length>=3?seeded(d.id):[],rs=makePools(es,d).map(p=>poolRounds(p.entries)),n=rs.reduce((a,r)=>a+r.reduce((x,y)=>x+y.length,0),0),r=Math.max(0,...rs.map(x=>x.length));return{cm:n*L,n,rt:r*L}}
     if(d.status==='open'){const sz=poolShape(active(d.id).length,d),n=sz.reduce((a,k)=>a+k*(k-1)/2,0),r=sz.length?Math.max(...sz.map(k=>k%2?k:k-1)):0;return{cm:n*L,n,rt:r*L}}
     const left=S.matches.filter(m=>m.div===d.id&&m.stage==='pool'&&m.status!=='done'),per={};
     left.forEach(m=>[m.a,m.b].forEach(e=>per[e]=(per[e]||0)+1));
@@ -4338,9 +4455,18 @@ function courtTile(ct,mode){
 function poolTable(d,p,hl){
   const st=standings(d,p),qs=needsPo(d)?new Set(d.bracket&&d.bracket.seeds?d.bracket.seeds:d.poDraft?d.poDraft.ids:qualifiers(d).ids):new Set(),adv=qs.size;
   return `<div class="tablebox"><table class="t pt"><thead><tr><th>#</th><th>${d.type==='singles'?'Player':'Team'}</th><th class="n">W</th><th class="n">L</th><th class="n pfpa">PF</th><th class="n pfpa">PA</th><th class="n">+/–</th></tr></thead><tbody>
-  ${st.map((r,i)=>`<tr class="${qs.has(r.id)?'q':''}" ${hl&&hl===r.id?'style="background:var(--ball-soft)"':''}><td class="num">${i+1}</td><td class="tm">${ename(r.id).split(' / ').map(n=>`<span class="tm-p">${esc(n)}</span>`).join('<span class="tm-sl"> / </span>')} <span class="skill">#${r.seed}</span>${r.tb?`<div class="tb">Tiebreak: ${r.tb}</div>`:''}</td><td class="n">${r.w}</td><td class="n">${r.l}</td><td class="n pfpa">${r.pf}</td><td class="n pfpa">${r.pa}</td><td class="n">${r.diff>0?'+':''}${r.diff}</td></tr>`).join('')}</tbody></table></div>
+  ${st.map((r,i)=>`<tr class="${qs.has(r.id)?'q':''}" ${hl&&hl===r.id?'style="background:var(--ball-soft)"':''}><td class="num">${i+1}</td><td class="tm">${ename(r.id).split(' / ').map(n=>`<span class="tm-p">${esc(n)}</span>`).join('<span class="tm-sl"> / </span>')}${clubTag(r.id)} <span class="skill">#${r.seed}</span>${r.tb?`<div class="tb">Tiebreak: ${r.tb}</div>`:''}</td><td class="n">${r.w}</td><td class="n">${r.l}</td><td class="n pfpa">${r.pf}</td><td class="n pfpa">${r.pa}</td><td class="n">${r.diff>0?'+':''}${r.diff}</td></tr>`).join('')}</tbody></table></div>
   ${adv?`<p class="tb" style="margin:6px 0 0">${d.bracket||d.poDraft?'In the playoffs':'In the playoffs if pools ended now'} (green bar). ${poLabel(d)}.</p>`:''}`;
 }
+function meetScore(){const row={};clubs().forEach(c=>row[c.id]={id:c.id,name:c.name,w:0,l:0,pf:0,pa:0,teams:0,left:0});
+  S.entries.forEach(e=>{if(e.status==='in'&&row[e.club])row[e.club].teams++});
+  S.matches.forEach(m=>{if(m.result==='bye'||!m.a||!m.b)return;const A=row[clubOf(m.a)],B=row[clubOf(m.b)];if(!A||!B||A===B)return;
+    if(m.status!=='done'){A.left++;B.left++;return}const[a,b]=pts(m);A.pf+=a;A.pa+=b;B.pf+=b;B.pa+=a;if(m.winner===m.a){A.w++;B.l++}else{B.w++;A.l++}});
+  return Object.values(row)}
+function meetBoard(){if(!isMeet()||clubs().length<2)return '';const sc=meetScore(),top=Math.max(...sc.map(c=>c.w)),any=sc.some(c=>c.w||c.l),left=S.matches.filter(m=>m.status!=='done'&&m.result!=='bye'&&m.a&&m.b&&clubOf(m.a)!==clubOf(m.b)).length;
+  return `<section class="panel meet" aria-label="Club score"><h2>Club score <small>${any?(left?left+' game'+(left===1?'':'s')+' between clubs still to play':'final'):'match wins against the other club'+(sc.length>2?'s':'')}</small></h2>
+    <div class="meet-row" data-n="${sc.length}">${sc.map(c=>`<div class="meet-c ct${clubIx(c.id)%4} ${any&&c.w===top&&sc.filter(x=>x.w===top).length===1?'lead':''}"><span class="meet-n">${esc(c.name)}</span><b class="meet-w num">${c.w}</b><span class="meet-s">${c.w===1?'win':'wins'} · ${c.teams} team${c.teams===1?'':'s'}${any?' · '+(c.pf-c.pa>0?'+':'')+(c.pf-c.pa)+' pts':''}</span></div>`).join('<span class="meet-vs" aria-hidden="true">vs</span>')}</div>
+    <p class="tb" style="margin:10px 0 0">Dual meet: in pool play teams only face other clubs. Playoffs are open, and a playoff game between clubs also counts here.</p></section>`}
 function bracketView(d){
   if(!d.bracket)return '';
   const bm=id=>{const m=M(id),live=m.status==='called'||m.status==='play';
@@ -4355,7 +4481,7 @@ function podiumView(d){const p=podium(d);if(!p)return '';const k=['g','s','b'],t
 function divResults(d,hl){
   if(d.status==='open')return `<p class="muted">Registration open · ${active(d.id).length} of ${d.cap} entered. The draw is not out yet.</p>`;
   return `${podiumView(d)}${d.bracket?`<h3 class="eyebrow" style="margin:14px 0 8px">Playoffs</h3>${bracketView(d)}`:''}
-   <h3 class="eyebrow" style="margin:14px 0 8px">${d.pools.length>1?'Pools':'Round robin'}</h3><div class="pools">${d.pools.map(p=>`<div class="panel">${d.pools.length>1?`<h2>Pool ${p.name}</h2>`:''}${poolTable(d,p,hl)}</div>`).join('')}</div>`;
+   <h3 class="eyebrow" style="margin:14px 0 8px">${isMeet()?'Pool play · club against club':d.pools.length>1?'Pools':'Round robin'}</h3><div class="pools">${d.pools.map(p=>`<div class="panel">${d.pools.length>1?`<h2>Pool ${p.name}</h2>`:''}${poolTable(d,p,hl)}</div>`).join('')}</div>`;
 }
 function nextFive(){return queue().slice(0,6)}
 function upcomingList(n,admin){
@@ -4376,7 +4502,7 @@ function renderPublic(){
   const d=D(pubDiv),kp=App.kioskPage();
   const head=`<div class="pub-head"><img class="pub-logo" src="${LOGO_LOCK}" alt="Next Point Pickleball"><div><div class="eyebrow">${esc(S.t.venue)} · ${esc(S.t.dates)}</div><h1>${esc(S.t.name)}</h1></div><div class="pub-clock" id="pubClock">${clockStr(now())}</div>${App.qrBlock('Scan for your matches')}</div>`;
   const courtsHtml=`<div class="two pub-two"><div class="courts big" data-n="${S.courts.length}">${S.courts.map(c=>courtTile(c,'public')).join('')}</div>
-    <div class="stack"><section class="panel"><h2>Upcoming games <small>${queue().length} waiting</small></h2>${upcomingList(10,false)}</section>${publicSchedule()}</div></div>`;
+    <div class="stack">${meetBoard()}<section class="panel"><h2>Upcoming games <small>${queue().length} waiting</small></h2>${upcomingList(10,false)}</section>${publicSchedule()}</div></div>`;
   if(kp&&kp!=='courts'&&D(kp)){const x=D(kp);return `<section class="pub kpage">${head}<section class="panel kdiv"><h2>${esc(dname(x))} <span class="pill p-${x.status}">${{open:'Registration open',live:'In progress',done:'Final'}[x.status]}</span></h2>${divResults(x)}</section></section>`}
   if(kp==='courts')return `<section class="pub">${head}${courtsHtml}</section>`;
   return `<section class="pub">
@@ -4677,7 +4803,7 @@ function adminLive(){
   const done=S.matches.filter(m=>m.status==='done'&&m.result!=='bye').length,total=S.matches.filter(m=>m.result!=='bye').length;
   const busyC=S.courts.filter(c=>c.state!=='free').length,att=un.length+fl.length,lv=S.divs.filter(d=>d.status==='live').length;
   return App.pageHead(['Tournament',esc(S.t.venue||''),esc(S.t.dates||'')].filter(Boolean).join(' · '),esc(S.t.name),'<button class="btn" data-app="shareSched" data-id="'+S.id+'">Share schedule link</button><button class="btn" data-view="public">Courtside</button>')+
-  `<div class="kpis">${App.kpi('Matches played',done+' / '+total,total?Math.round(done/total*100)+'% complete':'lock a draw to start','',total?done/total:0)}${App.kpi('Courts in use',busyC+' / '+S.courts.length,S.matches.filter(m=>m.status==='play').length+' playing · '+S.matches.filter(m=>m.status==='called').length+' called')}${App.kpi('Ready to call',q.filter(x=>x.ok).length,q.length+' in the queue')}${App.kpi('Needs attention',att,att?'flags or unverified scores':'all clear',att?'warn':'good')}${App.kpi('Divisions live',lv+' / '+S.divs.length,S.divs.filter(d=>d.status==='done').length+' finished')}</div>
+  `${meetBoard()}<div class="kpis">${App.kpi('Matches played',done+' / '+total,total?Math.round(done/total*100)+'% complete':'lock a draw to start','',total?done/total:0)}${App.kpi('Courts in use',busyC+' / '+S.courts.length,S.matches.filter(m=>m.status==='play').length+' playing · '+S.matches.filter(m=>m.status==='called').length+' called')}${App.kpi('Ready to call',q.filter(x=>x.ok).length,q.length+' in the queue')}${App.kpi('Needs attention',att,att?'flags or unverified scores':'all clear',att?'warn':'good')}${App.kpi('Divisions live',lv+' / '+S.divs.length,S.divs.filter(d=>d.status==='done').length+' finished')}</div>
   ${tipsHtml(scheduleTips())}<h2 class="sec-h">Courts</h2><div class="courts">${S.courts.map(c=>courtTile(c,'admin')).join('')}</div>
   <div class="two" style="margin-top:18px"><div class="stack">
     <section class="panel"><h2>Upcoming games <small>courts take them from the top</small></h2>${upcomingList(12,true)}</section>
@@ -4743,8 +4869,9 @@ function adminRegs(){
   return App.pageHead('Tournament · '+esc(S.t.name),'Registrations',`<button class="btn" data-app="cardsModal" data-id="${S.id}" ${S.entries.some(e=>e.status!=='out')?'':'disabled'}>Player cards</button><button class="btn" data-act="csvModal" ${canAdd?'':'disabled'}>Import CSV</button><button class="btn primary" data-act="entryModal" ${canAdd?'':'disabled'}>Add entry</button>`)+
    `<div class="kpis">${App.kpi('Entries',S.entries.filter(e=>e.status==='in').length,S.divs.length+' division'+(S.divs.length===1?'':'s'))}${App.kpi('Need review',flaggedN,flaggedN?'accept or withdraw':'all clear',flaggedN?'warn':'good')}${App.kpi('Waitlist',S.entries.filter(e=>e.status==='wait').length,'move up on withdrawals')}${App.kpi('No DUPR',S.entries.filter(e=>e.status==='in'&&isNR(e)).length,'seeded by self-rating')}</div>
    <div class="row" style="margin-bottom:12px"><label class="f" style="min-width:240px">Show<select id="regDiv" aria-label="Filter by division"><option value="all">All divisions</option>${S.divs.map(d=>`<option value="${d.id}" ${regDiv===d.id?'selected':''}>${esc(dname(d))}</option>`).join('')}</select></label></div>
+   ${(()=>{if(!isMeet())return '';const no=S.entries.filter(e=>e.status!=='out'&&!clubOf(e.id)).length;return no?`<p class="err" role="alert">${no} entr${no>1?'ies have':'y has'} no club yet. Pick one under each team name; the draw can't be locked until every team has a club.</p>`:''})()}
    <section class="panel"><div class="tablebox"><table class="t" style="min-width:860px"><thead><tr><th>Entry</th><th>Division</th><th>Players</th><th class="n">Rating used</th><th>Checks</th><th></th></tr></thead><tbody>
-   ${list.map(e=>{const d=D(e.div),t=d.type;return `<tr ${e.status==='out'?'style="opacity:.5"':''}><td><b>${esc(ename(e.id))}</b><div class="tb">${esc(e.src)} · PIN${e.p.length>1?'s':''} ${e.p.map(pid=>esc(PL(pid).pin)).join(' / ')} ${e.status!=='out'?`<button class="btn sm linkish" data-app="cardModal" data-ev="${S.id}" data-id="${e.p.join(',')}">Sign-in QR</button>`:''}</div></td><td>${esc(dname(d))}${e.status==='wait'?' <span class="pill p-hold">Waitlist</span>':''}${e.status==='out'?' <span class="pill p-muted">Withdrawn</span>':''}</td>
+   ${list.map(e=>{const d=D(e.div),t=d.type;return `<tr ${e.status==='out'?'style="opacity:.5"':''}><td><b>${esc(ename(e.id))}</b>${isMeet()?`<label class="club-sel"><span class="sr-only">Club for ${esc(ename(e.id))}</span><select data-eclub="${e.id}" class="${clubOf(e.id)?'':'none'}" ${d.status==='open'&&e.status!=='out'?'':'disabled'}><option value="">No club</option>${clubs().map(c=>`<option value="${c.id}" ${e.club===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label>`:''}<div class="tb">${esc(e.src)} · PIN${e.p.length>1?'s':''} ${e.p.map(pid=>esc(PL(pid).pin)).join(' / ')} ${e.status!=='out'?`<button class="btn sm linkish" data-app="cardModal" data-ev="${S.id}" data-id="${e.p.join(',')}">Sign-in QR</button>`:''}</div></td><td>${esc(dname(d))}${e.status==='wait'?' <span class="pill p-hold">Waitlist</span>':''}${e.status==='out'?' <span class="pill p-muted">Withdrawn</span>':''}</td>
      <td>${e.p.map(pid=>{const p=PL(pid);return `<div>${esc(p.name)} <span class="skill">${p.g} · ${YEAR-p.by} · ${pNR(pid,t)?'NR (self '+p.self.toFixed(1)+')':(t==='singles'?p.s:p.d).toFixed(3)}</span></div>`}).join('')}</td>
      <td class="n num">${erate(e).toFixed(3)}${isNR(e)?' <span class="pill p-info">NR</span>':''}</td><td><div class="flags">${e.status==='out'?'':flagsHtml(e)||'<span class="pill p-ok">OK</span>'}</div></td>
      <td>${d.status==='open'?(e.status==='out'?`<button class="btn sm" data-act="reinstate" data-id="${e.id}">Reinstate</button>`:`<button class="btn sm danger" data-act="withdraw" data-id="${e.id}">Withdraw</button>`):'<span class="tb">Draw locked</span>'}</td></tr>`}).join('')}</tbody></table></div></section>
@@ -4784,22 +4911,29 @@ function adminDraw(){
       :`<section class="panel unl"><div class="row" style="justify-content:space-between"><p class="muted" style="margin:0;flex:1 1 320px">Locked by mistake, or want different pools? You can unlock it while no game in this division has started.</p><button class="btn" data-act="unlockAsk" data-id="${d.id}">Unlock draw</button></div></section>`;
     return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="pill p-${d.status}">Draw locked</span>`)+ul+seedPanel(d)+`<section class="panel">${divResults(d)}</section>`}
   const es=seeded(d.id),pools=makePools(es,d),blk=es.filter(e=>blocking(e).length);
-  return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="muted">${es.length} entries → ${es.length<3?'need at least 3':(pools.length>1?pools.length+' pools':'1 round robin')+(needsPo(d)?' → '+(d.poSize?'top '+Math.min(d.poSize,es.length)+(Math.min(d.poSize,es.length)>4?' (quarterfinals)':' (semifinals)'):'top 2 per pool'):'')}</span>`)+`
-  <div class="two"><section class="panel"><h2>Seeding <small>by ${d.type} DUPR${d.type==='doubles'?' (team average)':''}</small></h2><ul class="list">${es.map((e,i)=>`<li><div class="li-main"><span class="li-t">${e.seed}. ${esc(ename(e.id))}</span><div class="li-m">${erate(e).toFixed(3)}${isNR(e)?' · NR':''}${blocking(e).length?' · <span style="color:var(--bad)">needs review</span>':''}</div></div><div class="row"><button class="btn sm" data-act="seedUp" data-id="${e.id}" ${i?'':'disabled'} aria-label="Move up">↑</button><button class="btn sm" data-act="seedDown" data-id="${e.id}" ${i<es.length-1?'':'disabled'} aria-label="Move down">↓</button></div></li>`).join('')}</ul>
+  return App.pageHead('Tournament · '+esc(S.t.name),'Draw',sel+`<span class="muted">${es.length} entries → ${es.length<3?'need at least 3':(pools.length>1?pools.length+' pools':isMeet()?'1 pool, club vs club':'1 round robin')+(needsPo(d)?' → '+(d.poSize?'top '+Math.min(d.poSize,es.length)+(Math.min(d.poSize,es.length)>4?' (quarterfinals)':' (semifinals)'):'top 2 per pool'):'')}</span>`)+`
+  <div class="two"><section class="panel"><h2>Seeding <small>by ${d.type} DUPR${d.type==='doubles'?' (team average)':''}</small></h2><ul class="list">${es.map((e,i)=>`<li><div class="li-main"><span class="li-t">${e.seed}. ${esc(ename(e.id))}${clubTag(e.id)}</span><div class="li-m">${erate(e).toFixed(3)}${isNR(e)?' · NR':''}${blocking(e).length?' · <span style="color:var(--bad)">needs review</span>':''}</div></div><div class="row"><button class="btn sm" data-act="seedUp" data-id="${e.id}" ${i?'':'disabled'} aria-label="Move up">↑</button><button class="btn sm" data-act="seedDown" data-id="${e.id}" ${i<es.length-1?'':'disabled'} aria-label="Move down">↓</button></div></li>`).join('')}</ul>
    <div class="row" style="margin-top:10px"><button class="btn" data-act="reseed">Re-seed by rating</button></div></section>
    <div class="stack">${es.length>=3?(()=>{const n=es.length,mx=maxPools(n),au=autoPools(n),cur=d.poolN&&d.poolN<=mx&&n%d.poolN===0?d.poolN:0,po=d.poSize||0,auEven=n%au===0;
       const opt=k=>{const sz=sizesFor(n,k),even=Math.max(...sz)===Math.min(...sz),g=sz.reduce((a,x)=>a+x*(x-1)/2,0),lo=Math.min(...sz)-1,hi=Math.max(...sz)-1;
         const q=k===1?(po?Math.min(po,n):0):(po||k*2),wild=k>1&&po&&po%k!==0,fair=even&&!wild;
         return{k,sz,g,txt:(k===1?'1 round robin':k+' pools')+' · '+(k===1?n+' teams':sz.join(', ')+' teams'),sub:(lo===hi?lo+' games each':lo+'–'+hi+' games each')+' · '+g+' pool games'+(k===1&&!po?' · no playoffs':'')+(wild?' · '+(po-k*Math.floor(po/k))+' wildcard spot'+((po-k*Math.floor(po/k))>1?'s':''):''),fair}};
       const list=evenKs(n).map(opt).filter(o=>o.k!==au);
+      if(isMeet()){const mc=d.poolN&&d.poolN<=meetMax(n)?d.poolN:0,ma=meetAuto(n);
+        const mo=k=>{const ps=makePools(es,{...d,poolN:k}),per={};let g=0;ps.forEach(p=>poolRounds(p.entries).forEach(r=>r.forEach(([a,b])=>{g++;per[a]=(per[a]||0)+1;per[b]=(per[b]||0)+1})));const v=es.map(e=>per[e.id]||0),lo=Math.min(...v),hi=Math.max(...v);
+          return{k,txt:(k===1?'1 pool':k+' pools')+' · '+ps.map(p=>p.entries.length).join(', ')+' teams',sub:(lo===hi?lo+' games each':lo+'–'+hi+' games each')+' · '+g+' pool games'}};
+        return `<section class="panel"><h2>Pools <small>dual meet · how ${n} entries are split</small></h2><fieldset class="pool-opts"><legend class="sr-only">Number of pools</legend>
+        <label class="check pool-o"><input type="radio" name="poolN" value="0" data-div="${d.id}" ${mc?'':'checked'}><span><b>Recommended · ${esc(mo(ma).txt)}</b><br><span class="muted">${esc(mo(ma).sub)}</span></span></label>
+        ${meetKs(n).filter(k=>k!==ma).map(mo).map(o=>`<label class="check pool-o"><input type="radio" name="poolN" value="${o.k}" data-div="${d.id}" ${mc===o.k?'checked':''}><span><b>${esc(o.txt)}</b><br><span class="muted">${esc(o.sub)}</span></span></label>`).join('')}</fieldset>
+        <p class="tb" style="margin:8px 0 0">Each pool mixes the clubs, and a team only plays the other club's teams in its pool. When one club has more teams in a pool, some teams play more games and the table ranks by win rate.</p></section>`}
       return `<section class="panel"><h2>Pools <small>how ${n} entries are split</small></h2><fieldset class="pool-opts"><legend class="sr-only">Number of pools</legend>
         <label class="check pool-o"><input type="radio" name="poolN" value="0" data-div="${d.id}" ${cur?'':'checked'}><span><b>Recommended · ${esc(opt(au).txt)}</b><br><span class="muted">${esc(opt(au).sub)}${auEven?'':' · '+n+' entries can\'t be split into equal pools, so pools differ by one team'}</span></span></label>
         ${list.map(o=>`<label class="check pool-o"><input type="radio" name="poolN" value="${o.k}" data-div="${d.id}" ${cur===o.k?'checked':''}><span><b>${esc(o.txt)}</b><br><span class="muted">${esc(o.sub)}</span></span></label>`).join('')}</fieldset>
         <p class="tb" style="margin:8px 0 0">Only equal pools are offered, so every team plays the same number of games. More games per team means a longer day: check the Schedule tab after you choose.</p></section>`})():''}
-   <section class="panel"><h2>Pools preview <small>snake by seed</small></h2><div class="pools">${pools.map(p=>`<div><div class="eyebrow">${pools.length>1?'Pool '+p.name:'Round robin'}</div><ul class="list">${p.entries.map(id=>`<li><span>${E(id).seed}. ${esc(ename(id))}</span></li>`).join('')}</ul></div>`).join('')}</div></section>
+   <section class="panel"><h2>Pools preview <small>${isMeet()?'each club spread by seed':'snake by seed'}</small></h2><div class="pools">${pools.map(p=>`<div><div class="eyebrow">${pools.length>1?'Pool '+p.name:isMeet()?'One pool':'Round robin'}</div><ul class="list">${p.entries.map(id=>`<li><span>${E(id).seed}. ${esc(ename(id))}${clubTag(id)}</span></li>`).join('')}</ul></div>`).join('')}</div></section>
    <section class="panel"><h2>Lock draw</h2><p style="margin:0 0 10px">Locking creates all pool matches and adds them to the court queue. Registration for this division closes and waitlisted entries are dropped.</p>
-   ${blk.length?`<p class="err">${blk.length} entr${blk.length>1?'ies need':'y needs'} review in Registrations first.</p>`:''}
-   <button class="btn primary" data-act="lock" ${blk.length||es.length<3?'disabled':''}>Lock draw and create matches</button></section></div></div>`;
+   ${blk.length?`<p class="err">${blk.length} entr${blk.length>1?'ies need':'y needs'} review in Registrations first.</p>`:''}${meetBlock(d,pools)?`<p class="err">${esc(meetBlock(d,pools))}</p>`:''}
+   <button class="btn primary" data-act="lock" ${blk.length||es.length<3||meetBlock(d,pools)?'disabled':''}>Lock draw and create matches</button></section></div></div>`;
 }
 function adminSetup(){
   return App.pageHead('Tournament · '+esc(S.t.name),'Setup','')+`<div class="two"><div class="stack"><section class="panel"><h2>Tournament</h2><form id="tForm" class="grid-form">
@@ -4813,6 +4947,13 @@ function adminSetup(){
    <label class="f" style="grid-column:1/-1">About this tournament<textarea id="tAbout" rows="4" placeholder="Format, prizes, what's included">${esc(S.t.about||'')}</textarea></label>
    <p class="tb" style="grid-column:1/-1;margin:0">With a form link and an open division, the listing shows <b>Registration open</b> and a Register button until the closing date.</p>
    <div class="row" style="grid-column:1/-1"><button class="btn primary" type="submit">Save listing</button><a class="btn" href="#t=${esc(S.id)}" target="_blank" rel="noopener">View public page</a></div></form></section>
+   <section class="panel fmt"><h2>Format</h2>${(()=>{const locked=S.divs.some(d=>d.status!=='open'),use={};S.entries.forEach(e=>{if(e.status!=='out'&&e.club)use[e.club]=(use[e.club]||0)+1});
+     return `<fieldset class="pool-opts"><legend class="sr-only">Tournament format</legend>
+      <label class="check pool-o"><input type="radio" name="tFormat" value="std" ${isMeet()?'':'checked'} ${locked?'disabled':''}><span><b>Standard</b><br><span class="muted">Everyone in a pool plays each other.</span></span></label>
+      <label class="check pool-o"><input type="radio" name="tFormat" value="meet" ${isMeet()?'checked':''} ${locked?'disabled':''}><span><b>Dual meet</b><br><span class="muted">Club against club: in pool play a team only faces other clubs. Playoffs are open to everyone.</span></span></label></fieldset>
+      ${locked?'<p class="tb" style="margin:8px 0 0">A draw is locked, so the format can\'t change now. Unlock every draw first.</p>':''}
+      ${isMeet()?`<h3 class="set-h">Clubs <small>every entry picks one</small></h3><ul class="list clubs">${clubs().map((c,i)=>`<li><span class="club-tag ct${i%4}" aria-hidden="true">${i+1}</span><input type="text" data-club="${c.id}" value="${esc(c.name)}" maxlength="40" aria-label="Club ${i+1} name"><span class="muted">${use[c.id]||0} team${(use[c.id]||0)===1?'':'s'}</span><button class="btn sm danger" type="button" data-act="delClub" data-id="${c.id}" ${use[c.id]||clubs().length<=2?'disabled':''} aria-label="Remove ${esc(c.name)}">Remove</button></li>`).join('')}</ul>
+        <div class="row"><button class="btn sm" type="button" data-act="addClub">Add a club</button><span class="muted">Two clubs make a dual meet; three or more also work.</span></div>`:''}`})()}</section>
    <section class="panel"><h2>Referees</h2><p class="muted" style="margin:0">Referees are shared by all events. Add them and set their PINs under <b>Staff &amp; players</b>. ${S.officials.length} on the list.</p></section></div>
    <section class="panel guide"><h2>How the pieces fit</h2><ol><li><b>Divisions:</b> build each one from rules (type, gender, rating, age, size, scoring).</li><li><b>Registrations:</b> import Google Form responses. Each is checked against its division's rules.</li><li><b>Draw:</b> seed by DUPR, adjust, then lock. Pool matches join the court queue.</li><li><b>Live:</b> free courts pull the next ready match. Players in two divisions are never on two courts at once, and everyone gets the rest time set here.</li><li>When pools finish, the bracket builds itself. When the final ends, the podium shows on Courtside.</li></ol></section></div>`;
 }
@@ -4885,12 +5026,12 @@ function renderModal(){
       <label class="f">Self-rating (no DUPR)<select id="en${n}Self">${[2.5,3,3.5,4,4.5,5].map(s=>`<option ${s===3.5?'selected':''}>${s.toFixed(1)}</option>`).join('')}</select></label>
       <label class="f">DUPR ID<input type="text" id="en${n}Id"></label>
       <label class="f">Mobile<input type="text" id="en${n}M" inputmode="tel"></label><label class="f">Email <small>for sign-in, kept private</small><input type="email" id="en${n}E" inputmode="email" autocomplete="off"></label></div></fieldset>`;
-    h=`<h3>Add entry</h3><label class="f">Division<select id="enDiv">${open.map(d=>`<option value="${d.id}" data-type="${d.type}">${esc(dname(d))}</option>`).join('')}</select></label>
+    h=`<h3>Add entry</h3><label class="f">Division<select id="enDiv">${open.map(d=>`<option value="${d.id}" data-type="${d.type}">${esc(dname(d))}</option>`).join('')}</select></label>${isMeet()?`<label class="f">Club<select id="enClub"><option value="">Choose a club</option>${clubs().map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></label>`:''}
       ${pf(1)}${pf(2)}<p class="tb" style="margin:0">The DUPR rating used matches the division: doubles rating for doubles, singles rating for singles.</p>
       <div class="err" id="enErr"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-act="closeModal">Cancel</button><button class="btn" data-act="saveEntry" data-more="1">Save and add another</button><button class="btn primary" data-act="saveEntry">Save entry</button></div>`}
   if(modal.type==='csv'){
     h=`<h3>Import CSV</h3><p class="muted" style="margin:0">Export the Google Form responses as CSV, or copy the rows (header included) straight from Excel or Google Sheets, and paste them below. The first row must be the header. Division names must match the ones you created.</p>
-      <label class="f">Header the import expects<input type="text" readonly value="${esc(CSV_HEAD)}" id="csvHead"></label>
+      <label class="f">Header the import expects<input type="text" readonly value="${esc(CSV_HEAD+(isMeet()?',Club':''))}" id="csvHead"></label>
       <label class="f">Choose an Excel or CSV file<input type="file" id="csvFile" accept=".xlsx,.csv,.tsv,.txt,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
       <label class="f">Or paste rows<textarea id="csvText" rows="8" style="width:100%;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:7px;padding:8px;background:var(--surface);color:var(--ink)"></textarea></label>
       <div class="err" id="csvErr" style="white-space:pre-line"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-act="closeModal">Close</button><button class="btn primary" data-act="doCsv">Import</button></div>`}
@@ -4976,7 +5117,8 @@ function importCSV(text){
     if(d.status!=='open'){errs.push('Row '+(k+2)+': '+dname(d)+' draw is already locked');return}
     const p1=personFrom(get,'P1',d.type),p2=d.type==='doubles'?personFrom(get,'P2',d.type):null;
     if(!p1||(d.type==='doubles'&&!p2)){errs.push('Row '+(k+2)+': missing player name');return}
-    addEntry(d.id,p2?[p1,p2]:[p1],'CSV row '+(k+2));n++});
+    const en=addEntry(d.id,p2?[p1,p2]:[p1],'CSV row '+(k+2));n++;
+    if(isMeet()){const c=clubByName(get('Club'),true);if(c)en.club=c;else errs.push('Row '+(k+2)+': no club given. Set it under Registrations.')}});
   audit('Admin','Imported '+n+' entries from CSV');return{n,errs};
 }
 function withdraw(e){e.status='out';e.seed=null;const d=D(e.div);const w=S.entries.find(x=>x.div===d.id&&x.status==='wait');if(w&&active(d.id).length<d.cap){w.status='in';audit('System',ename(w.id)+' moved off the waitlist in '+dname(d))}audit('Admin','Withdrew '+ename(e.id)+' from '+dname(d))}
@@ -5090,7 +5232,8 @@ document.addEventListener('click',e=>{
       for(const [n,p] of [[1,p1],[2,p2]]){if(!p)continue;const who=d.type==='doubles'?'Player '+n+': ':'';
         if(p.by!=null&&!(p.by>=YEAR-100&&p.by<=YEAR-5)){$('#enErr').textContent=who+'enter a birth year between '+(YEAR-100)+' and '+(YEAR-5)+'.';return}
         const x=d.type==='singles'?p.s:p.d;if(x!=null&&!(x>=2&&x<=8)){$('#enErr').textContent=who+'a DUPR rating is between 2.000 and 8.000. Leave it blank if they have none.';return}}
-      const e=addEntry(dv,p2?[p1,p2]:[p1],'Desk entry');audit('Admin','Added entry '+ename(e.id)+' to '+dname(d));
+      if(isMeet()&&!($('#enClub')&&$('#enClub').value)){$('#enErr').textContent='Choose the club this team plays for.';return}
+      const e=addEntry(dv,p2?[p1,p2]:[p1],'Desk entry');if(isMeet())e.club=$('#enClub').value;audit('Admin','Added entry '+ename(e.id)+' to '+dname(d));
       const pins=e.p.map(pid=>PL(pid).name.split(' ')[0]+' '+PL(pid).pin).join(', ');
       if(t.dataset.more){['Name','By','R','Id','M'].forEach(k=>{[1,2].forEach(n=>{const el=$('#en'+n+k);if(el)el.value=''})});$('#en1Name').focus();toast('Saved. PINs: '+pins+(e.status==='wait'?' (waitlist)':''));save();render();return}
       closeModal();toast('Entry saved. PINs: '+pins+(e.status==='wait'?' (waitlist)':''));break}
@@ -5107,11 +5250,13 @@ document.addEventListener('click',e=>{
     case 'poResetSeeds':{const d=D(id);d.poDraft={n:(d.poDraft&&d.poDraft.n)||poN(d),ids:qualifiers(d,(d.poDraft&&d.poDraft.n)||poN(d)).ids};toast('Seeds reset to the pool standings.');break}
     case 'poStart':{const d=D(id),ids=(d.poDraft&&d.poDraft.ids)||qualifiers(d).ids;buildBracket(d,ids);toast(roundLabel(0,d.bracket.rounds.length)+'s are in the queue.');break}
     case 'poReseed':{const d=D(id);if(poStarted(d)){toast('A playoff match has already started, so the seeding is locked.');return}unbuildBracket(d);audit('Admin','Reopened playoff seeding for '+dname(d));drawDiv=id;sub='draw';break}
-    case 'lock':lockDraw(drawDiv);unlockAsk=null;toast(planning()?'Draw locked. Matches wait in the queue until you start the day.':'Draw locked. Matches added to the queue.');break;
+    case 'lock':{const d0=D(drawDiv),mb=d0&&meetBlock(d0,makePools(seeded(drawDiv),d0));if(mb){toast(mb);return}}lockDraw(drawDiv);unlockAsk=null;toast(planning()?'Draw locked. Matches wait in the queue until you start the day.':'Draw locked. Matches added to the queue.');break;
     case 'unlockAsk':unlockAsk=id;App.render();return;
     case 'unlockNo':unlockAsk=null;App.render();return;
     case 'unlockYes':{unlockAsk=null;const n=unlockDraw(id);if(n===false){toast('Can\'t unlock: a game in this division has started.');App.render();return}toast('Draw unlocked. '+n+' matches removed. Change the pools or seeds, then lock again.');break}
     case 'addCourt':S.courts.push({no:S.courts.length+1,state:'free',match:null,hold:false,ref:null});break;
+    case 'addClub':clubs().push({id:App.uid('c'),name:'Club '+String.fromCharCode(65+clubs().length%26)});break;
+    case 'delClub':{if(clubs().length<=2||S.entries.some(e=>e.status!=='out'&&e.club===t.dataset.id)){toast('Move its teams to another club first.');return}S.clubs=clubs().filter(c=>c.id!==t.dataset.id);S.entries.forEach(e=>{if(e.club===t.dataset.id)delete e.club});break}
     case 'removeCourt':{const l=S.courts[S.courts.length-1];if(l.match){toast('Finish the match on the last court first.');return}if(S.courts.length>1)S.courts.pop();break}
     case 'delRef':S.officials=S.officials.filter(o=>o.id!==id);S.matches.forEach(m=>{if(m.ref===id&&m.status!=='done')m.ref=null});if(refMe===id)refMe=null;break;
     case 'pLogout':me=null;App.forgetMe();break;
@@ -5125,6 +5270,11 @@ document.addEventListener('change',e=>{
   if(!App.isActive('tournament'))return;
   const t=e.target;
   if(t.id==='enDiv'){syncEntryForm();return}
+  if(t.name==='tFormat'){if(S.divs.some(d=>d.status!=='open')){toast('Unlock every draw before changing the format.');render();return}
+    S.t.meet=t.value==='meet';if(S.t.meet&&clubs().length<2){while(clubs().length<2)clubs().push({id:App.uid('c'),name:'Club '+String.fromCharCode(65+clubs().length)})}
+    S.divs.forEach(d=>{delete d.poolN});audit('Admin','Format set to '+(S.t.meet?'dual meet':'standard'));toast(S.t.meet?'Dual meet on. Name the clubs, then set each entry\'s club under Registrations.':'Standard format.');commit();return}
+  if(t.dataset.club){const c=clubs().find(x=>x.id===t.dataset.club),v=t.value.trim().replace(/\s+/g,' ');if(!c)return;if(!v||clubs().some(x=>x!==c&&x.name.toLowerCase()===v.toLowerCase())){toast(v?'Another club already has that name.':'A club needs a name.');render();return}c.name=v;commit();return}
+  if(t.dataset.eclub){const e=E(t.dataset.eclub);if(!e||D(e.div).status!=='open')return;if(t.value)e.club=t.value;else delete e.club;commit();return}
   if(t.name==='poolN'&&t.dataset.div){const d=D(t.dataset.div);if(!d||d.status!=='open')return;const v=+t.value;if(v)d.poolN=v;else delete d.poolN;audit('Admin',dname(d)+': pools set to '+(v?v:'auto'));toast(v?'Pools: '+(v===1?'1 round robin':v+' pools')+'.':'Pools: automatic.');commit();return}
   if(t.dataset.poslot){const d=D(t.dataset.poslot);if(!d.poDraft)d.poDraft={n:poN(d),ids:qualifiers(d).ids};const ids=d.poDraft.ids,i=+t.dataset.i,j=ids.indexOf(t.value);
     if(j>=0&&j!==i){const was=ids[i];[ids[i],ids[j]]=[ids[j],ids[i]];audit('Admin',dname(d)+': set '+ename(ids[i])+' as seed '+(i+1)+(was?' (swapped with '+ename(was)+')':''));toast('Matchups updated.')}commit();return}
@@ -5218,11 +5368,13 @@ return{
       return{days:sc.days.map(x=>dayName(x)),dayShort:sc.days.map(x=>dayDate(x)||x.label),today:sc.today,planning:sc.today<0,blocks,ms,ents,people,courts,divs,C,forfeit:S.cfg.forfeit}}
     catch(e){console.warn('schedData',e);return null}finally{S=s0}},
   resultsHtml(ev,divId){const s0=S;S=ev;S.players=App.db().players;S.officials=App.db().officials;try{const d=D(divId);return d?divResults(d):''}catch(e){return ''}finally{S=s0}},
+  meetHtml(ev){const s0=S;S=ev;S.players=App.db().players;S.officials=App.db().officials;try{return meetBoard()}catch(e){return ''}finally{S=s0}},
   pubInfo(ev){const s0=S;S=ev;S.players=App.db().players;S.officials=App.db().officials;
     try{return{divs:(S.divs||[]).map(d=>{const pd=d.status==='done'?podium(d):null;return{id:d.id,name:dname(d),rules:ruleText(d).filter(x=>!/^Max /.test(x)),n:active(d.id).length,cap:d.cap,wait:S.entries.filter(e=>e.div===d.id&&e.status==='wait').length,status:d.status,unit:d.type==='singles'?'players':'teams',champ:pd&&pd[0]?ename(pd[0]):null}})}}
     catch(e){return{divs:[]}}finally{S=s0}},
   divsOf(pid){return S&&S.entries?S.entries.filter(e=>e.status!=='out'&&e.p.includes(pid)).map(e=>dname(D(e.div))):[]},
-  create(f){return{type:'tournament',id:f.id,offset:0,seq:0,t:{name:f.name,venue:f.venue,dates:f.date},cfg:{forfeit:f.forfeit,rest:f.rest,gameMin:f.gameMin},
+  create(f){const cn=f.meet?[...new Set((f.clubs||[]).map(x=>x.slice(0,40)))]:[];while(f.meet&&cn.length<2)cn.push('Club '+String.fromCharCode(65+cn.length));
+    return{type:'tournament',id:f.id,offset:0,seq:0,t:{name:f.name,venue:f.venue,dates:f.date,...(f.meet?{meet:true}:{})},...(f.meet?{clubs:cn.map(n=>({id:App.uid('c'),name:n}))}:{}),cfg:{forfeit:f.forfeit,rest:f.rest,gameMin:f.gameMin},
     divs:[],entries:[],matches:[],audit:[],ui:{},sched:{days:[{label:'Day 1',start:'08:00',end:'18:00'}],today:-1,pace:{11:15,15:20,21:25},buffer:3,blocks:[],plan:null},courts:Array.from({length:f.courts},(_,i)=>({no:i+1,state:'free',match:null,hold:false}))}},
   summary(ev){return ev.divs.length+' division'+(ev.divs.length===1?'':'s')+' · '+ev.entries.filter(e=>e.status==='in').length+' entries · '+ev.matches.filter(m=>m.status==='done'&&m.result!=='bye').length+'/'+ev.matches.filter(m=>m.result!=='bye').length+' matches'}
 };

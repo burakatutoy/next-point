@@ -1710,6 +1710,10 @@ a.btn{text-decoration:none}
 .sp-reclub{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:14px 0 0}.sp-reclub span{color:var(--muted);font-size:14.5px;max-width:46ch}.sp-reclub .btn{min-height:46px}
 .repool .pool-o.is-off{opacity:.55}.repool .pill{vertical-align:1px}
 .site-empty a{color:inherit;font-weight:600}
+
+/* ---------- v53: site nav never pushes the page sideways (tablet widths) ---------- */
+.sn-in{flex-wrap:nowrap}.sn-links{min-width:0;overflow-x:auto;scrollbar-width:none}.sn-links::-webkit-scrollbar{display:none}.sn-links button{white-space:nowrap;flex:none}.sn-acts{flex:none}
+@media (max-width:940px){.sn-links button{padding:8px 9px;font-size:14.5px}.sn-in{gap:8px 12px}.sn-links{margin-left:0}}
 </style>
 
 <header class="top">
@@ -1893,7 +1897,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-16a';
+  const BUILD='2026-11-16b';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2037,9 +2041,32 @@ const App=(()=>{
     c.hidden=view==='intro';c.dataset.s=st==='recon'?'wait':st;c.textContent={wait:'Connecting…',recon:'Reconnecting…',off:'Offline · saved here',save:'Saving…',err:'Not saved · tap',live:CL.live?'Live':'Online'}[st];
     c.title=st==='off'?'No connection. Changes stay on this device and upload when the connection is back.':st==='err'?'Not saved: '+CL.err:''}
   document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#syncChip')&&CL.on){toast(CL.err?'Not saved: '+CL.err+'. Trying again now.':CL.offline?'Offline. Changes are kept on this device.':'Everything is saved.');if(CL.err||CL.offline){CL.fail=0;schedulePush(0)}}});
+  // who asked for this redraw: the user (inside a click/change/key handler) or the background (sync, timers)
+  let inEvt=0,ptrDown=0,lastScroll=0,rPend=false,rHold=0,lastHtml=null,scrT=null;
+  ['click','change','submit','keydown','input'].forEach(t=>document.addEventListener(t,()=>{inEvt++;setTimeout(()=>{inEvt--},0)},true));
+  document.addEventListener('pointerdown',()=>{ptrDown=Date.now()},true);
+  // an accidental double-tap: the first tap redrew the page and a different button is now under the finger. Don't press it.
+  let lastTap={t:0,x:0,y:0,k:''};
+  document.addEventListener('click',e=>{if(!e.isTrusted)return;const b=e.target.closest&&e.target.closest('[data-act],[data-app],[data-sub],[data-view],button,summary,a');if(!b)return;
+    const k=(b.dataset.act||'')+'|'+(b.dataset.app||'')+'|'+(b.dataset.sub||'')+'|'+(b.dataset.view||'')+'|'+(b.dataset.id||'')+'|'+(b.dataset.s||'')+'|'+b.tagName,t=Date.now();
+    if(t-lastTap.t<300&&Math.abs(e.clientX-lastTap.x)<12&&Math.abs(e.clientY-lastTap.y)<12&&k!==lastTap.k){e.stopImmediatePropagation();e.preventDefault();return}
+    lastTap={t,x:e.clientX,y:e.clientY,k}},true);
+  ['pointerup','pointercancel'].forEach(t=>document.addEventListener(t,()=>{ptrDown=0;if(rPend){rPend=false;setTimeout(render,80)}},true));
+  document.addEventListener('scroll',()=>{lastScroll=Date.now()},true);
+  // what the user has set up on the page that a redraw must not undo: scrolled lists, opened sections
+  const uiSig=el=>el.id?'#'+el.id:el.tagName+'.'+(typeof el.className==='string'?el.className:'');
+  const dtSig=el=>{const sm=el.querySelector('summary');return 'D:'+(el.id||(sm?sm.textContent:'').replace(/[\d\s]+/g,' ').trim().slice(0,40))};
+  function uiSnap(){const sc=new Map(),dt=new Map(),cnt={};
+    $('#app').querySelectorAll('*').forEach(el=>{const g=uiSig(el),i=cnt[g]=(cnt[g]||0)+1;if(el.scrollTop>0||el.scrollLeft>0)sc.set(g+'|'+i,[el.scrollTop,el.scrollLeft]);
+      if(el.tagName==='DETAILS'){const k=dtSig(el),j=cnt[k]=(cnt[k]||0)+1;dt.set(k+'|'+j,el.open)}});
+    return{sc,dt,y:window.scrollY}}
+  function uiRestore(u){const cnt={};
+    $('#app').querySelectorAll('*').forEach(el=>{const g=uiSig(el),i=cnt[g]=(cnt[g]||0)+1,v=u.sc.get(g+'|'+i);if(v){el.scrollTop=v[0];el.scrollLeft=v[1]}
+      if(el.tagName==='DETAILS'){const k=dtSig(el),j=cnt[k]=(cnt[k]||0)+1,o=u.dt.get(k+'|'+j);if(o!==undefined&&el.open!==o)el.open=o}});
+    if(Math.abs(window.scrollY-u.y)>2)window.scrollTo(0,u.y)}
   let lastType=0,userAct=0;document.addEventListener('input',()=>{lastType=Date.now()},true);['pointerdown','keydown','submit','change'].forEach(t=>document.addEventListener(t,()=>{userAct=Date.now()},true));
   function scheduleRender(){clearTimeout(CL.rT);CL.rT=setTimeout(function go(){const a=document.activeElement;
-    if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#app,#modalRoot,#appModal')&&Date.now()-lastType<2500){CL.rT=setTimeout(go,700);return}render()},40)}
+    if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#app,#modalRoot,#appModal')&&(Date.now()-lastType<2500||(a.tagName==='SELECT'&&Date.now()-userAct<6000))){CL.rT=setTimeout(go,700);return}render()},40)}
   async function cloudInit(){
     if(!CL.on)return;
     if(!CL.sb){try{CL.sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:KEY+'-auth',storage:{getItem:k=>{try{return localStorage.getItem(k)}catch(e){return null}},setItem:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},removeItem:k=>{try{localStorage.removeItem(k)}catch(e){}}}}});acctWatch()}catch(e){CL.on=false;setState();return}
@@ -2418,6 +2445,13 @@ const App=(()=>{
 
   /* ---------- render ---------- */
   function render(){
+    if(!inEvt){   // a background redraw waits for the user's hand: no swapping the page under a press, a scroll or an open dropdown
+      const t=Date.now();if(!rHold)rHold=t;
+      const ae0=document.activeElement;
+      if(t-rHold<6000&&ae0&&ae0.tagName==='SELECT'&&ae0.closest&&ae0.closest('#app')&&t-userAct<6000){clearTimeout(scrT);scrT=setTimeout(render,700);return}
+      if(t-rHold<4000){if(ptrDown&&t-ptrDown<1500){rPend=true;return}
+        if(t-lastScroll<220){clearTimeout(scrT);scrT=setTimeout(render,240);return}}}
+    rHold=0;rPend=false;
     const ev=cur();
     if(!allowed(view))view=homeView();
     if(mode&&mode.role==='viewer'&&!pubOk()){mode={role:'player'};saveMode()}
@@ -2427,7 +2461,7 @@ const App=(()=>{
     document.querySelectorAll('.top .tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.view===view));
     const sel=$('#evPick');
     sel.innerHTML=`<option value="">${db.events.length?'Choose an event':'No events yet'}</option>`+db.events.map(e=>`<option value="${e.id}" ${e.id===db.cur?'selected':''}>${esc(e.type==='openplay'?e.session.name:e.t.name)}</option>`).join('');
-    const key=view+'|'+db.cur+'|'+home;
+    const key=view+'|'+db.cur+'|'+home,sameKey=key===lastKey;
     const keep=key===lastKey?[...document.querySelectorAll('#app input[id],#app select[id],#app textarea[id]')].filter(el=>!['checkbox','radio'].includes(el.type)).map(el=>[el.id,el.value]):[];
     lastKey=key;
     let html,m=null;
@@ -2445,9 +2479,14 @@ const App=(()=>{
     {const LF=window.LiveFeed,want=LF&&ev&&ev.type==='tournament'&&CL.on&&!(view==='admin'&&home)&&(view==='admin'||view==='ref'||(view==='public'&&(kiosk.on||!!CL.tok.staff)));
       if(LF){if(want)LF.watch('ev:'+ev.id,()=>{const e2=cur();if(!e2||e2.type!=='tournament')return;const m2=mod(e2);m2.bind(e2);if(m2.feedChanged)m2.feedChanged();else render()});else LF.stop()}}
     const ae=document.activeElement,aeId=ae&&ae.id&&ae.closest&&ae.closest('#app')?ae.id:null,aeSel=aeId&&typeof ae.selectionStart==='number'?[ae.selectionStart,ae.selectionEnd]:null;
-    $('#app').innerHTML=html+(tbOn?tabBar():'');
-    keep.forEach(([id,v])=>{const el=document.getElementById(id);if(el&&(!el.options||[...el.options].some(o=>o.value===v)))el.value=v});
-    if(aeId){const el=document.getElementById(aeId);if(el&&el!==document.activeElement){el.focus({preventScroll:true});if(aeSel&&el.setSelectionRange)try{el.setSelectionRange(aeSel[0],aeSel[1])}catch(e){}}}
+    const full=html+(tbOn?tabBar():'');
+    if(!(sameKey&&!inEvt&&full===lastHtml&&$('#app').firstChild)){   // nothing changed in the background: leave the page alone
+      const ui=sameKey&&!pendingTop?uiSnap():null;
+      $('#app').innerHTML=full;lastHtml=full;
+      keep.forEach(([id,v])=>{const el=document.getElementById(id);if(el&&(!el.options||[...el.options].some(o=>o.value===v)))el.value=v});
+      if(aeId){const el=document.getElementById(aeId);if(el&&el!==document.activeElement){el.focus({preventScroll:true});if(aeSel&&el.setSelectionRange)try{el.setSelectionRange(aeSel[0],aeSel[1])}catch(e){}}}
+      if(ui){uiRestore(ui);const ps=document.getElementById('plSearch');if(ps&&ps.value.trim()){const q=ps.value.trim().toLowerCase();document.querySelectorAll('#plRows li,.plT li').forEach(li=>li.hidden=!li.dataset.s.includes(q))}}
+    }
     setState();
     {const sd=document.querySelector('.side'),cu=sd&&sd.querySelector('[aria-current="page"]');if(sd&&cu&&sd.scrollWidth>sd.clientWidth)sd.scrollLeft=Math.max(0,cu.offsetLeft-sd.offsetLeft-8)}
     if(pendingTop){pendingTop=false;window.scrollTo(0,0);const h=document.querySelector('#app h1');if(h){h.tabIndex=-1;h.focus({preventScroll:true})}}
@@ -3173,7 +3212,7 @@ const App=(()=>{
     window.addEventListener('hashchange',()=>{deep(location.hash.slice(1));render()});
     render();
   }
-  return{fresh:()=>{lastKey=''},db:()=>db,save,render,go,uid,newPin,addPlayer,ensureSkill,isActive,start,kpi,pageHead,icon,clubBoard,playerRank,sessionLeaders,tools,qrBlock,kioskPage,alerts,verifyPin,playerLogin,registerPlayer,pinErr,pAuth,pSaveCard,canAuto,cloud:()=>CL,forgetMe,ackMatch,acked:ackedM,pushCard,me:()=>lastMe};
+  return{fresh:()=>{lastKey='';lastHtml=null},db:()=>db,save,render,go,uid,newPin,addPlayer,ensureSkill,isActive,start,kpi,pageHead,icon,clubBoard,playerRank,sessionLeaders,tools,qrBlock,kioskPage,alerts,verifyPin,playerLogin,registerPlayer,pinErr,pAuth,pSaveCard,canAuto,cloud:()=>CL,forgetMe,ackMatch,acked:ackedM,pushCard,me:()=>lastMe};
 })();
 
 /* ---------- live scores from referee phones ----------
@@ -3750,7 +3789,7 @@ setInterval(()=>{
 
 return{
   type:'openplay',
-  bind(ev){S=ev;S.players=App.db().players},
+  bind(ev){if(S&&ev&&S!==ev&&S.id!==ev.id){modal=null;const r=$('#modalRoot');if(r)r.dataset.key=''}S=ev;S.players=App.db().players},
   html,after,nav,tvPages,notices,calls,
   signOut(){me=null},
   selfIn(id){if(!S||!S.session.open||!PL(id))return false;const c=C(id);if(c&&c.status!=='left')return false;checkIn(id);return true},
@@ -5399,7 +5438,7 @@ setInterval(()=>{
 
 return{
   type:'tournament',
-  bind(ev){S=ev;S.players=App.db().players;S.officials=App.db().officials},
+  bind(ev){if(S&&ev&&S!==ev&&S.id!==ev.id){modal=null;const r=$('#modalRoot');if(r)r.dataset.key='';regDiv='all';drawDiv=null;pubDiv=null;editDiv=null;addDiv=false;unlockAsk=null;repoolOpen=false;repoolSel=-1;repoolAsk=-1;schedDay=null;refSel=null}S=ev;S.players=App.db().players;S.officials=App.db().officials},
   html,after,nav,tvPages,notices,calls,feedChanged,
   signOut(){me=null;refMe=null;refSel=null},
   setMe(id){if(App.db().players.some(p=>p.id===id))me=id},

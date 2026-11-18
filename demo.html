@@ -3082,15 +3082,16 @@ const App=(()=>{
     swR=navigator.serviceWorker.register('sw.js').catch(e=>{console.warn('sw',e);return null});
     navigator.serviceWorker.addEventListener('message',e=>{const u=e.data&&e.data.url;if(u&&/^#/.test(u)){deepLink(u.slice(1));render()}});return swR}
   async function pfn(op,body){
-    const r=await withTimeout(fetch(CFG.url.replace(/\/$/,'')+'/functions/v1/np-push',{method:'POST',headers:{'Content-Type':'application/json',apikey:CFG.key,Authorization:'Bearer '+CFG.key},body:JSON.stringify({op,...(body||{})})}).catch(e=>{throw Object.assign(new Error('offline'),{net:true})}));
+    const r=await withTimeout(fetch(CFG.url.replace(/\/$/,'')+'/functions/v1/np-push',{method:'POST',headers:{'Content-Type':'application/json',apikey:CFG.key,Authorization:'Bearer '+CFG.key},body:JSON.stringify({op,...(body||{})})}).catch(e=>{if(CL.ready&&navigator.onLine!==false){PU.status='unreach';PU.missAt=Date.now();throw Object.assign(new Error('unreach'),{missing:true})}throw Object.assign(new Error('offline'),{net:true})}));
     const j=await r.json().catch(()=>({}));
     if(r.status===404){PU.status='missing';PU.missAt=Date.now();throw Object.assign(new Error('missing'),{missing:true})}
     if(r.status===401&&j.error!=='auth'){PU.status='jwt';PU.missAt=Date.now();throw Object.assign(new Error('jwt'),{missing:true})}
     if(!r.ok)throw Object.assign(new Error(j.error||('HTTP '+r.status)),{app:true});PU.status='ok';return j}
-  function pushCheck(){if(!CL.on||PU.checking||PU.status==='ok')return;PU.checking=true;pfn('key').then(j=>{PU.key=j.key}).catch(()=>{}).then(()=>{PU.checking=false;scheduleRender()})}
+  function pushCheck(){if(!CL.on||PU.checking||PU.status==='ok'||Date.now()-(PU.checkAt||0)<60000)return;PU.checking=true;PU.checkAt=Date.now();pfn('key').then(j=>{PU.key=j.key}).catch(()=>{}).then(()=>{PU.checking=false;scheduleRender()})}
   function pushStatusHtml(){if(!CL.on)return 'Phone alerts work on the live site only.';if(!PU.status&&CL.ready)setTimeout(pushCheck,0);
     return PU.status==='ok'?'<span class="pill p-done">Phone alerts ready</span> Players turn them on from their Player screen.'
       :PU.status==='missing'?'<span class="pill p-flag">Phone alerts not set up</span> Add the <b>np-push</b> Edge Function in Supabase (see the setup guide). Everything else works without it.'
+      :PU.status==='unreach'?'<span class="pill p-flag">Phone alerts not reachable</span> In Supabase, check that the <b>np-push</b> Edge Function is deployed and that <b>Verify JWT</b> is off in its settings.'
       :PU.status==='jwt'?'<span class="pill p-flag">Phone alerts blocked</span> In Supabase, open Edge Functions → np-push → Details and turn off <b>Verify JWT</b>.'
       :'Checking phone alerts…'}
   const u8=x=>{x=x.replace(/-/g,'+').replace(/_/g,'/');while(x.length%4)x+='=';const b=atob(x);return Uint8Array.from(b,c=>c.charCodeAt(0))};
@@ -3110,7 +3111,7 @@ const App=(()=>{
       try{localStorage.setItem(PKEY,JSON.stringify({id:pid,ep:sub.endpoint}))}catch(e){}
       render();toast('Alerts are on. Sending a test…');pfn('test',{token:tok}).catch(()=>{})
     }catch(e){console.warn('push',e);toast(e.missing?'Phone alerts aren\'t set up on the club\'s server yet. Tell the desk.':e.net?'No connection. Try again.':'Couldn\'t turn on alerts: '+(e.message||e)+'.')}}
-  function pushCard(pid,who){if(!CL.on||!pid)return '';
+  function pushCard(pid,who){if(!CL.on||!pid)return '';if(CL.ready&&PU.status!=='ok')setTimeout(pushCheck,0);if(PU.status&&PU.status!=='ok')return '';
     const s=pushSaved(),on=!!s&&s.id===pid&&canPush()&&Notification.permission==='granted',what=who==='ref'?'when a match is on your court':'when you\'re on deck and when you\'re called';
     if(on)return `<div class="pushcard on"><span class="pc-dot" aria-hidden="true"></span><span class="pc-t"><b>Phone alerts on</b> · it buzzes ${what}, even with the screen locked.</span><button class="btn sm" data-app="pushTest">Test</button></div>`;
     if(!canPush()){if(isIOS&&!standalone())return `<div class="pushcard"><span class="pc-t"><b>Get alerts on iPhone</b> · add Next Point to your home screen first.</span><button class="btn sm primary" data-app="iosHow">Show me how</button></div>`;

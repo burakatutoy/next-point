@@ -1,6 +1,6 @@
 // Next Point Pickleball: phone alerts, and opening the site without signal.
 // Pages are fetched from the network first (so updates show up right away) and kept as a copy for when the signal is gone.
-const CACHE = 'np-pages-v1';
+const CACHE = 'np-pages-v2';
 const SHELL = ['./', 'index.html', 'scoresheet.html', 'manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {}).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('np-pages-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())));
@@ -38,7 +38,8 @@ self.addEventListener('push', e => {
     requireInteraction: call,
     vibrate: call ? [400, 150, 400, 150, 700] : [250],
     icon: 'icon-192.png',
-    badge: 'icon-192.png',
+    badge: 'badge-96.png',   // Android status-bar icon: white shape on transparent
+    silent: false,
     data: { url: d.url || '#player' },
     actions: d.kind === 'call' ? [{ action: 'here', title: "I'm on my way" }] : []
   }));

@@ -1734,6 +1734,29 @@ a.btn{text-decoration:none}
 .au-pick{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent)}
 .au-pick span{display:grid}.au-pick small{color:var(--muted);font-size:12.5px}
 .au-qr{margin:4px 0 0;font-size:13.5px;color:var(--muted)}
+/* v56: profile photos */
+.av{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none;background:var(--surface-2)}
+.av-i{display:inline-grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:14px;line-height:1}.av-i::before{content:attr(data-i)}
+.rk-p{display:inline-flex;align-items:center;gap:10px;background:none;border:0;padding:4px 0;margin:0;color:inherit;font:inherit;cursor:pointer;text-align:left;min-height:40px}
+.rk-p b{text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .15s}
+@media (hover:hover){.rk-p:hover b{text-decoration-color:currentColor}}
+.pod-p{display:grid;justify-items:center;gap:6px;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
+.av.pod-av{width:52px;height:52px;font-size:20px}
+.av.me-av{width:64px;height:64px;font-size:26px}
+.me-ph{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:8px!important}
+.me-ph label.btn{cursor:pointer}
+.prof .prof-head{display:flex;gap:18px;align-items:center;margin:8px 0 18px}
+.prof .prof-head h1{margin:0;font-family:var(--f-display);font-stretch:var(--wdth);font-size:clamp(28px,6vw,40px);line-height:1.05}
+.prof .prof-head p{margin:4px 0 0;color:var(--muted)}
+.av.prof-av{width:104px;height:104px;font-size:40px;box-shadow:0 0 0 4px var(--surface),0 0 0 6px var(--lime)}
+.prof-acts{margin-top:10px!important}
+.prof-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 8px}
+.prof-stats div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.prof-stats dt{font-size:13px;color:var(--muted);font-weight:600}.prof-stats dd{margin:2px 0 0;font-size:22px;font-weight:800}
+.pf-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pf-g{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.pf-gt{flex:1;min-width:0}.pf-gd{color:var(--muted);font-size:13px;white-space:nowrap}
+@media (max-width:480px){.prof .prof-head{gap:14px}.av.prof-av{width:84px;height:84px;font-size:32px}}
 /* the sign-in card is always dark: keep picked states readable */
 .gate .pa-who-f legend{color:#f4f1f7}
 .gate .pa-rad{border-color:rgba(255,255,255,.22);color:#f4f1f7}.gate .pa-rad input,.gate .pa-ck input{accent-color:#87c62d}
@@ -1934,7 +1957,7 @@ const App=(()=>{
   function ensureSkill(p){if(p&&p.skill==null)p.skill=p.self??(p.d?Math.round(p.d*2)/2:(p.s?Math.round(p.s*2)/2:3))}
   function addPlayer(o){const p={...o,id:o.id||uid('p')};ensureSkill(p);db.players.push(p);return p.id}
   function isActive(type){const ev=cur();return!!ev&&ev.type===type&&!(view==='admin'&&home)}
-  function toast(t){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}
+  function toast(t){document.querySelectorAll('body>.toast').forEach(x=>x.remove());const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}
 
   /* ---------- cloud sync (Supabase) ----------
      Docs: 'club' = players + staff (no PINs); 'ev:<id>' = one event. PINs live server-side in np_secrets.
@@ -2585,7 +2608,7 @@ const App=(()=>{
     const sel=$('#evPick');
     sel.innerHTML=`<option value="">${db.events.length?'Choose an event':'No events yet'}</option>`+db.events.map(e=>`<option value="${e.id}" ${e.id===db.cur?'selected':''}>${esc(e.type==='openplay'?e.session.name:e.t.name)}</option>`).join('');
     const key=view+'|'+db.cur+'|'+home,sameKey=key===lastKey;
-    const keep=key===lastKey?[...document.querySelectorAll('#app input[id],#app select[id],#app textarea[id]')].filter(el=>!['checkbox','radio','hidden'].includes(el.type)).map(el=>[el.id,el.value]):[];
+    const keep=key===lastKey?[...document.querySelectorAll('#app input[id],#app select[id],#app textarea[id]')].filter(el=>!['checkbox','radio','hidden','file'].includes(el.type)).map(el=>[el.id,el.value]):[];
     lastKey=key;
     let html,m=null;
     document.body.classList.toggle('intro-on',view==='intro');
@@ -2727,13 +2750,62 @@ const App=(()=>{
       <span class="tc-go" aria-hidden="true">${icon('arrow')}</span></article>`}
   function monthWin(off){const d=new Date();d.setDate(1);d.setHours(0,0,0,0);d.setMonth(d.getMonth()+off);const e=new Date(d);e.setMonth(e.getMonth()+1);return{from:+d,to:+e,label:d.toLocaleDateString([],{month:'long',year:'numeric'})}}
   const rkHidden=rows=>{const hid=new Set(db.players.filter(p=>p.hideRank).map(p=>p.id));const r=rows.filter(x=>!hid.has(x.id));return r};
+  /* ---------- profile photos: small square JPEGs, fetched only for the players on screen and kept on the phone ---------- */
+  const PHK=KEY+'-photos',PH={img:{},v:{},srv:null,at:0,busy:false,want:new Set(),t:null,tried:{}};
+  try{const o=JSON.parse(localStorage.getItem(PHK)||'{}');Object.keys(o).forEach(id=>{if(o[id]&&/^data:image\//.test(o[id].img)){PH.img[id]=o[id].img;PH.v[id]=o[id].v}})}catch(e){}
+  const phSave=()=>{try{const ids=Object.keys(PH.img).slice(-120),o={};ids.forEach(id=>{o[id]={img:PH.img[id],v:PH.v[id]}});localStorage.setItem(PHK,JSON.stringify(o))}catch(e){}};
+  function phImg(id){if(!id)return null;
+    if(CL.on){if(PH.srv&&!(id in PH.srv))return null;
+      if((!PH.srv||PH.srv[id]!==PH.v[id])&&(PH.tried[id]||0)<Date.now()-60000){PH.want.add(id);if(!PH.t)PH.t=setTimeout(phSync,60)}}
+    return PH.img[id]||null}
+  async function phSync(){PH.t=null;if(!CL.on||!CL.ready||PH.busy)return;PH.busy=true;let ch=false;
+    try{if(!PH.srv||Date.now()-PH.at>60000){PH.at=Date.now();PH.srv=(await rpc('np_photo_list',{}))||{};PH.at=Date.now();Object.keys(PH.img).forEach(id=>{if(!(id in PH.srv)){delete PH.img[id];delete PH.v[id];ch=true}})}
+      const need=[...PH.want].filter(id=>id in PH.srv&&PH.v[id]!==PH.srv[id]).slice(0,60);PH.want.clear();need.forEach(id=>PH.tried[id]=Date.now());
+      if(need.length){const g=(await rpc('np_photo_get',{p_ids:need}))||{};Object.keys(g).forEach(id=>{if(/^data:image\//.test(g[id].img)){PH.img[id]=g[id].img;PH.v[id]=g[id].v;ch=true}})}
+    }catch(e){}PH.busy=false;if(ch){phSave();scheduleRender()}}
+  const initial=n=>esc((Array.from(String(n||'').trim())[0]||'?').toUpperCase());
+  function avatar(id,name,cls){const im=phImg(id);return im?`<img class="av ${cls||''}" src="${im}" alt="" loading="lazy" decoding="async">`:`<span class="av av-i ${cls||''}" data-i="${initial(name)}" aria-hidden="true"></span>`}
+  // shrink a picked photo to a 192px square (centre crop), about 10-20 KB
+  async function phMake(file){let src;try{src=await createImageBitmap(file,{imageOrientation:'from-image'})}catch(e){src=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(file)})}
+    const w=src.width,h=src.height,s=Math.min(w,h),c=document.createElement('canvas');c.width=c.height=192;const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(src,(w-s)/2,(h-s)/2,s,s,0,0,192,192);
+    let q=.82,out=c.toDataURL('image/jpeg',q);while(out.length>60000&&q>.4){q-=.12;out=c.toDataURL('image/jpeg',q)}return out}
+  async function phPick(file){const id=lastMe;if(!file||!id)return;if(!/^image\//.test(file.type||'image/')){toast('Pick a photo.');return}
+    if(file.size>25e6){toast('That photo is too big. Pick a smaller one.');return}
+    let img;try{img=await phMake(file)}catch(e){toast("Couldn't read that photo. Try another one.");return}
+    await phPut(id,img)}
+  async function phPut(id,img){
+    if(!CL.on){if(img){PH.img[id]=img;PH.v[id]=Date.now()}else{delete PH.img[id];delete PH.v[id]}phSave();render();toast(img?'Photo saved on this phone (practice copy).':'Photo removed.');return}
+    const tok=(mode&&mode.role==='admin'&&CL.tok.staff)||CL.tok.player;if(!tok){toast('Sign in again to change photos.');return}
+    try{const r=await rpc('np_photo_set',{p_token:tok,p_player:id,p_img:img||''});
+      if(!r||!r.ok){toast(r&&r.error==='auth'?'Your sign-in expired. Sign in again.':r&&r.error==='bad'?"That photo couldn't be saved. Try another one.":"You can't change that photo.");return}
+      if(img){PH.img[id]=img;PH.v[id]=r.v}else{delete PH.img[id];delete PH.v[id]}if(PH.srv){if(img)PH.srv[id]=r.v;else delete PH.srv[id]}phSave();render();toast(img?'Photo saved.':'Photo removed.')}
+    catch(e){toast(e.net?pinErr('offline'):'Photos aren\'t switched on yet. Ask the club to run the latest setup SQL.')}}
+  // a player's public profile (from the rankings)
+  const confirmPh=pid=>{const q=db.players.find(x=>x.id===pid);return window.confirm?window.confirm('Remove '+(q?q.name:'this player')+"'s photo?"):true};
+  function profPage(id){const p=db.players.find(x=>x.id===id),mine=id&&id===lastMe,admin=!!(mode&&mode.role==='admin');
+    const back=`<button class="btn linkish tp-back" data-app="pg" data-pg="ranks">${icon('back')}Rankings</button>`;
+    if(!p)return `<div class="site-page prof">${back}<div class="sp-head"><h1>Player not found</h1><p>They may have been removed.</p></div></div>`;
+    if(p.hideRank&&!mine&&!admin)return `<div class="site-page prof">${back}<div class="prof-head">${avatar(null,p.name,'prof-av')}<div><h1>${esc(rkName(p.name))}</h1><p>This player keeps their profile private.</p></div></div></div>`;
+    const all=clubBoard({}),me=all.rows.find(x=>x.id===id),ra=rankRows(rkHidden(all.rows),'rating',3).find(x=>x.id===id),rm=ranks('month',0).rows.find(x=>x.id===id);
+    const nm=x=>{const q=db.players.find(y=>y.id===x);return q?rkName(q.name):'Someone'};
+    const games=opGames().filter(m=>m.a.includes(id)||m.b.includes(id)).reverse();
+    const recent=games.slice(0,10).map(m=>{const inA=m.a.includes(id),mt=(inA?m.a:m.b).filter(x=>x!==id),op=inA?m.b:m.a,my=inA?m.sa:m.sb,th=inA?m.sb:m.sa,won=my>th;
+      return `<li class="pf-g"><span class="pill ${won?'p-done':'p-left'}">${won?'W':'L'}</span><span class="pf-gt"><b class="num">${my}–${th}</b> ${mt.length?'with '+esc(mt.map(nm).join(' & '))+' ':''}vs ${esc(op.map(nm).join(' & '))}</span><span class="pf-gd">${fmtDay(m.t)}</span></li>`}).join('');
+    const tiles=me?[['Club rating',me.rating+(me.prov?'*':'')],['Games',me.g],['Won–lost',me.w+'–'+(me.g-me.w)],['Win rate',pct(me.wp)],['Best streak',me.best?me.best+' in a row':'—'],['Last played',fmtDay(me.last)]]:[];
+    const has=!!phImg(id);
+    return `<div class="site-page prof">${back}
+      <div class="prof-head">${avatar(id,p.name,'prof-av')}<div><h1>${esc(rkName(p.name))}</h1>
+        <p>${[ra?'#'+ra.rank+' all time':'',rm?'#'+rm.rank+' this month':'',me&&me.prov?'Rating settles after 10 games':''].filter(Boolean).join(' · ')||'Not ranked yet'}</p>
+        ${mine?`<p class="prof-acts"><button class="btn sm" data-app="pg" data-pg="me">Change my photo in My games</button></p>`:admin&&has?`<p class="prof-acts"><button class="btn sm danger" data-app="phDel" data-id="${esc(id)}">Remove photo</button></p>`:''}</div></div>
+      ${tiles.length?`<dl class="prof-stats">${tiles.map(([k,v])=>`<div><dt>${k}</dt><dd class="num">${esc(String(v))}</dd></div>`).join('')}</dl>`:'<p class="site-empty">No open play games scored yet.</p>'}
+      ${recent?`<section class="hub-sec"><h2 class="sp-h2">Recent games</h2><ul class="pf-list">${recent}</ul></section>`:''}</div>`}
   function ranks(tab,off){
     if(tab==='month'){const w=monthWin(off),b=clubBoard({from:w.from,to:w.to});const r=rkHidden(b.rows).filter(x=>x.g>=1).sort((a,c)=>c.w-a.w||c.wp-a.wp||c.diff-a.diff||c.g-a.g);r.forEach((x,i)=>x.rank=i+1);return{rows:r,games:b.games,label:w.label}}
     const b=clubBoard({});return{rows:rankRows(rkHidden(b.rows),'rating',3),games:b.games,label:'All time'}}
   function rankTable(R,tab,n,skip){const rows=n?R.rows.slice(skip||0,(skip||0)+n):R.rows;if(skip&&R.rows.length&&!rows.length)return '';
     if(!rows.length)return `<p class="site-empty">${tab==='month'?'No open play games scored '+(rk.off?'in '+esc(R.label):'this month')+' yet. Rankings fill in as games are scored.':'Nobody has 3 open play games yet. Rankings fill in as games are scored.'}</p>`;
     return `<div class="tablebox"><table class="t rk-t"><thead><tr><th class="n">Rank</th><th>Player</th>${tab==='month'?'<th class="n">Wins</th><th class="n">Games</th><th class="n">Win rate</th>':'<th class="n">Club rating</th><th class="n">Games</th><th class="n">Won–lost</th>'}</tr></thead><tbody>
-      ${rows.map(r=>`<tr class="${r.rank<=3?'rk-top':''}"><td class="n"><span class="lb-rank r${r.rank<=3?r.rank:''}">${r.rank}</span></td><td><b>${esc(rkName(r.name))}</b></td>${tab==='month'?`<td class="n num"><b>${r.w}</b></td><td class="n num">${r.g}</td><td class="n num">${pct(r.wp)}</td>`:`<td class="n num"><b>${r.rating}</b></td><td class="n num">${r.g}</td><td class="n num">${r.w}–${r.g-r.w}</td>`}</tr>`).join('')}</tbody></table></div>`}
+      ${rows.map(r=>`<tr class="${r.rank<=3?'rk-top':''}"><td class="n"><span class="lb-rank r${r.rank<=3?r.rank:''}">${r.rank}</span></td><td><button class="rk-p" data-app="pg" data-pg="p:${esc(r.id)}">${avatar(r.id,r.name,'rk-av')}<b>${esc(rkName(r.name))}</b></button></td>${tab==='month'?`<td class="n num"><b>${r.w}</b></td><td class="n num">${r.g}</td><td class="n num">${pct(r.wp)}</td>`:`<td class="n num"><b>${r.rating}</b></td><td class="n num">${r.g}</td><td class="n num">${r.w}–${r.g-r.w}</td>`}</tr>`).join('')}</tbody></table></div>`}
   const rkTabs=()=>`<div class="seg-tabs" role="tablist" aria-label="Ranking period"><button role="tab" class="sg ${rk.tab==='month'?'on':''}" aria-selected="${rk.tab==='month'}" data-app="rkTab" data-t="month">Monthly</button><button role="tab" class="sg ${rk.tab==='all'?'on':''}" aria-selected="${rk.tab==='all'}" data-app="rkTab" data-t="all">All time</button></div>`;
   // open play sessions for the public pages: live first, then open or with a join link, then the rest
   const okUrl=u=>/^https?:\/\/[^\s]+$/i.test(u||'')?u:'';
@@ -2824,7 +2896,7 @@ const App=(()=>{
         <section class="hub-sec"><div class="hs-h"><h2>Tournaments</h2><p>Run by Next Point. Register through the form, then follow every court live on the day.</p>${T.up.length+T.past.length>3?`<button class="btn linkish hs-more" data-app="pg" data-pg="tours">All tournaments</button>`:''}</div>
           ${T.up.length?`<div class="cards3">${T.up.slice(0,3).map(tCard).join('')}</div>`:`<p class="site-empty">No upcoming tournaments yet. Check back soon.${T.past.length?' <button class="btn linkish" data-app="pg" data-pg="tours">See past results</button>':''}</p>`}</section>
         <section class="hub-sec"><div class="hs-h"><h2>Rankings</h2><p>${rk.tab==='month'?'Most open play wins this month. Resets on the 1st.':'Club rating across every open play game.'}</p>${rkTabs()}</div>
-          ${R.rows.length>=3?`<ol class="podium3">${[R.rows[1],R.rows[0],R.rows[2]].map(r=>`<li class="pod p${r.rank}"><span class="pod-n">${r.rank}</span><b class="pod-name">${esc(rkName(r.name))}</b><span class="pod-s">${rk.tab==='month'?`<b class="num">${r.w}</b> win${r.w===1?'':'s'} · ${pct(r.wp)}`:`<b class="num">${r.rating}</b> rating · ${r.w}–${r.g-r.w}`}</span></li>`).join('')}</ol>`:''}
+          ${R.rows.length>=3?`<ol class="podium3">${[R.rows[1],R.rows[0],R.rows[2]].map(r=>`<li class="pod p${r.rank}"><span class="pod-n">${r.rank}</span><button class="pod-p" data-app="pg" data-pg="p:${esc(r.id)}">${avatar(r.id,r.name,'pod-av')}<b class="pod-name">${esc(rkName(r.name))}</b></button><span class="pod-s">${rk.tab==='month'?`<b class="num">${r.w}</b> win${r.w===1?'':'s'} · ${pct(r.wp)}`:`<b class="num">${r.rating}</b> rating · ${r.w}–${r.g-r.w}`}</span></li>`).join('')}</ol>`:''}
           <div class="panel rk-panel">${rankTable(R,rk.tab,5,R.rows.length>=3?3:0)}<button class="btn rk-all" data-app="pg" data-pg="ranks">Full rankings</button></div></section>
       </div>`}
   function toursPage(){const T=tSorted();
@@ -2921,9 +2993,9 @@ const App=(()=>{
   function privacyPage(){const c=(db.settings&&db.settings.privacyContact)||'';
     return `<div class="site-page privacy"><div class="sp-head"><h1>Privacy notice</h1><p>How Next Point Pickleball uses the details you give us when you register, check in or play.</p></div>
       <section class="panel prose">
-      <h2>What we collect</h2><ul><li>Your name, gender and birth year</li><li>Your DUPR rating and DUPR ID, if you give them</li><li>Your mobile number</li><li>The games you play: who with, who against, scores and times</li><li>If you turn on match alerts: a code from your phone's browser that lets us send them</li></ul>
+      <h2>What we collect</h2><ul><li>Your name, gender and birth year</li><li>Your DUPR rating and DUPR ID, if you give them</li><li>Your mobile number</li><li>The games you play: who with, who against, scores and times</li><li>If you turn on match alerts: a code from your phone's browser that lets us send them</li><li>If you add one: your profile photo</li></ul>
       <h2>Why</h2><p>To run registrations and check division rules (age, gender, rating), make the draw and schedule, call you to court, keep score, publish results and keep the club rankings.</p>
-      <h2>Who can see it</h2><ul><li><b>Anyone with the link:</b> your name in schedules, brackets, results and on Courtside. In public rankings we show ${(db.settings&&db.settings.rankNames)==='full'?'your full name':'your first name and last initial'}.</li><li><b>Club staff only:</b> your mobile number, birth year, DUPR details and PIN.</li></ul><p>We don't sell your details or share them with advertisers.</p>
+      <h2>Who can see it</h2><ul><li><b>Anyone with the link:</b> your name in schedules, brackets, results and on Courtside. In public rankings we show ${(db.settings&&db.settings.rankNames)==='full'?'your full name':'your first name and last initial'}, plus your profile photo if you added one.</li><li><b>Club staff only:</b> your mobile number, birth year, DUPR details and PIN.</li></ul><p>We don't sell your details or share them with advertisers.</p>
       <h2>Where it's kept and for how long</h2><p>In the club's database (Supabase) and in your own browser. Players added for one tournament are removed when that tournament is deleted. Club members are kept while they play with us.</p>
       <h2>Your choices</h2><p>Under the Data Privacy Act of 2012 you can ask to see, correct or delete your details, or to be left out of the public rankings. ${c?'Contact: <b>'+esc(c)+'</b>.':'Ask the desk at any Next Point event.'}</p>
       </section></div>`}
@@ -2946,15 +3018,16 @@ const App=(()=>{
         <span class="me-n">${nx?(ct?`<b>${nx.status==='play'?'Playing':'Called'}: Court ${ct.no}</b> vs ${esc(opp(nx))}`:`Next: vs ${esc(opp(nx))}`):ms.length?'All your games are played':'Matches appear once the draw is out'}</span>
         <span class="me-a"><button class="btn ${nx&&ct?'primary':''}" data-app="meOpen" data-id="${e.id}">Open</button></span></li>`};
     const up=opList().filter(i=>!i.lv&&!i.ss.open&&i.link).slice(0,3);
-    const R=ranks('month',0).rows.find(x=>x.name===p.name);
-    return `<div class="site-page me"><div class="me-head"><span class="me-av" aria-hidden="true">${esc(Array.from(p.name.trim())[0]||'?').toUpperCase()}</span><div><h1>${esc(p.name)}</h1><p>${how}${R?` · #${R.rank} this month, ${R.w} win${R.w===1?'':'s'}`:''}</p></div><button class="btn me-out" data-app="meOut">Sign out</button></div>
+    const R=ranks('month',0).rows.find(x=>x.id===id);
+    return `<div class="site-page me"><div class="me-head">${avatar(id,p.name,'me-av')}<div><h1>${esc(p.name)}</h1><p>${how}${R?` · #${R.rank} this month, ${R.w} win${R.w===1?'':'s'}`:''}</p>
+        <p class="me-ph"><label class="btn sm">${phImg(id)?'Change photo':'Add a photo'}<input type="file" accept="image/*" id="phFile" class="sr-only"></label>${phImg(id)?`<button class="btn sm linkish" data-app="phDel" data-id="${esc(id)}">Remove</button>`:''}<button class="btn sm linkish" data-app="pg" data-pg="p:${esc(id)}">View my profile</button></p></div><button class="btn me-out" data-app="meOut">Sign out</button></div>
       ${pSaveCard()}
       <section class="hub-sec"><h2 class="sp-h2">Right now</h2>${live.length?`<ul class="me-list">${live.map(opRow).join('')}</ul>`:`<p class="site-empty">No open play running right now.</p>`}</section>
       <section class="hub-sec"><h2 class="sp-h2">Your tournaments</h2>${tours.length?`<ul class="me-list">${tours.map(tRow).join('')}</ul>`:`<p class="site-empty">You're not entered in a tournament. When you register, it shows up here by itself.</p>`}</section>
       <section class="hub-sec"><div class="hs-h"><h2 class="sp-h2">Open play</h2><a class="btn linkish hs-more" href="${RECLUB}" target="_blank" rel="noopener">See sessions on Reclub</a></div>${up.length?`<div class="cards3">${up.map(opCard).join('')}</div>`:'<p class="site-empty">Book your next session on Reclub, then check in here when you arrive.</p>'}</section></div>`}
   const E2=(ev,id)=>(ev.entries||[]).find(x=>x.id===id);
   function introHtml(){
-    const body=gate?`<div class="site-gate">${gateHtml()}</div>`:pg==='tours'?toursPage():pg==='open'?openPage():pg==='me'?mePage():pg.startsWith('t:')?tourPage(pg.slice(2)):pg.startsWith('s:')?schedPage(pg.slice(2)):pg==='privacy'?privacyPage():pg==='ranks'?ranksPage():homeHub();
+    const body=gate?`<div class="site-gate">${gateHtml()}</div>`:pg==='tours'?toursPage():pg==='open'?openPage():pg==='me'?mePage():pg.startsWith('t:')?tourPage(pg.slice(2)):pg.startsWith('s:')?schedPage(pg.slice(2)):pg.startsWith('p:')?profPage(pg.slice(2)):pg==='privacy'?privacyPage():pg==='ranks'?ranksPage():homeHub();
     return `<section class="intro site pg-${gate?'gate':pg.split(':')[0]}">${siteNav()}${body}
       <footer class="site-foot"><p class="intro-ver"><span class="iv-dot" data-s="${CL.on?(CL.ready?'ok':CL.offline?'off':'wait'):CLOUD_WANTED?'off':'local'}"></span>${CL.on?(CL.ready?'Connected to the club database':CL.offline?'No connection yet, retrying…':'Connecting to the club database…'):CLOUD_WANTED?"Not connected: this browser couldn't start the live connection":'Practice copy: saved in this browser only'} · version ${BUILD}</p><button class="btn linkish" data-app="pg" data-pg="privacy">Privacy notice</button>${storyOn===false&&pg==='home'&&!gate?'<button class="btn linkish" data-app="replayStory">Replay the intro</button>':''}</footer></section>`;
   }
@@ -2969,7 +3042,7 @@ const App=(()=>{
   addEventListener('scroll',()=>{if(!stRaf&&document.getElementById('story'))stRaf=requestAnimationFrame(storyTick)},{passive:true});
   addEventListener('resize',()=>{if(document.getElementById('story'))storyTick()},{passive:true});
   function goPg(v,push){pg=v;gate=null;gateErr='';view='intro';pendingTop=true;
-    if(push!==false){const h=v==='home'?'#home':v==='me'?'#me':v==='open'?'#openplay':v==='tours'?'#tournaments':v==='ranks'?'#rankings':v==='privacy'?'#privacy':v.startsWith('s:')?'#s='+v.slice(2):'#t='+v.slice(2);try{if(location.hash!==h)history.pushState(null,'',location.pathname+location.search+h)}catch(e){}}render()}
+    if(push!==false){const h=v==='home'?'#home':v==='me'?'#me':v==='open'?'#openplay':v==='tours'?'#tournaments':v==='ranks'?'#rankings':v==='privacy'?'#privacy':v.startsWith('s:')?'#s='+v.slice(2):v.startsWith('p:')?'#p='+encodeURIComponent(v.slice(2)):'#t='+v.slice(2);try{if(location.hash!==h)history.pushState(null,'',location.pathname+location.search+h)}catch(e){}}render()}
   /* ---------- TV mode ---------- */
   const kiosk={on:false,page:0,t0:0,wl:null,fs:false};
   function playerLink(){return db.playerUrl||(/^https?:/.test(location.protocol)?location.href.split('#')[0]+(db.cur?'#ev='+encodeURIComponent(db.cur):'#player'):'')}
@@ -3005,10 +3078,10 @@ const App=(()=>{
     for(let k=0;k<3;k++)[[2093,0],[2637,.12]].forEach(([f,d])=>{const st=t+k*.36+d,o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;
       g.gain.setValueAtTime(.0001,st);g.gain.exponentialRampToValueAtTime(.6,st+.01);g.gain.setValueAtTime(.6,st+.09);g.gain.exponentialRampToValueAtTime(.0001,st+.11);o.connect(g).connect(cmp);o.start(st);o.stop(st+.12)})}catch(e){}}
   function sayIt(a){try{if(!a||!a.say||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(a.say);u.lang='en-US';u.rate=.95;u.volume=1;setTimeout(()=>speechSynthesis.speak(u),1150)}catch(e){}}
-  function buzz(a,talk){try{navigator.vibrate&&navigator.vibrate([600,200,600,200,600,200,1000])}catch(e){}beep();if(talk)sayIt(a)}
+  function buzz(a,talk){try{const ua=navigator.userActivation;if(navigator.vibrate&&(!ua||ua.hasBeenActive))navigator.vibrate([600,200,600,200,600,200,1000])}catch(e){}beep();if(talk)sayIt(a)}
   function showAlert(a){
     let el=document.getElementById('callAlert');
-    if(!a){if(el)el.remove();shown=null;shownA=null;clearInterval(buzzT);try{window.speechSynthesis&&speechSynthesis.cancel();navigator.vibrate&&navigator.vibrate(0)}catch(e){}document.title=baseTitle;return}
+    if(!a){const was=!!shown;if(el)el.remove();shown=null;shownA=null;clearInterval(buzzT);if(was)try{window.speechSynthesis&&speechSynthesis.cancel();const ua=navigator.userActivation;if(navigator.vibrate&&(!ua||ua.hasBeenActive))navigator.vibrate(0)}catch(e){}document.title=baseTitle;return}
     if(shown===a.key&&el)return;
     if(el)el.remove();shown=a.key;
     el=document.createElement('div');el.id='callAlert';el.className='calert';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','caBig');
@@ -3061,6 +3134,7 @@ const App=(()=>{
     else{const r=remGet();if(r&&!lastMe)resume(r.id);if(lastMe||r){gate=null;pg='me'}else gate='auth'}}
   function doAck(){if(!pendAck||(CL.on&&!CL.ready))return;const a=pendAck;pendAck=null;if(!lastMe){toast('Sign in, then tap "I\'m on my way".');return}ackMatch(a.ev,a.mid)}
   function deepLink(h){
+    if(h.startsWith('p=')){pg='p:'+decodeURIComponent(h.slice(2));gate=null;view='intro';return}
     if(h==='home'||h==='me'||h==='openplay'||h==='tournaments'||h==='rankings'||h==='privacy'||h.startsWith('t=')||h.startsWith('s=')){pg=h==='home'?'home':h==='me'?'me':h==='openplay'?'open':h==='tournaments'?'tours':h==='rankings'?'ranks':h==='privacy'?'privacy':h.startsWith('s=')?'s:'+h.slice(2):'t:'+h.slice(2);gate=null;view='intro';return}
     if(h.startsWith('ev=')||h==='checkin'){clearHash();pendEv=h==='checkin'?'*':decodeURIComponent(h.slice(3));setTimeout(doEv,0);return}
     if(h.startsWith('join=')){const [id,pin]=h.slice(5).split('.');clearHash();if(id&&/^\d{6}$/.test(pin||'')){pendJoin={id,pin};mode={role:'player'};saveMode();gate=null;view='player';setTimeout(doJoin,0)}return}
@@ -3254,6 +3328,7 @@ const App=(()=>{
       case 'acctOut':if(CL.sb)CL.sb.auth.signOut().catch(()=>{});AC.sess=null;gate='signin';gateErr='';AC.note='';render();return;
       case 'acctUnlink':{if(!CL.tok.staff)return;rpc('np_account_unlink',{p_token:CL.tok.staff,p_staff:id}).then(r=>{if(r&&r.ok){if(AC.accts)delete AC.accts[id];toast('Email sign-in removed. They can still use their PIN.');render()}else toast('Couldn\'t remove it. Try again.')},()=>toast(pinErr('offline')));return}
       case 'pg':goPg(t.dataset.pg);return;
+      case 'phDel':{const pid=t.dataset.id;if(!pid)return;if(pid!==lastMe&&!confirmPh(pid))return;phPut(pid,null);return}
       case 'schPick':{try{if(t.dataset.p)localStorage.setItem(schKey(id),t.dataset.p);else localStorage.removeItem(schKey(id))}catch(_){}render();if(t.dataset.p)setTimeout(()=>{const el=document.querySelector('.sch-me');el&&el.scrollIntoView({block:'start'})},0);return}
       case 'schDay':schDay[id]=+t.dataset.d;render();return;
       case 'resDiv':resDiv[id]=t.dataset.d;render();return;
@@ -3292,6 +3367,7 @@ const App=(()=>{
   });
   document.addEventListener('input',e=>{if(e.target.id!=='auFind')return;AU.q=e.target.value;const r=document.getElementById('auRes');if(r)r.innerHTML=auResults(e.target.dataset.staff==='1',e.target.dataset.act2||'auPick')});
   document.addEventListener('change',e=>{
+    if(e.target.id==='phFile'){const f=e.target.files&&e.target.files[0];e.target.value='';phPick(f);return}
     if(e.target.name==='auWho'){AU.who=e.target.value;AU.pick=null;AU.err='';PA.err='';render();return}
     if(e.target.id==='paCk'){PA.ckSet=e.target.checked;const f=e.target.form;const l=f&&f.querySelector('[data-ckl]');if(l)l.textContent=l.dataset.ckl+(e.target.checked?' and check in':'');return}
     if(e.target.name==='paWho'){PA.who=e.target.value;document.querySelectorAll('#paUp [data-w]').forEach(g=>g.hidden=g.dataset.w!==PA.who);PA.err='';const er=document.querySelector('.gate.au .err,.pauth .err');if(er)er.remove();return}
@@ -3495,7 +3571,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 const LEVELS={all:'All levels',low:'3.5 and below',high:'4.0 and up'};
 const fits=(id,lvl)=>{const s=PL(id).skill;return lvl==='all'||(lvl==='low'?s<=3.5:s>=4)};
 function save(){App.save()}
-function toast(t){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2600)}
+function toast(t){document.querySelectorAll('body>.toast').forEach(x=>x.remove());const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2600)}
 
 /* ---------- queue engine ---------- */
 const waitingIds=()=>Object.keys(S.checkins).filter(id=>C(id).status==='waiting');
@@ -4027,7 +4103,7 @@ const clockStr=t=>new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-di
 const pshort=id=>{const n=PL(id).name.trim().split(/\s+/);return n.length<2?n[0]:Array.from(n[0])[0]+'. '+n.slice(1).join(' ')};
 const ename=id=>{if(!id)return 'TBD';const e=E(id);return D(e.div).type==='singles'?PL(e.p[0]).name:e.p.map(pshort).join(' / ')};
 const save=()=>App.save();
-function toast(t){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}
+function toast(t){document.querySelectorAll('body>.toast').forEach(x=>x.remove());const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}
 function audit(who,what){S.audit.push({t:now(),who,what});if(S.audit.length>200)S.audit.shift()}
 let rs=20261121;const rnd=()=>(rs=(rs*16807)%2147483647)/2147483647;
 

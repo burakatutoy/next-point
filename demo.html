@@ -2126,7 +2126,7 @@ const App=(()=>{
       await pullAll();CL.ready=true;
       if(CL.staffRole==='admin')await loadSecrets();
       swReg();if(CL.staffRole==='admin')pushCheck();
-      setTimeout(()=>{doJoin();doGo();doAck()},0);
+      setTimeout(()=>{doJoin();doGo();doAck();doEv()},0);
       CL.sb.channel('np-rev').on('postgres_changes',{event:'*',schema:'public',table:'np_rev'},pl=>{const r=pl.new||{};onRev(r.id,r.rev,r.deleted)}).subscribe(st=>{CL.live=st==='SUBSCRIBED';setState();if(CL.live)poll()});
       clearInterval(CL.pollT);CL.pollT=setInterval(()=>{if(!CL.live||Date.now()-(CL.lastPoll||0)>30000){CL.lastPoll=Date.now();poll()}},4000);
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')poll()});
@@ -2968,7 +2968,7 @@ const App=(()=>{
     if(push!==false){const h=v==='home'?'#home':v==='me'?'#me':v==='open'?'#openplay':v==='tours'?'#tournaments':v==='ranks'?'#rankings':v==='privacy'?'#privacy':v.startsWith('s:')?'#s='+v.slice(2):'#t='+v.slice(2);try{if(location.hash!==h)history.pushState(null,'',location.pathname+location.search+h)}catch(e){}}render()}
   /* ---------- TV mode ---------- */
   const kiosk={on:false,page:0,t0:0,wl:null,fs:false};
-  function playerLink(){return db.playerUrl||(/^https?:/.test(location.protocol)?location.href.split('#')[0]+'#player':'')}
+  function playerLink(){return db.playerUrl||(/^https?:/.test(location.protocol)?location.href.split('#')[0]+(db.cur?'#ev='+encodeURIComponent(db.cur):'#player'):'')}
   function qrSVG(text){try{const q=qrcode(0,'M');q.addData(text);q.make();const n=q.getModuleCount();let d='';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d+='M'+(c+3)+' '+(r+3)+'h1v1h-1z';
     return `<svg class="qr" viewBox="0 0 ${n+6} ${n+6}" role="img" aria-label="QR code" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`}catch(e){return ''}}
   function qrBlock(label){const l=playerLink();return l?`<div class="qrtile">${qrSVG(l)}<span>${esc(label)}</span></div>`:''}
@@ -3028,7 +3028,15 @@ const App=(()=>{
   function resume(id){const r=remGet();if(CL.on&&r&&r.id===id&&r.tok&&!CL.tok.player){CL.tok.player=r.tok;saveTokens()}
     lastMe=id;mode={role:'player'};saveMode();gate=null;gateErr='';const e=evFor(id);if(e)db.cur=e.id;else pickLive();home=false;
     [OPM,TM].forEach(m=>{m.signOut();m.setMe&&m.setMe(id)});pendingTop=true;save(true);view='player'}
-  let pendJoin=null,pendAck=null;
+  let pendJoin=null,pendAck=null,pendEv=null;
+  // a QR at the venue: open that event (or tonight's open session) on the phone, signed in or with the sign-in card
+  function doEv(){if(!pendEv||(CL.on&&!CL.ready))return;const want=pendEv;pendEv=null;
+    let ev=want==='*'?null:db.events.find(e=>e.id===want);
+    if(want==='*'){const live=db.events.filter(e=>e.type==='openplay'&&e.session&&e.session.open);if(live.length===1)ev=live[0]}
+    if(!ev){gate=null;view='intro';pg=want==='*'?'open':'home';render();return}
+    const r=remGet();if(r&&!lastMe)resume(r.id);if(!mode||mode.role==='viewer'){mode={role:'player'};saveMode()}
+    if(mode.role!=='player'){db.cur=ev.id;render();return}
+    db.cur=ev.id;home=false;gate=null;view='player';render()}
   function clearHash(){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
   function doJoin(){if(!pendJoin||(CL.on&&!CL.ready))return;const j=pendJoin;pendJoin=null;
     const p=db.players.find(x=>x.id===j.id);if(!p){toast("That player card isn't for an event on this site anymore. Ask the desk.");return}
@@ -3044,6 +3052,7 @@ const App=(()=>{
   function doAck(){if(!pendAck||(CL.on&&!CL.ready))return;const a=pendAck;pendAck=null;if(!lastMe){toast('Sign in, then tap "I\'m on my way".');return}ackMatch(a.ev,a.mid)}
   function deepLink(h){
     if(h==='home'||h==='me'||h==='openplay'||h==='tournaments'||h==='rankings'||h==='privacy'||h.startsWith('t=')||h.startsWith('s=')){pg=h==='home'?'home':h==='me'?'me':h==='openplay'?'open':h==='tournaments'?'tours':h==='rankings'?'ranks':h==='privacy'?'privacy':h.startsWith('s=')?'s:'+h.slice(2):'t:'+h.slice(2);gate=null;view='intro';return}
+    if(h.startsWith('ev=')||h==='checkin'){clearHash();pendEv=h==='checkin'?'*':decodeURIComponent(h.slice(3));setTimeout(doEv,0);return}
     if(h.startsWith('join=')){const [id,pin]=h.slice(5).split('.');clearHash();if(id&&/^\d{6}$/.test(pin||'')){pendJoin={id,pin};mode={role:'player'};saveMode();gate=null;view='player';setTimeout(doJoin,0)}return}
     if(h.startsWith('here=')){const [ev,mid]=h.slice(5).split('.');clearHash();const r=remGet();if(r&&!lastMe)resume(r.id);if(!mode||mode.role==='viewer'){mode={role:'player'};saveMode()}
       if(mode.role==='player'){if(ev&&db.events.some(e=>e.id===ev)){db.cur=ev;home=false}view='player';pendAck={ev,mid};setTimeout(doAck,0)}return}

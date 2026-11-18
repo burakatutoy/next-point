@@ -1678,7 +1678,7 @@ a.btn{text-decoration:none}
 .pa-rad input{width:20px;height:20px;accent-color:var(--accent);margin:0}.pa-rad:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
 .pa-grp{display:grid;gap:10px;padding:4px 2px 2px}.pa-grp[hidden]{display:none}
 .pa-links span{color:var(--muted);font-size:14.5px;align-self:center}.pa-links{align-items:center}
-.pa-forgot{margin:-4px 0 0;font-size:13px;color:var(--muted)}
+.pa-forgot{margin:-4px 0 0;font-size:13px;line-height:1.55;color:var(--muted)}.pa-forgot .btn{min-height:0;padding:0;font-size:inherit;line-height:inherit;vertical-align:baseline}.gate .pa-forgot .btn.linkish,.gate .pa-legal .btn.linkish{display:inline;min-height:0;padding:0;margin:0;font-size:inherit;line-height:inherit}
 
 /* ---------- v50: seamless first sign-in ---------- */
 .pa-br{display:grid;gap:8px;max-width:520px;margin:0 auto 14px;padding:16px 18px;border-radius:16px;background:color-mix(in srgb,var(--warn,#d9a21b) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--warn,#d9a21b) 55%,var(--line))}
@@ -1937,7 +1937,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-17a';
+  const BUILD='2026-11-18a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2195,7 +2195,7 @@ const App=(()=>{
   const playerIntent=()=>{const it=intentGet();return!!(it&&(it.k==='player'||it.k==='plink'))};
   function pAfterAuth(){PA.busy=true;PA.err='';scheduleRender();let n=0;
     const go=()=>{if(!CL.ready){if(++n<80)setTimeout(go,250);else{PA.busy=false;PA.err=pinErr('offline');scheduleRender()}return}
-      const it=intentGet();intentClear();
+      const it=intentGet();intentClear();if(it&&it.back&&db.events.some(e=>e.id===it.back))AU.back=it.back;if(it&&it.ck!=null)PA.ckSet=it.ck;
       if(!(it&&it.k==='plink')){rpc('np_account_login',{}).then(sr=>{
           if(sr&&sr.token){rpc('np_player_login',{}).then(x=>{if(x&&x.token){remSet(x.subject,x.token,true);if(x.key)pkeySet(x.subject,x.key);if(!lastMe)lastMe=x.subject}}).catch(()=>{});PA.busy=false;gate=null;acctEnter(sr);return}
           rpc('np_player_login',{}).then(r=>pResult(r,false),e=>{PA.busy=false;PA.err=e.net?pinErr('offline'):'Sign-in for players isn\'t switched on yet. Ask the desk.';render()})},
@@ -2287,8 +2287,8 @@ const App=(()=>{
          ${qrTip}${DEMO&&!CL.on?`<p class="gate-hint">Practice PINs: ${db.officials.map(o=>`${esc(o.name)} ${esc(o.pin)}`).join(' · ')}</p>`:''}`)}
     if(AU.st==='create'&&!cloud)return box('Create your profile','You get a 6-digit PIN to sign in with.',`<form id="auNew" class="pa-f"><label class="f">Full name<input type="text" id="auNewName" autocomplete="name"></label><label class="f">Skill level<select id="auNewSkill">${[2.5,3,3.5,4,4.5,5].map(x=>`<option ${x===3?'selected':''}>${x.toFixed(1)}</option>`).join('')}</select></label>${dupHtml()}<button class="btn primary" type="submit">Create profile</button></form>`);
     if(AU.st==='create'){const bk=AU.back&&db.events.find(e=>e.id===AU.back),who=PA.who||(bk&&bk.type==='tournament'?'old':'new'),pk=auPicked();
-      return box('Create your account','Pick a username and password. Your phone stays signed in after this.',
-        `<form id="paUp" class="pa-f" novalidate><label class="f">Username<input type="text" id="paUpUser" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24" placeholder="e.g. ana.reyes"></label>
+      return box('Create your account',g?'Quickest: use Google. Or pick a username and password.':'Pick a username and password. Your phone stays signed in after this.',
+        `${g?`<div class="pa-ways">${g}<span class="pa-or">or use a username</span></div>`:''}<form id="paUp" class="pa-f" novalidate><label class="f">Username<input type="text" id="paUpUser" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24" placeholder="e.g. ana.reyes"></label>
           <label class="f">Password <small>at least 8 characters</small><input type="password" id="paUpPass" autocomplete="new-password"></label>
           <fieldset class="pa-who-f au-q"><legend>Have you played with us before?</legend>
             <label class="pa-rad"><input type="radio" name="paWho" value="new" ${who==='new'?'checked':''}><span>No, I'm new</span></label>
@@ -2302,8 +2302,8 @@ const App=(()=>{
     return box('Sign in','Players and staff. Your phone stays signed in.',
       `<div class="pa-ways">${g}${g?'<span class="pa-or">or</span>':''}
         <form id="auIn" class="pa-f" novalidate><label class="f">Username<input type="text" id="auInUser" autocomplete="username" autocapitalize="none" spellcheck="false"></label><label class="f">Password<input type="password" id="auInPass" autocomplete="current-password"></label><button class="btn ${g?'':'primary'}" type="submit">Sign in</button></form></div>
-       <div class="au-alt"><button class="btn au-new" type="button" data-app="auTo" data-st="create"><b>New here?</b><span>Create an account</span></button><button class="btn au-new" type="button" data-app="auTo" data-st="pin"><b>Have a PIN or desk QR?</b><span>Sign in with it</span></button></div>
-       <p class="pa-forgot">Forgot your password? Sign in with a PIN from the desk, then make a new username from My games.${pv.email?' Staff with an email account: <button class="btn linkish" type="button" data-app="gateTo" data-g="signin">email sign-in</button>.':''}</p>
+       <div class="au-alt"><button class="btn au-new" type="button" data-app="auTo" data-st="create"><b>New here?</b><span>Create an account${g?' (Google works too)':''}</span></button></div>
+       <p class="pa-forgot">Have a PIN or a desk QR? <button class="btn linkish" type="button" data-app="auTo" data-st="pin">Sign in with a PIN</button>. Forgot your password? Use your PIN, then make a new username from My games.${pv.email?' Staff with an email account: <button class="btn linkish" type="button" data-app="gateTo" data-g="signin">email sign-in</button>.':''}</p>
        <p class="pa-legal">By signing in you agree to our <button class="btn linkish" type="button" data-app="pg" data-pg="privacy">privacy notice</button>.</p>`,false)}
   function openAuth(st,back){PA.ckSet=null;AU.st=st||'';AU.back=back||null;AU.q='';AU.pick=null;AU.err='';PA.err='';PA.st=AC.sess?PA.st:'';PA.who='';AU.who='';gate='auth';gateErr='';view='intro';pendingTop=true;render();
     setTimeout(()=>{const f=document.querySelector('#auInUser,#auFind,#paUpUser,#auNewName');f&&f.focus({preventScroll:true})},0)}
@@ -3199,7 +3199,7 @@ const App=(()=>{
       case 'gateBack':gate=null;gateErr='';AC.note='';render();return;
       case 'gateTo':gate=t.dataset.g;gateErr='';if(gate!=='sent')AC.note='';render();setTimeout(()=>{const f=document.querySelector('.gate input');f&&f.focus()},0);return;
       case 'acctGo':acctGo();return;
-      case 'pGoogle':{t.disabled=true;PA.err='';intentSet({k:t.dataset.k==='plink'?'plink':'player',tok:t.dataset.k==='plink'?CL.tok.player:null});
+      case 'pGoogle':{t.disabled=true;PA.err='';const ckEl=document.getElementById('paCk');intentSet({k:t.dataset.k==='plink'?'plink':'player',tok:t.dataset.k==='plink'?CL.tok.player:null,back:AU.back||null,ck:ckEl?ckEl.checked:null});
         CL.sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:siteUrl(),skipBrowserRedirect:true,queryParams:{prompt:'select_account'}}}).then(({data,error})=>{
           if(error||!data||!data.url){t.disabled=false;PA.err=authMsg(error);render();return}location.assign(data.url)},err=>{t.disabled=false;PA.err=authMsg(err);render()});return}
       case 'pGo':intentSet({k:'player'});pAfterAuth();return;

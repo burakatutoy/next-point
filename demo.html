@@ -2646,7 +2646,7 @@ const App=(()=>{
     // signed in with Google or an email code: straight back in
     if(v==='player'&&acctOn()&&!lastMe){const r=remGet();if(r&&r.acct&&db.players.some(x=>x.id===r.id)){resume(r.id);render();return}
       if(AC.sess&&!PA.st){mode={role:'player'};saveMode();gate=null;[OPM,TM].forEach(m=>m.signOut());pickLive();home=false;pendingTop=true;save();go('player');intentSet({k:'player'});pAfterAuth();return}}
-    if(v==='public'&&csLocked()&&!lastMe)v='player';mode={role:v==='public'?'viewer':'player'};saveMode();gate=null;[OPM,TM].forEach(m=>m.signOut());pickLive();home=false;pendingTop=true;save();go(v)}
+    if(v==='public'&&csLocked()&&!lastMe)v='player';mode={role:v==='public'?'viewer':'player'};saveMode();gate=null;[OPM,TM].forEach(m=>{m.signOut();if(v==='player'&&lastMe&&m.setMe)m.setMe(lastMe)});pickLive();home=false;pendingTop=true;save();go(v)}
   function enterStaff(o,srvRole){mode={role:srvRole||roleOf(o),id:o.id};saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pickLive();
     if(mode.role==='admin'){home=true;homeSec='events';pendingTop=true;save();go('admin')}else{const c=cur();if(!c||c.type!=='tournament'){const ts=db.events.filter(e=>e.type==='tournament');const t=ts.find(liveNow)||ts[ts.length-1];if(t)db.cur=t.id}home=false;pendingTop=true;save();go('ref')}}
   function exitMode(){if(AC.sess&&CL.sb){CL.sb.auth.signOut().catch(()=>{});AC.sess=null}lastMe=null;remClear();if(kiosk.on)kioskOff();if(CL.on){const t=[CL.tok.staff,CL.tok.player].filter(Boolean);t.forEach(x=>{rpc('np_logout',{p_token:x}).catch(()=>{})});CL.tok.staff=null;CL.tok.player=null;CL.staffRole=null;CL.pins=null;saveTokens();[...db.players,...db.officials].forEach(x=>{delete x.pin});save(true)}mode=null;saveMode();gate=null;gateErr='';[OPM,TM].forEach(m=>m.signOut());pendingTop=true;go('intro')}
@@ -3036,7 +3036,7 @@ const App=(()=>{
     if(!ev){gate=null;view='intro';pg=want==='*'?'open':'home';render();return}
     const r=remGet();if(r&&!lastMe)resume(r.id);if(!mode||mode.role==='viewer'){mode={role:'player'};saveMode()}
     if(mode.role!=='player'){db.cur=ev.id;render();return}
-    db.cur=ev.id;home=false;gate=null;view='player';render()}
+    db.cur=ev.id;home=false;gate=null;view='player';if(lastMe)[OPM,TM].forEach(m=>m.setMe&&m.setMe(lastMe));render()}
   function clearHash(){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
   function doJoin(){if(!pendJoin||(CL.on&&!CL.ready))return;const j=pendJoin;pendJoin=null;
     const p=db.players.find(x=>x.id===j.id);if(!p){toast("That player card isn't for an event on this site anymore. Ask the desk.");return}
@@ -3250,7 +3250,12 @@ const App=(()=>{
       case 'shareSched':{const url=location.origin+location.pathname+'#s='+id;const done=()=>toast('Schedule link copied. Paste it in your group chat.');
         try{navigator.clipboard.writeText(url).then(done,()=>prompt('Copy this link',url))}catch(_){try{prompt('Copy this link',url)}catch(__){}}return}
       case 'myGames':{if(mode&&mode.role==='ref'){go('ref');return}const r=remGet(),me0=lastMe||(r&&db.players.some(x=>x.id===r.id)?r.id:null);if(me0){if(!lastMe&&r)resume(r.id);goMine(me0);return}openAuth('');return}
-      case 'playEv':db.cur=id;enterPlayer('player');return;
+      case 'playEv':{const ev=db.events.find(e=>e.id===id),p=ev&&acctOn()?playerIn():null;
+        if(p){const r=remGet();if(r&&r.id===p.id&&CL.on&&r.tok&&!CL.tok.player){CL.tok.player=r.tok;saveTokens()}
+          lastMe=p.id;db.cur=id;mode={role:'player'};saveMode();gate=null;gateErr='';home=false;[OPM,TM].forEach(m=>{m.signOut();m.setMe&&m.setMe(p.id)});
+          if(ev.type==='openplay'&&ev.session&&ev.session.open){OPM.bind(ev);OPM.setMe(p.id);if(OPM.selfIn(p.id))toast("You're checked in.")}
+          pendingTop=true;save();go('player');return}
+        db.cur=id;enterPlayer('player');return}
       case 'rkTab':rk.tab=t.dataset.t;rk.off=0;render();return;
       case 'rkMonth':rk.off=Math.min(0,rk.off+(+t.dataset.d||0));render();return;
       case 'toStory':case 'toHub':{const el=document.getElementById(a==='toStory'?'story':'hub');if(el)el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return}

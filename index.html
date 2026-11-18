@@ -779,6 +779,10 @@ table.t th,table.t td{padding:9px 10px}
 .calert .ca-big{font-family:var(--f-display);font-stretch:var(--wdth);font-weight:700;font-size:clamp(64px,22vw,140px);line-height:1;letter-spacing:-.01em}
 .calert .ca-sub{font-size:20px;font-weight:600;line-height:1.35;opacity:.95}
 .calert .btn{margin-top:14px;min-width:240px;background:var(--ball);color:#1b1800;border-color:var(--ball);font-size:20px;padding:16px 24px}
+.calert .btn.primary{background:#fff;color:#0b1f30;border:0;font-size:24px;font-weight:800;min-height:72px;min-width:min(86vw,360px);border-radius:18px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+@media (prefers-reduced-motion:no-preference){.calert{animation:caFlash 1s steps(1,end) infinite}.calert .ca-eb{animation:caEb 1s steps(1,end) infinite}}
+@keyframes caFlash{0%{background:#123a57;color:#fff}50%{background:#ffd400;color:#0b1f30}}
+@keyframes caEb{0%{color:var(--ball)}50%{color:#0b1f30}}
 @media (prefers-reduced-motion:no-preference){.calert .ca-big{animation:caPulse 1.2s ease-in-out 3}}
 @keyframes caPulse{50%{transform:scale(1.04)}}
 @media (prefers-reduced-motion:reduce){.kprog i{transition:none}}
@@ -3017,23 +3021,29 @@ const App=(()=>{
     const sec=(p[kiosk.page%p.length].sec||20)*1000,el=Date.now()-kiosk.t0;
     if(el>=sec){kiosk.page=(kiosk.page+1)%p.length;kiosk.t0=Date.now();render()}else{const b=document.getElementById('kBar');if(b)b.style.transform='scaleX('+Math.min(1,el/sec).toFixed(3)+')'}},500);
   /* ---------- call alerts (player + referee phones) ---------- */
-  let acked=new Set(),pend=[],shown=null,selfAct=0,actx=null,buzzT=null,buzzN=0;const baseTitle=document.title;
+  let acked=new Set(),pend=[],shown=null,shownA=null,selfAct=0,actx=null,buzzT=null,buzzN=0;
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&shown&&shownA)buzz(shownA,true)});const baseTitle=document.title;
   try{acked=new Set(JSON.parse(localStorage.getItem(KEY+'-acked')||'[]'))}catch(e){}
   const saveAcked=()=>{try{localStorage.setItem(KEY+'-acked',JSON.stringify([...acked].slice(-300)))}catch(e){}};
   document.addEventListener('pointerdown',e=>{if((view==='player'||view==='ref')&&e.target.closest('#app [data-act]'))selfAct=Date.now();
     if(!actx){try{const A=window.AudioContext||window.webkitAudioContext;if(A)actx=new A()}catch(err){}}},true);
-  function beep(){try{if(!actx)return;if(actx.state==='suspended')actx.resume();const t=actx.currentTime;[0,.22].forEach(d=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=880;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.3,t+d+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d+.16);o.connect(g).connect(actx.destination);o.start(t+d);o.stop(t+d+.18)})}catch(e){}}
-  function buzz(){try{navigator.vibrate&&navigator.vibrate([400,150,400,150,700])}catch(e){}beep()}
+  // loud-venue alarm: three bursts of a two-tone chirp in the 2–2.6 kHz range (cuts through court noise), pushed through a compressor
+  function beep(){try{if(!actx)return;if(actx.state==='suspended')actx.resume();const t=actx.currentTime,cmp=actx.createDynamicsCompressor();cmp.threshold.value=-24;cmp.ratio.value=12;cmp.connect(actx.destination);
+    for(let k=0;k<3;k++)[[2093,0],[2637,.12]].forEach(([f,d])=>{const st=t+k*.36+d,o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;
+      g.gain.setValueAtTime(.0001,st);g.gain.exponentialRampToValueAtTime(.6,st+.01);g.gain.setValueAtTime(.6,st+.09);g.gain.exponentialRampToValueAtTime(.0001,st+.11);o.connect(g).connect(cmp);o.start(st);o.stop(st+.12)})}catch(e){}}
+  function sayIt(a){try{if(!a||!a.say||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(a.say);u.lang='en-US';u.rate=.95;u.volume=1;setTimeout(()=>speechSynthesis.speak(u),1150)}catch(e){}}
+  function buzz(a,talk){try{navigator.vibrate&&navigator.vibrate([600,200,600,200,600,200,1000])}catch(e){}beep();if(talk)sayIt(a)}
   function showAlert(a){
     let el=document.getElementById('callAlert');
-    if(!a){if(el)el.remove();shown=null;clearInterval(buzzT);document.title=baseTitle;return}
+    if(!a){if(el)el.remove();shown=null;shownA=null;clearInterval(buzzT);try{window.speechSynthesis&&speechSynthesis.cancel();navigator.vibrate&&navigator.vibrate(0)}catch(e){}document.title=baseTitle;return}
     if(shown===a.key&&el)return;
     if(el)el.remove();shown=a.key;
     el=document.createElement('div');el.id='callAlert';el.className='calert';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','caBig');
     el.innerHTML=`<div class="ca-in"><div class="ca-eb">${esc(a.title)}</div><div class="ca-big" id="caBig">${esc(a.big)}</div>${a.sub?`<div class="ca-sub">${esc(a.sub)}</div>`:''}<button class="btn primary big" data-ack="${esc(a.key)}" ${a.mid?`data-ev="${esc(a.ev)}" data-mid="${esc(a.mid)}"`:''}>${esc(a.btn||'On my way')}</button></div>`;
     document.body.appendChild(el);const b=el.querySelector('button');b&&b.focus({preventScroll:true});
     document.title='● '+a.big+' – '+baseTitle;
-    buzz();clearInterval(buzzT);buzzN=0;if(!a.once)buzzT=setInterval(()=>{if(!shown||++buzzN>4){clearInterval(buzzT);return}buzz()},15000);
+    a.say=a.say||[a.title,a.big].filter(Boolean).join('. ').replace(/^You're up/i,"You're up");shownA=a;
+    buzz(a,true);clearInterval(buzzT);buzzN=0;if(!a.once)buzzT=setInterval(()=>{if(!shown||++buzzN>8){clearInterval(buzzT);return}if(!document.hidden)buzz(a,buzzN%2===0)},6000);
   }
   function alerts(list){
     if(!list||(view!=='player'&&view!=='ref')){pend=[];showAlert(null);return}

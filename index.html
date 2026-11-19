@@ -1748,6 +1748,9 @@ a.btn{text-decoration:none}
 .au-pick{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent)}
 .au-pick span{display:grid}.au-pick small{color:var(--muted);font-size:12.5px}
 .au-qr{margin:4px 0 0;font-size:13.5px;color:var(--muted)}
+/* v57: correct a finished open play game */
+.fixteams{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0 4px}.fixteams>div{display:grid;gap:6px}.fixteams select{width:100%}
+@media (max-width:480px){.fixteams{grid-template-columns:1fr}}
 /* v56: profile photos */
 .av{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none;background:var(--surface-2)}
 .av-i{display:inline-grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:14px;line-height:1}.av-i::before{content:attr(data-i)}
@@ -3689,6 +3692,13 @@ function finish(ct,sa,sb){
   if(!stay)W.forEach(id=>{C(id).streak=0;backToQueue(id)});
   return {W,stay};
 }
+// correct a finished game's score: rankings recount from the games, today's win counts are adjusted if the winner flips
+// correct a finished game (players and/or score): today's games and wins move by the difference; rankings recount from the games
+function tally(m){const t={},aw=m.sa>m.sb;m.a.forEach(id=>t[id]={g:1,w:aw?1:0});m.b.forEach(id=>t[id]={g:1,w:aw?0:1});return t}
+function fixGame(m,a,b,sa,sb){const before=tally(m),flip=(m.sa>m.sb)!==(sa>sb);m.a=a;m.b=b;m.sa=sa;m.sb=sb;m.edited=now();const after=tally(m);
+  new Set([...Object.keys(before),...Object.keys(after)]).forEach(id=>{const c=C(id);if(!c)return;const x=before[id]||{g:0,w:0},y=after[id]||{g:0,w:0};
+    c.games=Math.max(0,(c.games||0)+y.g-x.g);c.wins=Math.max(0,(c.wins||0)+y.w-x.w)});
+  return flip}
 function cancel(ct){
   const m=M(ct.match);m.status='void';m.end=now();
   [...m.a,...m.b].forEach(id=>backToQueue(id));
@@ -3893,7 +3903,7 @@ function renderPlayer(){
       acts+=c.restAfter||c.leaveAfter?`<button class="btn full" data-act="pback">Undo: ${c.leaveAfter?'leaving':'break'} after this game</button>`:`<button class="btn" data-act="prest">Break after this game</button><button class="btn danger" data-act="pleave">Leave after this game</button>`;
     }
     const others=Object.keys(S.checkins).filter(id=>id!==me&&C(id).status!=='left'&&!C(id).pairWith).sort((a,b)=>PL(a).name.localeCompare(PL(b).name));
-    const pairBox=c&&c.status!=='left'?(c.pairWith?`<div class="row"><span>Playing as a pair with <b>${esc(PL(c.pairWith).name)}</b></span><button class="btn sm" data-act="punpair">Unpair</button></div>`
+    const pairBox=c&&c.status!=='left'?(c.pairWith?`<div style="display:grid;gap:8px"><div class="row"><span>Playing as a pair with <b>${esc(PL(c.pairWith).name)}</b></span><button class="btn sm" data-act="punpair">Unpair</button></div>${others.length?`<div style="display:grid;gap:6px"><span class="eyebrow">Change partner</span><div class="row"><select id="ppair2" aria-label="New partner" style="flex:1">${others.map(id=>`<option value="${id}">${esc(PL(id).name)}</option>`).join('')}</select><button class="btn" data-act="pswitch">Switch</button></div>${c.status==='playing'?'<p class="muted" style="margin:0;font-size:13px">Takes effect from your next game.</p>':''}</div>`:''}</div>`
       :`<div style="display:grid;gap:6px"><span class="eyebrow">Play with a partner</span><div class="row"><select id="ppair" aria-label="Partner" style="flex:1">${others.map(id=>`<option value="${id}">${esc(PL(id).name)}</option>`).join('')}</select><button class="btn" data-act="ppairgo" ${others.length?'':'disabled'}>Pair</button></div></div>`):'';
     const mine=S.matches.filter(x=>x.status==='done'&&[...x.a,...x.b].includes(me)).reverse();
     const hist=mine.length?`<table class="mini-table"><thead><tr><th>Court</th><th>Partner</th><th>Score</th><th></th></tr></thead><tbody>${mine.map(x=>{const inA=x.a.includes(me),my=inA?x.sa:x.sb,th=inA?x.sb:x.sa,mt=(inA?x.a:x.b).find(i=>i!==me);return `<tr><td>${x.court}</td><td>${esc(short(mt))}</td><td class="num">${my}–${th}</td><td><span class="pill ${my>th?'p-waiting':'p-left'}">${my>th?'Won':'Lost'}</span></td></tr>`}).join('')}</tbody></table>`:'<span class="muted">No games yet today.</span>';
@@ -3914,10 +3924,10 @@ function renderPlayer(){
 function renderLog(){
   const done=S.matches.filter(m=>m.status==='done'||m.status==='void').slice().reverse();
   const nm=(t,w)=>`<span class="${w?'w':''}">${t.map(x=>esc(short(x))).join(' & ')}</span>`;
-  const rows=done.map(m=>`<tr><td class="num">${clockStr(m.start||m.assignedAt)}</td><td>${m.court}${m.manual?' <span class="pill p-resting">Admin</span>':''}</td><td>${nm(m.a,m.sa>m.sb)}</td><td class="score">${m.status==='void'?'<span class="pill p-left">Stopped</span>':m.sa+'–'+m.sb}</td><td>${nm(m.b,m.sb>m.sa)}</td><td class="num">${m.start&&m.status==='done'?mins(m.end-m.start)+' min':'–'}</td></tr>`).join('');
+  const rows=done.map(m=>`<tr><td class="num">${clockStr(m.start||m.assignedAt)}</td><td>${m.court}${m.manual?' <span class="pill p-resting">Admin</span>':''}</td><td>${nm(m.a,m.sa>m.sb)}</td><td class="score">${m.status==='void'?'<span class="pill p-left">Stopped</span>':m.sa+'–'+m.sb}</td><td>${nm(m.b,m.sb>m.sa)}</td><td class="num">${m.start&&m.status==='done'?mins(m.end-m.start)+' min':'–'}</td><td>${m.status==='done'?`<button class="btn sm" data-act="fixOpen" data-id="${m.id}">Edit${m.edited?' <span class="pill p-resting">Edited</span>':''}</button>`:''}</td></tr>`).join('');
   const stats=Object.keys(S.checkins).map(id=>({id,...C(id)})).sort((a,b)=>b.games-a.games||b.wins-a.wins);
   return App.pageHead('Open play · '+esc(S.session.name),'Match log','')+`<div class="loggrid"><section class="panel"><h2>Games today <small>${done.filter(m=>m.status==='done').length} finished · avg ${mins(avgGame())} min</small></h2>
-    <div class="tablebox"><table class="log"><thead><tr><th>Start</th><th>Court</th><th>Team A</th><th>Score</th><th>Team B</th><th>Length</th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="muted">No games yet.</td></tr>'}</tbody></table></div></section>
+    <div class="tablebox"><table class="log"><thead><tr><th>Start</th><th>Court</th><th>Team A</th><th>Score</th><th>Team B</th><th>Length</th><th><span class="sr-only">Fix</span></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="muted">No games yet.</td></tr>'}</tbody></table></div></section>
     <section class="panel"><h2>Players today</h2><div class="tablebox"><table class="mini-table"><thead><tr><th>Player</th><th>Games</th><th>Wins</th><th>Status</th></tr></thead><tbody>
     ${stats.map(s=>`<tr><td>${esc(PL(s.id).name)}</td><td class="num">${s.games}</td><td class="num">${s.wins}</td><td><span class="pill p-${s.status}">${{waiting:'In line',playing:'On court',resting:'On break',left:'Left'}[s.status]}</span></td></tr>`).join('')}</tbody></table></div>
     <p class="muted" style="margin:10px 0 0">Fewest-games-first keeps the spread tight: compare the top and bottom of the Games column.</p></section></div>`;
@@ -3960,6 +3970,16 @@ function renderModal(){
       <div class="scorein"><label for="sa">${m.a.map(x=>esc(short(x))).join(' & ')}</label><input type="number" id="sa" min="0" ${S.session.win2?'':'max="'+S.session.gameTo+'"'} inputmode="numeric">
       <label for="sb">${m.b.map(x=>esc(short(x))).join(' & ')}</label><input type="number" id="sb" min="0" ${S.session.win2?'':'max="'+S.session.gameTo+'"'} inputmode="numeric"></div>
       <div class="err" id="scoreErr"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-act="closeModal">Cancel</button><button class="btn primary" data-act="saveScore">Save score</button></div>`;
+  }
+  if(modal.type==='fix'){
+    const m=M(modal.id);if(!m){closeModal();return}
+    const ppl=Object.keys(S.checkins).filter(id=>PL(id)).sort((x,y)=>PL(x).name.localeCompare(PL(y).name));
+    const sel=(k,i,v)=>`<select id="fp${k}${i}" class="fpk" aria-label="Team ${k.toUpperCase()} player ${i+1}">${ppl.map(id=>`<option value="${id}" ${id===v?'selected':''}>${esc(PL(id).name)}</option>`).join('')}</select>`;
+    h=`<h3>Correct game · Court ${m.court}</h3><p class="muted" style="margin:0">Started ${clockStr(m.start||m.assignedAt)}. Was ${m.a.map(x=>esc(short(x))).join(' & ')} ${m.sa}–${m.sb} ${m.b.map(x=>esc(short(x))).join(' & ')}. Fix who played or the score; today's games, wins and the rankings update to match.</p>
+      <div class="fixteams"><div><span class="eyebrow">Team A</span>${m.a.map((v,i)=>sel('a',i,v)).join('')}</div><div><span class="eyebrow">Team B</span>${m.b.map((v,i)=>sel('b',i,v)).join('')}</div></div>
+      <div class="scorein"><label for="fa">Team A score</label><input type="number" id="fa" min="0" ${S.session.win2?'':'max="'+S.session.gameTo+'"'} inputmode="numeric" value="${m.sa}">
+      <label for="fb">Team B score</label><input type="number" id="fb" min="0" ${S.session.win2?'':'max="'+S.session.gameTo+'"'} inputmode="numeric" value="${m.sb}"></div>
+      <div class="err" id="fixErr"></div><div class="row" style="justify-content:flex-end"><button class="btn" data-act="closeModal">Cancel</button><button class="btn primary" data-act="fixSave">Save correction</button></div>`;
   }
   if(modal.type==='pick'){
     const ct=CT(modal.court),cur=ct.match?[...M(ct.match).a,...M(ct.match).b]:[];
@@ -4036,6 +4056,14 @@ document.addEventListener('click',e=>{
     case 'endSession': S.courts.forEach(c=>{if(c.match)cancel(c)});S.session.open=false;closeModal();toast('Session ended.');break;
     case 'reopen': S.session.open=true;break;
     case 'closeModal': closeModal();return;
+    case 'fixOpen': openModal({type:'fix',id:t.dataset.id});return;
+    case 'fixSave':{const m=M(modal.id),sa=parseInt($('#fa').value,10),sb=parseInt($('#fb').value,10);if(!m){closeModal();return}
+      const a=m.a.map((_,i)=>$('#fpa'+i).value),b=m.b.map((_,i)=>$('#fpb'+i).value),all=[...a,...b];
+      if(new Set(all).size!==all.length){$('#fixErr').textContent='Each player can only be in the game once.';return}
+      const err=validScore(sa,sb,S.session.gameTo,S.session.win2);if(err){$('#fixErr').textContent=err;return}
+      const same=sa===m.sa&&sb===m.sb&&a.join()===m.a.join()&&b.join()===m.b.join();if(same){closeModal();return}
+      const ppl=a.join()!==m.a.join()||b.join()!==m.b.join(),flip=fixGame(m,a,b,sa,sb);closeModal();
+      toast('Court '+m.court+' corrected'+(ppl?' (players changed)':'')+': '+sa+'–'+sb+'.'+(flip?' Winner changed.':''));break}
     case 'saveScore':{const c=CT(modal.court),sa=parseInt($('#sa').value,10),sb=parseInt($('#sb').value,10);
       const err=validScore(sa,sb,S.session.gameTo,S.session.win2);if(err){$('#scoreErr').textContent=err;return}
       const r=finish(c,sa,sb);closeModal();toast('Court '+c.no+': '+sa+'–'+sb+' saved.'+(r.stay?' Winners stay on.':''));break}
@@ -4053,6 +4081,7 @@ document.addEventListener('click',e=>{
     case 'pleave': leave(me);break;
     case 'pconfirm': confirm(me);break;
     case 'pscore':{const m=S.matches.find(x=>x.status==='play'&&[...x.a,...x.b].includes(me));if(m)openModal({type:'score',court:m.court});return}
+    case 'pswitch':{const o=$('#ppair2').value;if(o){const was=C(me).pairWith;pair(me,o);toast('Now paired with '+short(o)+(was?' (was '+short(was)+')':'')+'.')}break}
     case 'ppairgo':{const o=$('#ppair').value;if(o){pair(me,o);toast('Paired with '+short(o)+'.')}break}
     case 'punpair': unpair(me);break;
     default: return;

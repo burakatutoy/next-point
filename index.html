@@ -1748,9 +1748,30 @@ a.btn{text-decoration:none}
 .au-pick{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent)}
 .au-pick span{display:grid}.au-pick small{color:var(--muted);font-size:12.5px}
 .au-qr{margin:4px 0 0;font-size:13.5px;color:var(--muted)}
+/* v59b: desk efficiency */
+.opcalls{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}.opcalls>label{grid-column:1/-1}
+.callcard{padding:12px 14px;gap:6px}.callcard .cc-no{font-size:clamp(22px,3vw,28px)}.callcard .cc-t{font-size:16px}
+.m-op .admin .qlist li{grid-template-columns:30px minmax(0,1fr) auto;row-gap:2px;column-gap:10px;padding:8px 0}
+.m-op .admin .qlist li .qacts{grid-column:auto;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.m-op .admin .qname{font-size:15px;line-height:1.25}
+.m-op .admin .qmeta{font-size:12.5px}
+.m-op .admin .qpos{font-size:18px}
+@media (max-width:440px){.m-op .admin .qlist li{grid-template-columns:26px minmax(0,1fr)}.m-op .admin .qlist li .qacts{grid-column:2;justify-content:flex-start}.m-op .admin #ciPanel li[data-s]{grid-template-columns:22px minmax(0,1fr) auto}.m-op .admin #ciPanel li[data-s] .qacts{grid-column:auto;justify-content:flex-end}}
+.m-op .admin details.panel>summary{font-size:18px}
+.m-op .admin .stack{gap:14px}
+.ct2-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ct2-acts>.btn{min-height:40px}
+.ct2-more{margin-left:auto;position:relative}
+.ct2-more>summary{list-style:none;min-height:40px;display:inline-flex;align-items:center}
+.ct2-more>summary::-webkit-details-marker{display:none}
+.ct2-more[open]>summary{background:var(--surface-2)}
+.ct2-mo{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);width:100%}
+.ct2-more[open]{flex-basis:100%;margin-left:0}
+.here-tag.hb{border:1px dashed currentColor;background:transparent;cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;color:inherit}
+@media (hover:hover){.here-tag.hb:hover{background:var(--good);color:#fff;border-color:var(--good)}}
 /* v59: check-in before play, desk calls, quick check-in */
 .prebar{border:1px dashed var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;margin:0 0 14px;color:var(--muted)}.prebar b{color:var(--ink)}
-.callbar{display:grid;gap:10px;margin:0 0 16px}
+.opcalls{display:grid;gap:10px;margin:0 0 16px}
 .callcard{display:grid;gap:8px;padding:14px 16px;border-radius:14px;border:2px solid #e0b400;background:color-mix(in srgb,#ffd400 14%,var(--surface))}
 .cc-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .cc-no{font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:clamp(24px,4vw,34px);line-height:1}
@@ -1758,7 +1779,7 @@ a.btn{text-decoration:none}
 .callcard .btn{min-height:42px}.cc-auto{font-weight:500}
 .ci-search{width:100%;font-size:16px;padding:10px 12px;margin:0 0 8px}
 .ci-none{margin:0 0 8px}
-.ci-list{max-height:360px;overflow:auto}
+.m-op .ci-panel .roster{max-height:min(440px,55vh);overflow:auto;overscroll-behavior:contain}
 .ci-new{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 8px;align-items:center;margin-top:12px}.ci-new .eyebrow{grid-column:1/-1}
 @media (max-width:480px){.ci-new{grid-template-columns:1fr 1fr}.ci-new input{grid-column:1/-1}}
 /* v58: scenarios, set courts, challenge court */
@@ -2019,7 +2040,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-23a';
+  const BUILD='2026-11-23b';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -3827,7 +3848,7 @@ function courtTile(ct,mode){
   if(m){
     if(ct.state==='play')clock=`<span class="ct2-clock"><span class="clock" data-since="${m.start}">${fmt(now()-m.start)}</span><small>game time</small></span>`;
     if(ct.state==='assigned'){const due=m.assignedAt+S.session.noShow*1000;clock=`<span class="ct2-clock"><span class="clock" data-due="${due}">${fmt(due-now())}</span><small>no-show timer</small></span>`}
-    const nm=id=>`<span class="nm">${esc(big?PL(id).name:short(id))} <small>${PL(id).skill.toFixed(1)}</small>${m.status==='assigned'?` <span class="here-tag ${m.confirmed[id]?'ok':''}">${m.confirmed[id]?'here':'not yet'}</span>`:''}</span>`;
+    const nm=id=>`<span class="nm">${esc(big?PL(id).name:short(id))} <small>${PL(id).skill.toFixed(1)}</small>${m.status==='assigned'?(mode==='admin'&&!m.confirmed[id]?` <button class="here-tag hb" data-act="markHere" data-id="${id}" title="Tap when they're on court">not yet</button>`:` <span class="here-tag ${m.confirmed[id]?'ok':''}">${m.confirmed[id]?'here':'not yet'}</span>`):''}</span>`;
     const row=(t,s)=>`<div class="ct2-team ${s}"><span class="ct2-names">${t.map(nm).join('')}</span></div>`;
     board=`<div class="ct2-board">${row(m.a,'a')}${row(m.b,'b')}</div>`;
   }else{
@@ -3841,13 +3862,15 @@ function courtTile(ct,mode){
   const lvl=mode==='admin'?`<label class="ct2-lvl">Level <select data-level="${ct.no}" aria-label="Court ${ct.no} level">${Object.entries(LEVELS).map(([k,v])=>`<option value="${k}" ${ct.level===k?'selected':''}>${v}</option>`).join('')}</select></label>`:`<span>${LEVELS[ct.level]}</span>`;
   let acts='';
   if(mode==='admin'){
-    if(ct.state==='free')acts=`<button class="btn sm primary" data-act="fill" data-c="${ct.no}" ${S.session.open?'':'disabled'}>Call next 4</button><button class="btn sm" data-act="pickModal" data-c="${ct.no}" ${S.session.open?'':'disabled'}>Choose players</button><button class="btn sm" data-act="${ct.hold?'unhold':'hold'}" data-c="${ct.no}">${ct.hold?'Release hold':'Hold court'}</button><button class="btn sm" data-act="block" data-c="${ct.no}">Take offline</button>`;
-    if(ct.state==='blocked')acts=`<button class="btn sm" data-act="unblock" data-c="${ct.no}">Put back in use</button>`;
-    if(ct.state==='assigned')acts=`<button class="btn sm primary" data-act="start" data-c="${ct.no}">Start game</button><button class="btn sm" data-act="replace" data-c="${ct.no}">Replace no-shows</button><button class="btn sm" data-act="swapModal" data-c="${ct.no}">Swap player</button><button class="btn sm" data-act="reassign" data-c="${ct.no}">Reassign court</button><button class="btn sm danger" data-act="cancel" data-c="${ct.no}">Cancel</button>`;
-    if(ct.state==='play')acts=`<button class="btn sm primary" data-act="score" data-c="${ct.no}">Enter score</button><button class="btn sm" data-act="swapModal" data-c="${ct.no}">Swap player</button><button class="btn sm danger" data-act="cancel" data-c="${ct.no}">Stop game</button>`;
-    acts=`<div class="ct2-acts">${acts}</div>`;
+    const B=(a,l,cls,dis)=>`<button class="btn ${cls||''}" data-act="${a}" data-c="${ct.no}" ${dis?'disabled':''}>${l}</button>`,off=!S.session.open;let main='',more='';
+    if(ct.state==='free'){main=B('fill','Call next 4','primary',off)+B('pickModal','Choose players','',off);more=B(ct.hold?'unhold':'hold',ct.hold?'Release hold':'Hold court','sm')+B('block','Take offline','sm')}
+    if(ct.state==='blocked')main=B('unblock','Put back in use','primary');
+    if(ct.state==='assigned'){main=B('start','Start game','primary')+B('replace','Replace no-shows');more=B('swapModal','Swap player','sm')+B('reassign','Reassign court','sm')+B('cancel','Cancel','sm danger')}
+    if(ct.state==='play'){main=B('score','Enter score','primary');more=B('swapModal','Swap player','sm')+B('cancel','Stop game','sm danger')}
+    acts=`<div class="ct2-acts">${main}<details class="ct2-more" id="ctm${ct.no}"><summary class="btn">More</summary><div class="ct2-mo">${more}${lvl}</div></details></div>`;
   }
-  return `<article class="ct2 s-${st} ${big?'big':''}"><header class="ct2-h"><div class="ct2-id"><span class="ct2-no">Court ${ct.no}</span>${pill}${chCourt()&&chCourt().no===ct.no?'<span class="pill p-ch">Challenge court</span>':''}${m&&m.challenge?'<span class="pill p-ch">Challenge</span>':m&&m.set?'<span class="pill p-resting">Set court</span>':m&&m.manual?'<span class="pill p-resting">Admin pick</span>':''}</div>${clock}</header>${board}<div class="ct2-meta">${lvl}</div>${acts}</article>`;
+  const meta=mode==='admin'?'':`<div class="ct2-meta">${lvl}</div>`;
+  return `<article class="ct2 s-${st} ${big?'big':''}"><header class="ct2-h"><div class="ct2-id"><span class="ct2-no">Court ${ct.no}</span>${pill}${chCourt()&&chCourt().no===ct.no?'<span class="pill p-ch">Challenge court</span>':''}${m&&m.challenge?'<span class="pill p-ch">Challenge</span>':m&&m.set?'<span class="pill p-resting">Set court</span>':m&&m.manual?'<span class="pill p-resting">Admin pick</span>':''}</div>${clock}</header>${board}${meta}${acts}</article>`;
 }
 
 function counts(){const v=Object.values(S.checkins);return{here:v.filter(c=>c.status!=='left').length,waiting:v.filter(c=>c.status==='waiting').length,playing:v.filter(c=>c.status==='playing').length,resting:v.filter(c=>c.status==='resting').length,games:S.matches.filter(m=>m.status==='done').length}}
@@ -3877,15 +3900,15 @@ function suggestMode(){const sk=Object.keys(S.checkins).filter(id=>C(id).status!
   return{n:sk.length,lo:sk.length?lo:0,hi:sk.length?hi:0,mode:sk.length>=4&&hi-lo>1?'challenge':'rotation'}}
 function freeOpts(ids,sel){return ids.filter(id=>!busyIn(id)).map(id=>`<option value="${id}" ${id===sel?'selected':''}>${esc(PL(id).name)} · ${PL(id).skill.toFixed(1)}</option>`).join('')}
 function setCourtPanel(here){const ids=here.filter(id=>!busyIn(id)),o=i=>`<option value="">Player ${i}</option>`+freeOpts(ids);
-  return `<section class="panel"><h2>Set a full court <small>${groups().length?groups().length+' in line':''}</small></h2>
+  return `<details class="panel" id="setcPanel"><summary>Set a full court${groups().length?` <span class="pill p-resting">${groups().length} in line</span>`:''}</summary>
     <p class="muted" style="margin:0 0 10px">Pick 4 players and their teams. They join the line together and take the next court when their turn comes.</p>
     <div class="setc"><span class="eyebrow">Team A</span><select id="gA1" aria-label="Team A player 1">${o(1)}</select><select id="gA2" aria-label="Team A player 2">${o(2)}</select>
     <span class="eyebrow">Team B</span><select id="gB1" aria-label="Team B player 1">${o(3)}</select><select id="gB2" aria-label="Team B player 2">${o(4)}</select></div>
-    <div class="err" id="grpErr"></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="grpAdd" ${ids.length>=4?'':'disabled'}>Add to line</button></div></section>`}
+    <div class="err" id="grpErr"></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="grpAdd" ${ids.length>=4?'':'disabled'}>Add to line</button></div></details>`}
 function chState(c){if(c.status!=='open')return '';if(c.ok){const n=chOk().indexOf(c)+1;return `<span class="pill p-ch">Approved · #${n}</span>`}
   const wait=chNeed(c).filter(id=>!(c.acc&&c.acc[id]));return wait.length?`<span class="pill p-resting">Waiting for ${esc(andList(wait.map(short)))}</span>`:'<span class="pill p-waiting">Accepted · needs your OK</span>'}
 function challengePanel(here){const open=chOpen().sort((a,b)=>(b.ok-a.ok)||((a.okAt||a.at)-(b.okAt||b.at))),ids=here.filter(id=>!busyIn(id)),o=i=>`<option value="">Player ${i}</option>`+freeOpts(ids);
-  const rows=open.map(c=>`<li><div style="min-width:0"><div class="qname">${esc(teamStr(c.from))} <span class="skill">${avgSk(c.from).toFixed(1)}</span> <span class="muted">challenge</span> ${esc(teamStr(c.to))} <span class="skill">${avgSk(c.to).toFixed(1)}</span></div><div class="qmeta">${chState(c)}</div></div>
+  const rows=open.map((c,ix)=>`<li><span class="qpos">${c.ok?chOk().indexOf(c)+1:'–'}</span><div style="min-width:0"><div class="qname">${esc(teamStr(c.from))} <span class="skill">${avgSk(c.from).toFixed(1)}</span> <span class="muted">challenge</span> ${esc(teamStr(c.to))} <span class="skill">${avgSk(c.to).toFixed(1)}</span></div><div class="qmeta">${chState(c)}</div></div>
     <div class="qacts">${c.ok?'':chAccepted(c)?`<button class="btn sm primary" data-act="chOk" data-id="${c.id}">Approve</button>`:`<button class="btn sm" data-act="chAccAll" data-id="${c.id}" title="The players said yes in person">Mark accepted</button>`}<button class="btn sm danger" data-act="chNo" data-id="${c.id}">${c.ok?'Remove':'Decline'}</button></div></li>`).join('');
   return `<section class="panel"><h2>Challenge court <small>Court ${chCourt().no}</small></h2>
     <ul class="qlist">${rows||'<li><span></span><span class="muted">No challenges yet. Players send them from their phones, or add one below.</span></li>'}</ul>
@@ -3967,26 +3990,27 @@ function renderAdmin(){
       <section class="panel ci-panel" id="ciPanel"><h2>Check in <small>${notHere.length} not here yet</small></h2>
         <input type="search" id="ciSearch" class="ci-search" placeholder="Type a name to find them" autocomplete="off" aria-label="Find a player to check in">
         <p class="muted ci-none" id="ciNone" hidden>No one called "<b></b>". <button class="btn sm" data-act="ciAdd">Add as a new player</button></p>
-        <div class="roster"><ul class="qlist ci-list">${notHere.map(p=>`<li data-s="${esc(p.name.toLowerCase())}"><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(p.name)} <span class="skill">${p.skill.toFixed(1)}</span></div><div class="qmeta">${C(p.id)?'Left · '+C(p.id).games+' games today':'Not checked in'}${p.pin?' · PIN '+esc(p.pin):''}</div></div><div class="qacts"><button class="btn sm primary" data-act="checkin" data-id="${p.id}">Check in</button></div></li>`).join('')||'<li><span></span><span class="muted">Everyone registered is here.</span></li>'}</ul></div>
+        <div class="roster"><ul class="qlist ci-list">${notHere.map(p=>`<li data-s="${esc(p.name.toLowerCase())}"><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(p.name)} <span class="skill">${p.skill.toFixed(1)}</span></div><div class="qmeta">${C(p.id)?'Left · '+C(p.id).games+' games today':'Not checked in'}</div></div><div class="qacts"><button class="btn sm primary" data-act="checkin" data-id="${p.id}">Check in</button></div></li>`).join('')||'<li><span></span><span class="muted">Everyone registered is here.</span></li>'}</ul></div>
         <form id="newForm" class="ci-new"><span class="eyebrow">New player</span>
           <input type="text" id="newName" required placeholder="Full name" aria-label="New player name" autocomplete="off">
           <select id="newSkill" aria-label="Skill level">${[2.5,3,3.5,4,4.5,5].map(s=>`<option ${s===3?'selected':''}>${s.toFixed(1)}</option>`).join('')}</select>
           <button class="btn primary" type="submit">Add &amp; check in</button>
         </form></section>
-      ${(()=>{const L=App.sessionLeaders(S.id,5);return `<section class="panel"><h2>Top players tonight <small><button class="btn sm" data-app="homeSec" data-s="board">Club leaderboard</button></small></h2>${L.length?`<ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(PL(r.id).name)}</span><span class="lead-s num">${r.w}–${r.g-r.w} · ${r.diff>0?'+':''}${r.diff}</span></li>`).join('')}</ol>`:'<p class="muted" style="margin:0">Leaders show here once games are scored.</p>'}</section>`})()}
       <section class="panel"><h2>Line <small>${k.waiting} waiting</small></h2><ul class="qlist">${qrows||'<li><span></span><span class="muted">Nobody in line.</span></li>'}</ul></section>
-      ${isCh()?challengePanel(here):''}
-      ${setCourtPanel(here)}
       <section class="panel"><h2>On break <small>${resting.length+playing.length}</small></h2>
         <ul class="qlist">${resting.map(id=>`<li><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(PL(id).name)}</div><div class="qmeta">${C(id).games} games · keeps their place</div></div><div class="qacts"><button class="btn sm primary" data-act="back" data-id="${id}">Back in line</button><button class="btn sm" data-act="bump" data-id="${id}">Play next</button><button class="btn sm danger" data-act="leave" data-id="${id}">Leave</button></div></li>`).join('')}
         ${playing.map(id=>`<li><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(PL(id).name)}</div><div class="qmeta">${C(id).leaveAfter?'Leaving':'Break'} after this game</div></div><div class="qacts"><button class="btn sm" data-act="back" data-id="${id}">Undo</button></div></li>`).join('')}
         ${resting.length+playing.length?'':'<li><span></span><span class="muted">Nobody on break.</span></li>'}</ul></section>
-
-      <section class="panel"><h2>Pair partners</h2>
+      ${isCh()?challengePanel(here):''}
+      ${setCourtPanel(here)}
+      <details class="panel" id="pairPanel"><summary>Pair partners</summary>
         <p class="muted" style="margin:0 0 10px">Paired players are always called together as teammates.</p>
         <div class="grid2"><select id="pairA" aria-label="First player">${opt(here)}</select><select id="pairB" aria-label="Second player">${opt(here.slice(1).concat(here.slice(0,1)))}</select></div>
         <div class="row" style="margin-top:8px"><button class="btn primary" data-act="pairSel">Pair them</button><button class="btn" data-act="unpairSel">Unpair first player</button></div>
-      </section>
+      </details>
+      ${(()=>{const L=App.sessionLeaders(S.id,5);return `<section class="panel"><h2>Top players tonight <small><button class="btn sm" data-app="homeSec" data-s="board">Club leaderboard</button></small></h2>${L.length?`<ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(PL(r.id).name)}</span><span class="lead-s num">${r.w}–${r.g-r.w} · ${r.diff>0?'+':''}${r.diff}</span></li>`).join('')}</ol>`:'<p class="muted" style="margin:0">Leaders show here once games are scored.</p>'}</section>`})()}
+
+
     </div>
   </div>`;
 }
@@ -4089,7 +4113,7 @@ function autoRead(){if(!S)return;const cur=S.matches.filter(m=>m.status==='assig
   if(!spoken){spoken=new Set(cur.map(x=>x[1]));return}
   cur.forEach(([m,k])=>{if(spoken.has(k))return;spoken.add(k);if(autoOn())say(callText(m))})}
 function callBar(){const ms=S.matches.filter(m=>m.status==='assigned'&&!m.called).sort((a,b)=>a.court-b.court);if(!ms.length)return '';
-  return `<div class="callbar" role="status">${ms.map(m=>`<div class="callcard"><div class="cc-h"><span class="cc-no">Call Court ${m.court}</span><span class="muted">${m.confirmed&&Object.keys(m.confirmed).length?Object.keys(m.confirmed).length+' of 4 here':'just called'}</span></div>
+  return `<div class="opcalls" role="status">${ms.map(m=>`<div class="callcard"><div class="cc-h"><span class="cc-no">Call Court ${m.court}</span><span class="muted">${m.confirmed&&Object.keys(m.confirmed).length?Object.keys(m.confirmed).length+' of 4 here':'just called'}</span></div>
     <div class="cc-t"><b>${m.a.map(x=>esc(fullNm(x))).join(' &amp; ')}</b><span>vs</span><b>${m.b.map(x=>esc(fullNm(x))).join(' &amp; ')}</b></div>
     <div class="row"><button class="btn" data-act="sayCall" data-id="${m.id}">${App.icon?App.icon('live'):''}Read it out</button><button class="btn primary" data-act="called" data-id="${m.id}">Called ✓</button></div></div>`).join('')}
     <label class="check cc-auto"><input type="checkbox" id="autoRead" ${autoOn()?'checked':''}> Read new calls out loud on this device</label></div>`}
@@ -4213,6 +4237,7 @@ document.addEventListener('click',e=>{
     case 'endModal': openModal({type:'end'});return;
     case 'endSession': S.courts.forEach(c=>{if(c.match)cancel(c)});S.session.open=false;closeModal();toast('Session ended.');break;
     case 'reopen': S.session.open=true;break;
+    case 'markHere': confirm(id);toast(short(id)+' is on court.');break;
     case 'startPlay': S.session.started=true;S.session.startedAt=now();toast('Play started. Courts are being called from the line.');break;
     case 'pausePlay': S.session.started=false;toast('Calling paused. Games on court carry on; check-in stays open.');break;
     case 'called':{const m=M(id);if(m)m.called=now();break}
@@ -4313,6 +4338,7 @@ document.addEventListener('submit',e=>{
 });
 
 /* live clocks + no-show countdowns */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.ct2-mo button');if(b){const d=b.closest('details');if(d)d.open=false}},true);
 setInterval(()=>{
   if(!S||!App.isActive('openplay'))return;
   document.querySelectorAll('[data-since]').forEach(el=>{const d=now()-(+el.dataset.since);el.textContent=el.dataset.fmt==='dur'?dur(d):el.dataset.fmt==='min'?mins(d):fmt(d)});

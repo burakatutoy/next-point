@@ -1748,6 +1748,19 @@ a.btn{text-decoration:none}
 .au-pick{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent)}
 .au-pick span{display:grid}.au-pick small{color:var(--muted);font-size:12.5px}
 .au-qr{margin:4px 0 0;font-size:13.5px;color:var(--muted)}
+/* v59: check-in before play, desk calls, quick check-in */
+.prebar{border:1px dashed var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;margin:0 0 14px;color:var(--muted)}.prebar b{color:var(--ink)}
+.callbar{display:grid;gap:10px;margin:0 0 16px}
+.callcard{display:grid;gap:8px;padding:14px 16px;border-radius:14px;border:2px solid #e0b400;background:color-mix(in srgb,#ffd400 14%,var(--surface))}
+.cc-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cc-no{font-family:var(--f-display);font-stretch:var(--wdth);font-weight:800;font-size:clamp(24px,4vw,34px);line-height:1}
+.cc-t{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:clamp(16px,2.4vw,20px)}.cc-t span{color:var(--muted);font-size:14px}
+.callcard .btn{min-height:42px}.cc-auto{font-weight:500}
+.ci-search{width:100%;font-size:16px;padding:10px 12px;margin:0 0 8px}
+.ci-none{margin:0 0 8px}
+.ci-list{max-height:360px;overflow:auto}
+.ci-new{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 8px;align-items:center;margin-top:12px}.ci-new .eyebrow{grid-column:1/-1}
+@media (max-width:480px){.ci-new{grid-template-columns:1fr 1fr}.ci-new input{grid-column:1/-1}}
 /* v58: scenarios, set courts, challenge court */
 .pill.p-ch{background:#fff1c2;color:#7a4b00}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.p-ch{background:#4a3a10;color:#ffd970}}
@@ -1977,7 +1990,7 @@ const App=(()=>{
   const DEMO=false;
   const tools=()=>DEMO||!!db.tools;
   let db,view='admin',home=true,homeSec='events',modal=null,lastKey='',pendingTop=false;
-  let lb={period:'all',sort:'rating',min:5,skill:'all'};
+  let lb={period:'all',sort:'std',min:5,skill:'all'};
   document.addEventListener('click',e=>{if(e.target.closest('.side-item,.top .tab'))pendingTop=true},true);
   const $=s=>document.querySelector(s);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -2006,7 +2019,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-20a';
+  const BUILD='2026-11-23a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -2555,9 +2568,9 @@ const App=(()=>{
       return{...r,name:p.name,skill:p.skill,rating:Math.round(rt(r.id)),dr:Math.round((r.r1??rt(r.id))-(r.r0??1000)),wp:r.g?r.w/r.g:0,diff:r.pf-r.pa,prov:(N[r.id]||0)<10,total:N[r.id]||0}});
     return{rows,games:opGames().filter(m=>(!o.from||m.t>=o.from)&&(!o.to||m.t<o.to)&&(!o.ev||m.ev===o.ev)).length,sessions:sessions.size};
   }
-  const SORTS={rating:(a,b)=>b.rating-a.rating||b.wp-a.wp,wins:(a,b)=>b.w-a.w||b.wp-a.wp,wp:(a,b)=>b.wp-a.wp||b.w-a.w,diff:(a,b)=>b.diff-a.diff||b.w-a.w,games:(a,b)=>b.g-a.g||b.w-a.w};
-  function rankRows(rows,sort,min){const r=rows.filter(x=>x.g>=min).sort(SORTS[sort]||SORTS.rating);r.forEach((x,i)=>x.rank=i+1);return r}
-  function playerRank(pid){const b=clubBoard({}),r=rankRows(b.rows,'rating',5),me=b.rows.find(x=>x.id===pid);return me?{...me,rank:(r.find(x=>x.id===pid)||{}).rank||null,of:r.length}:null}
+  const SORTS={std:(a,b)=>b.w-a.w||b.diff-a.diff||a.g-b.g||b.wp-a.wp,rating:(a,b)=>b.w-a.w||b.diff-a.diff||a.g-b.g||b.wp-a.wp,wins:(a,b)=>b.w-a.w||b.wp-a.wp,wp:(a,b)=>b.wp-a.wp||b.w-a.w,diff:(a,b)=>b.diff-a.diff||b.w-a.w,games:(a,b)=>b.g-a.g||b.w-a.w};
+  function rankRows(rows,sort,min){const r=rows.filter(x=>x.g>=min).sort(SORTS[sort]||SORTS.std);r.forEach((x,i)=>x.rank=i+1);return r}
+  function playerRank(pid){const b=clubBoard({}),r=rankRows(b.rows,'std',3),me=b.rows.find(x=>x.id===pid);return me?{...me,rank:(r.find(x=>x.id===pid)||{}).rank||null,of:r.length}:null}
   function sessionLeaders(evId,n){return clubBoard({ev:evId}).rows.sort((a,b)=>b.w-a.w||b.diff-a.diff||b.g-a.g).slice(0,n)}
   const fmtDay=t=>t?new Date(t).toLocaleDateString([],{month:'short',day:'numeric'}):'—';
   const pct=x=>Math.round(x*100)+'%';
@@ -2569,8 +2582,9 @@ const App=(()=>{
     const b=clubBoard({from,ev}),skillOk=r=>lb.skill==='all'||(lb.skill==='low'?r.skill<=3:lb.skill==='mid'?r.skill>3&&r.skill<4:r.skill>=4);
     const pool=b.rows.filter(skillOk),ranked=rankRows(pool,lb.sort,lb.min),unranked=pool.filter(r=>r.g<lb.min).sort((a,c)=>c.g-a.g);
     const topStreak=[...pool].sort((a,c)=>c.best-a.best)[0];
-    const sortLabel={rating:'Club rating',wins:'Wins',wp:'Win rate',diff:'Point difference',games:'Games played'}[lb.sort];
-    const metric=r=>lb.sort==='wins'?r.w:lb.sort==='wp'?pct(r.wp):lb.sort==='diff'?sgn(r.diff):lb.sort==='games'?r.g:r.rating;
+    if(!['std','wp','diff','games'].includes(lb.sort))lb.sort='std';
+    const sortLabel={std:'Wins',wp:'Win rate',diff:'Point difference',games:'Games played'}[lb.sort];
+    const metric=r=>lb.sort==='wp'?pct(r.wp):lb.sort==='diff'?sgn(r.diff):lb.sort==='games'?r.g:r.w;
     const pod=ranked.slice(0,3),k=['g','s','b'],place=['1st','2nd','3rd'];
     const opt=(v,cur,l)=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${l}</option>`;
     if(!opEvents.length)return pageHead('Club · open play only','Leaderboard','')+`<section class="panel"><p class="muted" style="margin:0">The leaderboard fills in from open play sessions. Create an open play event under All events, check players in, and every game with a saved score counts here. Tournament games are never included.</p></section>`;
@@ -2578,24 +2592,23 @@ const App=(()=>{
      `<div class="kpis">${kpi('Ranked players',ranked.length,lb.min>1?'with '+lb.min+'+ games':'with a game')}${kpi('Games counted',b.games,b.sessions+' session'+(b.sessions===1?'':'s'))}${kpi('Leader',ranked[0]?esc(ranked[0].name.split(' ')[0]):'—',ranked[0]?sortLabel+': '+metric(ranked[0]):'nobody ranked yet')}${kpi('Best win streak',topStreak&&topStreak.best?topStreak.best:'—',topStreak&&topStreak.best?esc(topStreak.name):'no wins yet')}</div>
      <section class="panel lb-filters"><div class="lb-f">
        <label class="f">Period<select id="lbPeriod">${opt('all',lb.period,'All time')}${opt('30',lb.period,'Last 30 days')}${opt('7',lb.period,'Last 7 days')}${[...opEvents].reverse().map(e=>opt('ev:'+e.id,lb.period,'Session: '+esc(e.session.name)+(e.session.date?' ('+esc(e.session.date)+')':''))).join('')}</select></label>
-       <label class="f">Rank by<select id="lbSort">${opt('rating',lb.sort,'Club rating')}${opt('wins',lb.sort,'Wins')}${opt('wp',lb.sort,'Win rate')}${opt('diff',lb.sort,'Point difference')}${opt('games',lb.sort,'Games played')}</select></label>
+       <label class="f">Rank by<select id="lbSort">${opt('std',lb.sort,'Wins, then +/−')}${opt('wp',lb.sort,'Win rate')}${opt('diff',lb.sort,'Point difference')}${opt('games',lb.sort,'Games played')}</select></label>
        <label class="f">Minimum games<select id="lbMin">${[1,3,5,10].map(n=>opt(n,lb.min,n+(n===1?' game':' games'))).join('')}</select></label>
        <label class="f">Skill<select id="lbSkill">${opt('all',lb.skill,'All levels')}${opt('low',lb.skill,'3.0 and below')}${opt('mid',lb.skill,'3.5')}${opt('high',lb.skill,'4.0 and up')}</select></label>
        <label class="f">Find a player<input type="search" id="lbSearch" placeholder="Name" autocomplete="off"></label></div></section>
      ${pod.length?`<div class="podium lb-pod">${pod.map((r,i)=>`<div class="pod ${k[i]}"><div class="pl">${place[i]}</div><div class="lb-pn">${esc(r.name)}</div><div class="li-m">${sortLabel}: <b>${metric(r)}</b> · ${r.w}–${r.g-r.w}</div></div>`).join('')}</div>`:''}
      <section class="panel"><h2>Rankings <small>${sortLabel}</small></h2>
-      ${ranked.length?`<div class="tablebox"><table class="t lb-t"><thead><tr><th class="n">#</th><th>Player</th><th class="n">Rating</th><th class="n">Games</th><th class="n">W–L</th><th class="n">Win rate</th><th class="n">+/–</th><th>Streak</th><th>Last played</th></tr></thead><tbody id="lbRows">
-       ${ranked.map(r=>`<tr data-s="${esc(r.name.toLowerCase())}" class="${r.rank<=3?'top':''}"><td class="n num"><span class="lb-rank r${r.rank<=3?r.rank:''}">${r.rank}</span></td><td><b>${esc(r.name)}</b> <span class="skill">${(+r.skill).toFixed(1)}</span>${r.prov?' <span class="pill p-muted" title="Fewer than 10 games: rating still settling">New</span>':''}</td>
-        <td class="n num"><b>${r.rating}</b>${r.dr?` <span class="lb-d ${r.dr>0?'up':'down'}">${sgn(r.dr)}</span>`:''}</td><td class="n num">${r.g}</td><td class="n num">${r.w}–${r.g-r.w}</td><td class="n num">${pct(r.wp)}</td><td class="n num">${sgn(r.diff)}</td>
+      ${ranked.length?`<div class="tablebox"><table class="t lb-t"><thead><tr><th class="n">#</th><th>Player</th><th class="n">Wins</th><th class="n">Games</th><th class="n">W–L</th><th class="n">Win rate</th><th class="n">Points</th><th class="n">+/–</th><th>Streak</th><th>Last played</th></tr></thead><tbody id="lbRows">
+       ${ranked.map(r=>`<tr data-s="${esc(r.name.toLowerCase())}" class="${r.rank<=3?'top':''}"><td class="n num"><span class="lb-rank r${r.rank<=3?r.rank:''}">${r.rank}</span></td><td><b>${esc(r.name)}</b> <span class="skill">${(+r.skill).toFixed(1)}</span></td>
+        <td class="n num"><b>${r.w}</b></td><td class="n num">${r.g}</td><td class="n num">${r.w}–${r.g-r.w}</td><td class="n num">${pct(r.wp)}</td><td class="n num">${r.pf}–${r.pa}</td><td class="n num">${sgn(r.diff)}</td>
         <td>${r.streak>=2?`<span class="pill p-ok">Won ${r.streak}</span>`:r.streak<=-2?`<span class="pill p-muted">Lost ${-r.streak}</span>`:'—'}</td><td>${fmtDay(r.last)}</td></tr>`).join('')}</tbody></table></div>`
        :`<p class="muted" style="margin:0">Nobody has ${lb.min} game${lb.min===1?'':'s'} in this period yet. Lower the minimum or pick a longer period.</p>`}
       <p class="tb" id="lbNone" hidden>No ranked player matches that name.</p></section>
-     ${unranked.length?`<section class="panel" style="margin-top:16px"><h2>Not ranked yet <small>need ${lb.min} games</small></h2><ul class="list">${unranked.map(r=>`<li data-s="${esc(r.name.toLowerCase())}"><div class="li-main"><span class="li-t">${esc(r.name)}</span><div class="li-m">${r.g} game${r.g===1?'':'s'} · ${r.w} win${r.w===1?'':'s'} · rating ${r.rating}</div></div><span class="pill p-muted">${lb.min-r.g} more</span></li>`).join('')}</ul></section>`:''}
+     ${unranked.length?`<section class="panel" style="margin-top:16px"><h2>Not ranked yet <small>need ${lb.min} games</small></h2><ul class="list">${unranked.map(r=>`<li data-s="${esc(r.name.toLowerCase())}"><div class="li-main"><span class="li-t">${esc(r.name)}</span><div class="li-m">${r.g} game${r.g===1?'':'s'} · ${r.w} win${r.w===1?'':'s'} · ${sgn(r.diff)}</div></div><span class="pill p-muted">${lb.min-r.g} more</span></li>`).join('')}</ul></section>`:''}
      <section class="panel guide" style="margin-top:16px"><h2>How rankings work</h2><ol>
       <li><b>Only open play counts.</b> Games from tournaments run by the club are never included.</li>
-      <li><b>Club rating</b> starts at 1000. Winning raises it and losing lowers it, by more when you beat a stronger side and less when you beat a weaker one. Your partner shares the result.</li>
-      <li>The first 10 games move a rating faster (marked <b>New</b>) so it settles quickly. Big wins count up to 1.5 times as much.</li>
-      <li>The number beside a rating is the change in the chosen period. Only games with a saved score count.</li></ol></section>`;
+      <li><b>Ranked by wins.</b> Ties go to the bigger points difference (+/−: points won minus points lost), then to whoever played fewer games.</li>
+      <li>Skill levels and DUPR don't affect the ranking. Only games with a saved score count.</li></ol></section>`;
   }
   function homePeople(){
     const club=db.players.filter(p=>p.club).sort((a,b)=>a.name.localeCompare(b.name)),temp=db.players.filter(p=>!p.club);
@@ -2828,26 +2841,26 @@ const App=(()=>{
     const back=`<button class="btn linkish tp-back" data-app="pg" data-pg="ranks">${icon('back')}Rankings</button>`;
     if(!p)return `<div class="site-page prof">${back}<div class="sp-head"><h1>Player not found</h1><p>They may have been removed.</p></div></div>`;
     if(p.hideRank&&!mine&&!admin)return `<div class="site-page prof">${back}<div class="prof-head">${avatar(null,p.name,'prof-av')}<div><h1>${esc(rkName(p.name))}</h1><p>This player keeps their profile private.</p></div></div></div>`;
-    const all=clubBoard({}),me=all.rows.find(x=>x.id===id),ra=rankRows(rkHidden(all.rows),'rating',3).find(x=>x.id===id),rm=ranks('month',0).rows.find(x=>x.id===id);
+    const all=clubBoard({}),me=all.rows.find(x=>x.id===id),ra=rankRows(rkHidden(all.rows),'std',3).find(x=>x.id===id),rm=ranks('month',0).rows.find(x=>x.id===id);
     const nm=x=>{const q=db.players.find(y=>y.id===x);return q?rkName(q.name):'Someone'};
     const games=opGames().filter(m=>m.a.includes(id)||m.b.includes(id)).reverse();
     const recent=games.slice(0,10).map(m=>{const inA=m.a.includes(id),mt=(inA?m.a:m.b).filter(x=>x!==id),op=inA?m.b:m.a,my=inA?m.sa:m.sb,th=inA?m.sb:m.sa,won=my>th;
       return `<li class="pf-g"><span class="pill ${won?'p-done':'p-left'}">${won?'W':'L'}</span><span class="pf-gt"><b class="num">${my}–${th}</b> ${mt.length?'with '+esc(mt.map(nm).join(' & '))+' ':''}vs ${esc(op.map(nm).join(' & '))}</span><span class="pf-gd">${fmtDay(m.t)}</span></li>`}).join('');
-    const tiles=me?[['Club rating',me.rating+(me.prov?'*':'')],['Games',me.g],['Won–lost',me.w+'–'+(me.g-me.w)],['Win rate',pct(me.wp)],['Best streak',me.best?me.best+' in a row':'—'],['Last played',fmtDay(me.last)]]:[];
+    const tiles=me?[['Wins',me.w],['Games',me.g],['Won–lost',me.w+'–'+(me.g-me.w)],['Points +/−',sgn(me.diff)],['Win rate',pct(me.wp)],['Best streak',me.best?me.best+' in a row':'—'],['Last played',fmtDay(me.last)]]:[];
     const has=!!phImg(id);
     return `<div class="site-page prof">${back}
       <div class="prof-head">${avatar(id,p.name,'prof-av')}<div><h1>${esc(rkName(p.name))}</h1>
-        <p>${[ra?'#'+ra.rank+' all time':'',rm?'#'+rm.rank+' this month':'',me&&me.prov?'Rating settles after 10 games':''].filter(Boolean).join(' · ')||'Not ranked yet'}</p>
+        <p>${[ra?'#'+ra.rank+' all time':'',rm?'#'+rm.rank+' this month':'',''].filter(Boolean).join(' · ')||'Not ranked yet'}</p>
         ${mine?`<p class="prof-acts"><button class="btn sm" data-app="pg" data-pg="me">Change my photo in My games</button></p>`:admin&&has?`<p class="prof-acts"><button class="btn sm danger" data-app="phDel" data-id="${esc(id)}">Remove photo</button></p>`:''}</div></div>
       ${tiles.length?`<dl class="prof-stats">${tiles.map(([k,v])=>`<div><dt>${k}</dt><dd class="num">${esc(String(v))}</dd></div>`).join('')}</dl>`:'<p class="site-empty">No open play games scored yet.</p>'}
       ${recent?`<section class="hub-sec"><h2 class="sp-h2">Recent games</h2><ul class="pf-list">${recent}</ul></section>`:''}</div>`}
   function ranks(tab,off){
-    if(tab==='month'){const w=monthWin(off),b=clubBoard({from:w.from,to:w.to});const r=rkHidden(b.rows).filter(x=>x.g>=1).sort((a,c)=>c.w-a.w||c.wp-a.wp||c.diff-a.diff||c.g-a.g);r.forEach((x,i)=>x.rank=i+1);return{rows:r,games:b.games,label:w.label}}
-    const b=clubBoard({});return{rows:rankRows(rkHidden(b.rows),'rating',3),games:b.games,label:'All time'}}
+    if(tab==='month'){const w=monthWin(off),b=clubBoard({from:w.from,to:w.to});const r=rkHidden(b.rows).filter(x=>x.g>=1).sort(SORTS.std);r.forEach((x,i)=>x.rank=i+1);return{rows:r,games:b.games,label:w.label}}
+    const b=clubBoard({});return{rows:rankRows(rkHidden(b.rows),'std',3),games:b.games,label:'All time'}}
   function rankTable(R,tab,n,skip){const rows=n?R.rows.slice(skip||0,(skip||0)+n):R.rows;if(skip&&R.rows.length&&!rows.length)return '';
     if(!rows.length)return `<p class="site-empty">${tab==='month'?'No open play games scored '+(rk.off?'in '+esc(R.label):'this month')+' yet. Rankings fill in as games are scored.':'Nobody has 3 open play games yet. Rankings fill in as games are scored.'}</p>`;
-    return `<div class="tablebox"><table class="t rk-t"><thead><tr><th class="n">Rank</th><th>Player</th>${tab==='month'?'<th class="n">Wins</th><th class="n">Games</th><th class="n">Win rate</th>':'<th class="n">Club rating</th><th class="n">Games</th><th class="n">Won–lost</th>'}</tr></thead><tbody>
-      ${rows.map(r=>`<tr class="${r.rank<=3?'rk-top':''}"><td class="n"><span class="lb-rank r${r.rank<=3?r.rank:''}">${r.rank}</span></td><td><button class="rk-p" data-app="pg" data-pg="p:${esc(r.id)}">${avatar(r.id,r.name,'rk-av')}<b>${esc(rkName(r.name))}</b></button></td>${tab==='month'?`<td class="n num"><b>${r.w}</b></td><td class="n num">${r.g}</td><td class="n num">${pct(r.wp)}</td>`:`<td class="n num"><b>${r.rating}</b></td><td class="n num">${r.g}</td><td class="n num">${r.w}–${r.g-r.w}</td>`}</tr>`).join('')}</tbody></table></div>`}
+    return `<div class="tablebox"><table class="t rk-t"><thead><tr><th class="n">Rank</th><th>Player</th><th class="n">Wins</th><th class="n">Games</th><th class="n">+/−</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr class="${r.rank<=3?'rk-top':''}"><td class="n"><span class="lb-rank r${r.rank<=3?r.rank:''}">${r.rank}</span></td><td><button class="rk-p" data-app="pg" data-pg="p:${esc(r.id)}">${avatar(r.id,r.name,'rk-av')}<b>${esc(rkName(r.name))}</b></button></td><td class="n num"><b>${r.w}</b></td><td class="n num">${r.g}</td><td class="n num">${sgn(r.diff)}</td></tr>`).join('')}</tbody></table></div>`}
   const rkTabs=()=>`<div class="seg-tabs" role="tablist" aria-label="Ranking period"><button role="tab" class="sg ${rk.tab==='month'?'on':''}" aria-selected="${rk.tab==='month'}" data-app="rkTab" data-t="month">Monthly</button><button role="tab" class="sg ${rk.tab==='all'?'on':''}" aria-selected="${rk.tab==='all'}" data-app="rkTab" data-t="all">All time</button></div>`;
   // open play sessions for the public pages: live first, then open or with a join link, then the rest
   const okUrl=u=>/^https?:\/\/[^\s]+$/i.test(u||'')?u:'';
@@ -2937,8 +2950,8 @@ const App=(()=>{
         ${db.events.some(e=>e.type==='openplay')?`<section class="hub-sec"><div class="hs-h"><h2>Open play</h2><p>Drop in, check in, play. The queue does the rest.</p><a class="btn linkish hs-more" href="${RECLUB}" target="_blank" rel="noopener">Join on Reclub</a><button class="btn linkish" data-app="pg" data-pg="open">All open play</button></div><div class="cards3">${opCards()}</div></section>`:''}
         <section class="hub-sec"><div class="hs-h"><h2>Tournaments</h2><p>Run by Next Point. Register through the form, then follow every court live on the day.</p>${T.up.length+T.past.length>3?`<button class="btn linkish hs-more" data-app="pg" data-pg="tours">All tournaments</button>`:''}</div>
           ${T.up.length?`<div class="cards3">${T.up.slice(0,3).map(tCard).join('')}</div>`:`<p class="site-empty">No upcoming tournaments yet. Check back soon.${T.past.length?' <button class="btn linkish" data-app="pg" data-pg="tours">See past results</button>':''}</p>`}</section>
-        <section class="hub-sec"><div class="hs-h"><h2>Rankings</h2><p>${rk.tab==='month'?'Most open play wins this month. Resets on the 1st.':'Club rating across every open play game.'}</p>${rkTabs()}</div>
-          ${R.rows.length>=3?`<ol class="podium3">${[R.rows[1],R.rows[0],R.rows[2]].map(r=>`<li class="pod p${r.rank}"><span class="pod-n">${r.rank}</span><button class="pod-p" data-app="pg" data-pg="p:${esc(r.id)}">${avatar(r.id,r.name,'pod-av')}<b class="pod-name">${esc(rkName(r.name))}</b></button><span class="pod-s">${rk.tab==='month'?`<b class="num">${r.w}</b> win${r.w===1?'':'s'} · ${pct(r.wp)}`:`<b class="num">${r.rating}</b> rating · ${r.w}–${r.g-r.w}`}</span></li>`).join('')}</ol>`:''}
+        <section class="hub-sec"><div class="hs-h"><h2>Rankings</h2><p>${rk.tab==='month'?'Most open play wins this month. Resets on the 1st.':'Most open play wins of all time.'}</p>${rkTabs()}</div>
+          ${R.rows.length>=3?`<ol class="podium3">${[R.rows[1],R.rows[0],R.rows[2]].map(r=>`<li class="pod p${r.rank}"><span class="pod-n">${r.rank}</span><button class="pod-p" data-app="pg" data-pg="p:${esc(r.id)}">${avatar(r.id,r.name,'pod-av')}<b class="pod-name">${esc(rkName(r.name))}</b></button><span class="pod-s"><b class="num">${r.w}</b> win${r.w===1?'':'s'} · ${sgn(r.diff)}</span></li>`).join('')}</ol>`:''}
           <div class="panel rk-panel">${rankTable(R,rk.tab,5,R.rows.length>=3?3:0)}<button class="btn rk-all" data-app="pg" data-pg="ranks">Full rankings</button></div></section>
       </div>`}
   function toursPage(){const T=tSorted();
@@ -2968,7 +2981,7 @@ const App=(()=>{
     return `<div class="site-page"><div class="sp-head"><h1>Rankings</h1><p>From open play games scored at Next Point. Tournament games don't count.</p></div>
       <div class="rk-bar">${rkTabs()}${rk.tab==='month'?`<div class="rk-month"><button class="btn sm" data-app="rkMonth" data-d="-1" aria-label="Previous month">${icon('back')}</button><b>${esc(R.label)}</b><button class="btn sm rk-next" data-app="rkMonth" data-d="1" aria-label="Next month" ${rk.off>=0?'disabled':''}>${icon('back')}</button></div>`:''}</div>
       <div class="panel rk-panel">${rankTable(R,rk.tab,0)}</div>
-      <p class="rk-how">${rk.tab==='month'?'<b>Monthly:</b> ranked by wins, then win rate, then point difference. Everyone with a scored game this month is listed. Resets on the 1st.':'<b>All time:</b> ranked by club rating, which starts at 1000 and moves with every win and loss (more for beating a stronger side). Players need 3 games to be ranked.'}</p></div>`}
+      <p class="rk-how"><b>Ranked by wins.</b> Ties go to the bigger points difference (+/−: points won minus points lost), then to whoever played fewer games. ${rk.tab==='month'?'Everyone with a scored game this month is listed. Resets on the 1st.':'Players need 3 games to be ranked.'}</p></div>`}
   /* ---------- public schedule page (#s=ID): find your games, today's order of play, courts now ---------- */
   const schKey=id=>KEY+'-sch-'+id;
   const schMe=id=>{try{return localStorage.getItem(schKey(id))||''}catch(e){return ''}};
@@ -3400,7 +3413,7 @@ const App=(()=>{
       case 'del':{db.events=db.events.filter(x=>x.id!==id);if(db.cur===id)db.cur=null;modal=null;const k=dropTemp();[OPM,TM].forEach(m=>m.signOut());toast('Event deleted.'+(k?' '+k+' tournament player'+(k===1?'':'s')+' removed.':''));break}
       case 'delRef':{const o=db.officials.find(x=>x.id===id);if(o&&roleOf(o)==='admin'&&admins().length<2){toast('Add another admin before removing the last one.');return}if(mode&&mode.id===id){toast('You can\'t remove yourself while signed in.');return}}db.officials=db.officials.filter(o=>o.id!==id);db.events.forEach(ev=>(ev.matches||[]).forEach(m=>{if(m.ref===id&&m.status!=='done')m.ref=null}));break;
       case 'copyBoard':{const from=lb.period==='30'?Date.now()-30*864e5:lb.period==='7'?Date.now()-7*864e5:null,evx=lb.period.startsWith('ev:')?lb.period.slice(3):null;
-        const r=rankRows(clubBoard({from,ev:evx}).rows,lb.sort,lb.min).slice(0,10),txt='Next Point Pickleball · Club leaderboard\n'+r.map(x=>x.rank+'. '+x.name+' · rating '+x.rating+' · '+x.w+'–'+(x.g-x.w)+' ('+pct(x.wp)+')').join('\n');
+        const r=rankRows(clubBoard({from,ev:evx}).rows,lb.sort,lb.min).slice(0,10),txt='Next Point Pickleball · Club leaderboard\n'+r.map(x=>x.rank+'. '+x.name+' · '+x.w+' win'+(x.w===1?'':'s')+' · '+x.w+'–'+(x.g-x.w)+' · '+sgn(x.diff)).join('\n');
         try{navigator.clipboard.writeText(txt).then(()=>toast('Top 10 copied.'),()=>toast('Copying isn\'t allowed here. Select the table instead.'))}catch(_){toast('Copying isn\'t allowed here. Select the table instead.')}return}
       case 'newPin':{const p=db.players.find(x=>x.id===id)||db.officials.find(x=>x.id===id);if(!p)return;p.pin=newPin();toast(p.name+'\'s new PIN: '+p.pin);break}
       default:return;
@@ -3729,7 +3742,7 @@ function assign(ct){
   createMatch(ct,makeTeams(nx.units));return true}
 function autoFill(){
   tidy();
-  if(!S.session.open||!S.session.autoFill)return false;
+  if(!S.session.open||S.session.started===false||!S.session.autoFill)return false;
   let ch=false;for(const ct of S.courts)if(ct.state==='free'&&!ct.hold&&assign(ct))ch=true;return ch;
 }
 function startMatch(ct){const m=M(ct.match);m.status='play';m.start=now();ct.state='play'}
@@ -3818,7 +3831,7 @@ function courtTile(ct,mode){
     const row=(t,s)=>`<div class="ct2-team ${s}"><span class="ct2-names">${t.map(nm).join('')}</span></div>`;
     board=`<div class="ct2-board">${row(m.a,'a')}${row(m.b,'b')}</div>`;
   }else{
-    const msg=ct.state==='blocked'?'Court not in use':ct.hold?'Held for admin pick':(S.session.open?(units(ct.level).flat().length<4?'Waiting for 4 players':'Ready for the next 4'):'Session closed');
+    const msg=ct.state==='blocked'?'Court not in use':ct.hold?'Held for admin pick':(S.session.open&&pre()?'Waiting for Start play':S.session.open?(units(ct.level).flat().length<4?'Waiting for 4 players':'Ready for the next 4'):'Session closed');
     let nxt='';
     if(S.session.open&&ct.state!=='blocked'){const cc=chCourt(),ch=cc&&cc.no===ct.no?nextCh():null;
       if(ch)nxt=`Next challenge: ${esc(teamStr(ch.from))} vs ${esc(teamStr(ch.to))}`;
@@ -3843,7 +3856,7 @@ function renderTV(){
   const q=queueOrder();let pos=0;const rows=[];
   for(const u of q){if(u.held)continue;for(const id of u.ids){if(pos<10)rows.push(`<div class="un ${pos<4?'first':''}"><span class="qpos">${pos+1}</span><span>${esc(short(id))}${u.ids.length===2?' <span class="pairtag">pair</span>':''}</span></div>`);pos++}}
   const k=counts();
-  const head=`<div class="tv-head"><img class="pub-logo" src="${LOGO_LOCK}" alt="Next Point Pickleball"><div><div class="eyebrow">${esc(S.session.venue)}</div><h1>${esc(S.session.name)}</h1></div><div class="tv-clock" id="tvClock">${clockStr(now())}</div>${App.qrBlock('Scan to check in')}</div>`;
+  const head=`<div class="tv-head"><img class="pub-logo" src="${LOGO_LOCK}" alt="Next Point Pickleball"><div><div class="eyebrow">${esc(S.session.venue)}</div><h1>${esc(S.session.name)}</h1></div><div class="tv-clock" id="tvClock">${clockStr(now())}</div>${S.session.phones==='off'?'':App.qrBlock('Scan to check in')}</div>`;
   if(App.kioskPage()==='board')return tvBoard(head);
   return `<section class="tv">
     ${head}
@@ -3855,7 +3868,7 @@ function renderTV(){
     ${pos>10?`<span class="muted">+ ${pos-10} more in line</span>`:''}
     ${(()=>{const L=App.sessionLeaders(S.id,5);return L.length?`<h2 class="tl-lead">Tonight's leaders</h2><ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(short(r.id))}</span><span class="lead-s num">${r.w}–${r.g-r.w}</span></li>`).join('')}</ol>`:''})()}</aside></div>
     <div class="tv-foot">
-    <span><b class="num">${k.here}</b> players here</span><span><b class="num">${k.games}</b> games played</span><span>${k.waiting?(mins(estWait(0))<1?'Next game any moment':`Next game in about <b class="num">${mins(estWait(0))}</b> min`):'Nobody waiting'}</span>
+    <span><b class="num">${k.here}</b> players here</span><span><b class="num">${k.games}</b> games played</span><span>${pre()?'Play starts soon':k.waiting?(mins(estWait(0))<1?'Next game any moment':`Next game in about <b class="num">${mins(estWait(0))}</b> min`):'Nobody waiting'}</span>
     <span>${S.session.rule==='winners'?'Winners stay on (max 2 games)':'Everyone rotates off after each game'}</span></div>
   </section>`;
 }
@@ -3915,8 +3928,9 @@ function renderAdmin(){
   const opt=ids=>ids.map(id=>`<option value="${id}">${esc(PL(id).name)}</option>`).join('');
   const busyC=S.courts.filter(c=>c.state==='play'||c.state==='assigned').length,useC=S.courts.filter(c=>c.state!=='blocked').length;
   return App.pageHead(['Open play',esc(S.session.venue||''),esc(S.session.date||'')].filter(Boolean).join(' · '),esc(S.session.name),
-     `<span class="pill ${S.session.open?'p-waiting':'p-left'}">${S.session.open?'Session open':'Session closed'}</span><button class="btn" data-view="public">Venue display</button>${S.session.open?'<button class="btn" data-act="endModal">End session</button>':'<button class="btn primary" data-act="reopen">Reopen session</button>'}`)+
-    `<div class="kpis">${App.kpi('Players here',k.here,'checked in today')}${App.kpi('In line',k.waiting,k.waiting?'next game in ~'+mins(estWait(0))+' min':'nobody waiting')}${App.kpi('Courts in use',busyC+' / '+useC,k.playing+' players on court','',useC?busyC/useC:0)}${App.kpi('On break',k.resting,'keep their place')}${App.kpi('Games played',k.games,k.games?'avg '+mins(avgGame())+' min':'none yet')}</div>
+     `<span class="pill ${!S.session.open?'p-left':pre()?'p-resting':'p-waiting'}">${!S.session.open?'Session closed':pre()?'Check-in open · play not started':'Playing'}</span>${S.session.open?(pre()?'<button class="btn primary" data-act="startPlay">Start play</button>':'<button class="btn" data-act="pausePlay" title="Stop calling new games; check-in stays open">Pause calling</button>'):''}<button class="btn" data-view="public">Venue display</button>${S.session.open?'<button class="btn" data-act="endModal">End session</button>':'<button class="btn primary" data-act="reopen">Reopen session</button>'}`)+
+    callBar()+(S.session.open&&pre()?`<div class="prebar"><b>Check-in is open.</b> Players can check in and join the line, but no games are called until you tap <b>Start play</b>. Courts then fill from the line in order.</div>`:'')+
+    `<div class="kpis">${App.kpi('Players here',k.here,'checked in today')}${App.kpi('In line',k.waiting,pre()?'play not started':k.waiting?'next game in ~'+mins(estWait(0))+' min':'nobody waiting')}${App.kpi('Courts in use',busyC+' / '+useC,k.playing+' players on court','',useC?busyC/useC:0)}${App.kpi('On break',k.resting,'keep their place')}${App.kpi('Games played',k.games,k.games?'avg '+mins(avgGame())+' min':'none yet')}</div>
   <div class="admin">
     <div class="stack">
       <h2 class="sec-h">Courts</h2>
@@ -3926,6 +3940,7 @@ function renderAdmin(){
         <div class="settings">
           <label class="f">Scenario<select id="setMode"><option value="rotation" ${isCh()?'':'selected'}>Balanced rotation (similar levels)</option><option value="challenge" ${isCh()?'selected':''}>Challenge court (mixed levels)</option></select></label>
           ${isCh()?`<label class="f">Challenge court<select id="setChCourt">${S.courts.map(c=>`<option value="${c.no}" ${chCourt().no===c.no?'selected':''}>Court ${c.no}</option>`).join('')}</select></label>`:''}
+          <label class="f">Players' phones<select id="setPhones"><option value="on" ${S.session.phones==='off'?'':'selected'}>Optional: QR check-in and alerts on</option><option value="off" ${S.session.phones==='off'?'selected':''}>Desk only: hide QR and alert prompts</option></select></label>
           <label class="f">After each game<select id="setRule"><option value="off" ${S.session.rule==='off'?'selected':''}>Everyone rotates off</option><option value="winners" ${S.session.rule==='winners'?'selected':''}>Winners stay (max 2 games)</option></select></label>
           <label class="f">Teams<select id="setTeams"><option value="balanced" ${S.session.teams==='balanced'?'selected':''}>Balanced by skill</option><option value="random" ${S.session.teams==='random'?'selected':''}>Random</option></select></label>
           <label class="f">Game to<select id="setTo">${[11,15,21].map(n=>`<option ${S.session.gameTo===n?'selected':''}>${n}</option>`).join('')}</select></label>
@@ -3949,6 +3964,15 @@ function renderAdmin(){
       </details>`:''}
     </div>
     <div class="stack">
+      <section class="panel ci-panel" id="ciPanel"><h2>Check in <small>${notHere.length} not here yet</small></h2>
+        <input type="search" id="ciSearch" class="ci-search" placeholder="Type a name to find them" autocomplete="off" aria-label="Find a player to check in">
+        <p class="muted ci-none" id="ciNone" hidden>No one called "<b></b>". <button class="btn sm" data-act="ciAdd">Add as a new player</button></p>
+        <div class="roster"><ul class="qlist ci-list">${notHere.map(p=>`<li data-s="${esc(p.name.toLowerCase())}"><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(p.name)} <span class="skill">${p.skill.toFixed(1)}</span></div><div class="qmeta">${C(p.id)?'Left · '+C(p.id).games+' games today':'Not checked in'}${p.pin?' · PIN '+esc(p.pin):''}</div></div><div class="qacts"><button class="btn sm primary" data-act="checkin" data-id="${p.id}">Check in</button></div></li>`).join('')||'<li><span></span><span class="muted">Everyone registered is here.</span></li>'}</ul></div>
+        <form id="newForm" class="ci-new"><span class="eyebrow">New player</span>
+          <input type="text" id="newName" required placeholder="Full name" aria-label="New player name" autocomplete="off">
+          <select id="newSkill" aria-label="Skill level">${[2.5,3,3.5,4,4.5,5].map(s=>`<option ${s===3?'selected':''}>${s.toFixed(1)}</option>`).join('')}</select>
+          <button class="btn primary" type="submit">Add &amp; check in</button>
+        </form></section>
       ${(()=>{const L=App.sessionLeaders(S.id,5);return `<section class="panel"><h2>Top players tonight <small><button class="btn sm" data-app="homeSec" data-s="board">Club leaderboard</button></small></h2>${L.length?`<ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(PL(r.id).name)}</span><span class="lead-s num">${r.w}–${r.g-r.w} · ${r.diff>0?'+':''}${r.diff}</span></li>`).join('')}</ol>`:'<p class="muted" style="margin:0">Leaders show here once games are scored.</p>'}</section>`})()}
       <section class="panel"><h2>Line <small>${k.waiting} waiting</small></h2><ul class="qlist">${qrows||'<li><span></span><span class="muted">Nobody in line.</span></li>'}</ul></section>
       ${isCh()?challengePanel(here):''}
@@ -3957,14 +3981,7 @@ function renderAdmin(){
         <ul class="qlist">${resting.map(id=>`<li><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(PL(id).name)}</div><div class="qmeta">${C(id).games} games · keeps their place</div></div><div class="qacts"><button class="btn sm primary" data-act="back" data-id="${id}">Back in line</button><button class="btn sm" data-act="bump" data-id="${id}">Play next</button><button class="btn sm danger" data-act="leave" data-id="${id}">Leave</button></div></li>`).join('')}
         ${playing.map(id=>`<li><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(PL(id).name)}</div><div class="qmeta">${C(id).leaveAfter?'Leaving':'Break'} after this game</div></div><div class="qacts"><button class="btn sm" data-act="back" data-id="${id}">Undo</button></div></li>`).join('')}
         ${resting.length+playing.length?'':'<li><span></span><span class="muted">Nobody on break.</span></li>'}</ul></section>
-      <section class="panel"><h2>Check in</h2>
-        <div class="roster"><ul class="qlist">${notHere.map(p=>`<li><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(p.name)} <span class="skill">${p.skill.toFixed(1)}</span></div><div class="qmeta">${C(p.id)?'Left · '+C(p.id).games+' games today':'Not checked in'}${p.pin?' · PIN '+esc(p.pin):''}</div></div><div class="qacts"><button class="btn sm primary" data-act="checkin" data-id="${p.id}">Check in</button></div></li>`).join('')||'<li><span></span><span class="muted">Everyone registered is here.</span></li>'}</ul></div>
-        <form id="newForm" class="grid2" style="margin-top:12px">
-          <label class="f">New player name<input type="text" id="newName" required placeholder="e.g. Marco Dela Cruz"></label>
-          <label class="f">Skill level<select id="newSkill">${[2.5,3,3.5,4,4.5,5].map(s=>`<option ${s===3?'selected':''}>${s.toFixed(1)}</option>`).join('')}</select></label>
-          <label class="f">6-digit PIN<input type="text" id="newPin" inputmode="numeric" maxlength="6" placeholder="Blank = make one up"></label>
-          <button class="btn primary" type="submit" style="align-self:end">Register and check in</button>
-        </form></section>
+
       <section class="panel"><h2>Pair partners</h2>
         <p class="muted" style="margin:0 0 10px">Paired players are always called together as teammates.</p>
         <div class="grid2"><select id="pairA" aria-label="First player">${opt(here)}</select><select id="pairB" aria-label="Second player">${opt(here.slice(1).concat(here.slice(0,1)))}</select></div>
@@ -4002,6 +4019,7 @@ function renderPlayer(){
         hero=`<div class="hero"><div class="eyebrow">Your court is set</div><div class="big">${ps.held?'Waiting':'#'+(ps.pos+1)}</div><div class="sub">With ${esc(short(mt))} vs ${esc(teamStr(op))}. ${ps.held?'Waiting for the others to finish their game.':ps.pos<4?'You\'re next. Stay close to the courts.':`About ${mins(estWait(ps.pos))} min wait.`}</div></div>`}
       else if(!ps){hero=`<div class="hero"><div class="eyebrow">In line</div><div class="big">Waiting</div><div class="sub">You'll be called soon.</div></div>`}
       else if(ps.held){hero=`<div class="hero"><div class="eyebrow">In line</div><div class="big">Waiting</div><div class="sub">You'll be called together with ${esc(short(c.pairWith))} once they're free.</div></div>`}
+      else if(pre())hero=`<div class="hero"><div class="eyebrow">You're checked in</div><div class="big">#${ps.pos+1}</div><div class="sub">Play hasn't started yet. You're #${ps.pos+1} in line and will be called when it does.</div></div>`;
       else hero=`<div class="hero"><div class="eyebrow">You're in line</div><div class="big">#${ps.pos+1}</div><div class="sub">${ps.pos<4?'You\'re in the next group. Stay close to the courts.':`About ${mins(estWait(ps.pos))} min wait · ${ps.pos} player${ps.pos===1?'':'s'} ahead of you`}</div></div>`;
       acts=`<button class="btn" data-act="prest">Take a break</button><button class="btn danger" data-act="pleave">Leave for today</button>`;
     }else if(c.status==='resting'){
@@ -4029,8 +4047,8 @@ function renderPlayer(){
     const mine=S.matches.filter(x=>x.status==='done'&&[...x.a,...x.b].includes(me)).reverse();
     const hist=mine.length?`<table class="mini-table"><thead><tr><th>Court</th><th>Partner</th><th>Score</th><th></th></tr></thead><tbody>${mine.map(x=>{const inA=x.a.includes(me),my=inA?x.sa:x.sb,th=inA?x.sb:x.sa,mt=(inA?x.a:x.b).find(i=>i!==me);return `<tr><td>${x.court}</td><td>${esc(short(mt))}</td><td class="num">${my}–${th}</td><td><span class="pill ${my>th?'p-waiting':'p-left'}">${my>th?'Won':'Lost'}</span></td></tr>`}).join('')}</tbody></table>`:'<span class="muted">No games yet today.</span>';
     const rk=App.playerRank(me);
-    const rankCard=rk?`<div class="rankcard"><div><span class="eyebrow">Club leaderboard</span><div class="rk-big">${rk.rank?'#'+rk.rank+' <small>of '+rk.of+'</small>':'Not ranked yet'}</div><div class="li-m">${rk.rank?'':'Play '+Math.max(0,5-rk.g)+' more game'+(5-rk.g===1?'':'s')+' to get a rank · '}${rk.g} game${rk.g===1?'':'s'} · ${Math.round(rk.wp*100)}% wins</div></div><div class="rk-r"><span class="eyebrow">Rating</span><b class="num">${rk.rating}</b></div></div>`:'';
-    body=`${App.acctOn()?App.pBrowser():App.pSaveCard()}${App.pushCard(me)}${hero}<div class="pacts">${acts}</div>${chBox}${pairBox}${rankCard}<div style="display:grid;gap:6px"><span class="eyebrow">Today · ${c?c.games:0} game${c&&c.games===1?'':'s'}, ${c?c.wins:0} win${c&&c.wins===1?'':'s'}</span>${hist}</div>`;
+    const rankCard=rk?`<div class="rankcard"><div><span class="eyebrow">Club leaderboard</span><div class="rk-big">${rk.rank?'#'+rk.rank+' <small>of '+rk.of+'</small>':'Not ranked yet'}</div><div class="li-m">${rk.rank?'':'Play '+Math.max(0,3-rk.g)+' more game'+(3-rk.g===1?'':'s')+' to get a rank · '}${rk.g} game${rk.g===1?'':'s'} · ${Math.round(rk.wp*100)}% wins</div></div><div class="rk-r"><span class="eyebrow">Wins</span><b class="num">${rk.w}</b></div></div>`:'';
+    body=`${App.acctOn()?App.pBrowser():App.pSaveCard()}${S.session.phones==='off'?'':App.pushCard(me)}${hero}<div class="pacts">${acts}</div>${chBox}${pairBox}${rankCard}<div style="display:grid;gap:6px"><span class="eyebrow">Today · ${c?c.games:0} game${c&&c.games===1?'':'s'}, ${c?c.wins:0} win${c&&c.wins===1?'':'s'}</span>${hist}</div>`;
   }
   return `<div class="phone-wrap"><div class="phone"><div class="phone-top"><img class="logo-sm" src="${LOGO_TILE}" alt=""><b>Next Point</b>${me?`<span class="muted" style="margin-left:auto">${esc(PL(me).name)}</span>${App.acctOn()?'<button class="btn sm" data-app="myGames">My games</button>':'<button class="btn sm" data-act="logout">Switch</button>'}`:''}</div>${body}</div>
   <div class="guide panel"><h2>What players see</h2>
@@ -4059,7 +4077,26 @@ function html(v){view=v;
   if(v==='admin')return opSub==='log'?renderLog():renderAdmin();
   return v==='tv'?renderTV():renderPlayer();
 }
-function after(v){App.alerts(v==='player'?opAlerts():null);renderModal()}
+function after(v){App.alerts(v==='player'?opAlerts():null);renderModal();if(v==='admin')autoRead();ciFilter()}
+/* v59: calls for players without phones */
+const pre=()=>S.session.started===false;
+const fullNm=id=>PL(id)?PL(id).name:'';
+const callText=m=>'Court '+m.court+'. '+m.a.map(fullNm).join(' and ')+', versus '+m.b.map(fullNm).join(' and ')+'.';
+function say(t){try{if(!window.speechSynthesis)return toast('This device can\'t read out loud.');const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.92;u.volume=1;speechSynthesis.speak(u)}catch(e){}}
+const ARK='np-autoread';const autoOn=()=>{try{return localStorage.getItem(ARK)==='1'}catch(e){return false}};
+let spoken=null;
+function autoRead(){if(!S)return;const cur=S.matches.filter(m=>m.status==='assigned'&&!m.called).map(m=>[m,m.id+':'+m.assignedAt]);
+  if(!spoken){spoken=new Set(cur.map(x=>x[1]));return}
+  cur.forEach(([m,k])=>{if(spoken.has(k))return;spoken.add(k);if(autoOn())say(callText(m))})}
+function callBar(){const ms=S.matches.filter(m=>m.status==='assigned'&&!m.called).sort((a,b)=>a.court-b.court);if(!ms.length)return '';
+  return `<div class="callbar" role="status">${ms.map(m=>`<div class="callcard"><div class="cc-h"><span class="cc-no">Call Court ${m.court}</span><span class="muted">${m.confirmed&&Object.keys(m.confirmed).length?Object.keys(m.confirmed).length+' of 4 here':'just called'}</span></div>
+    <div class="cc-t"><b>${m.a.map(x=>esc(fullNm(x))).join(' &amp; ')}</b><span>vs</span><b>${m.b.map(x=>esc(fullNm(x))).join(' &amp; ')}</b></div>
+    <div class="row"><button class="btn" data-act="sayCall" data-id="${m.id}">${App.icon?App.icon('live'):''}Read it out</button><button class="btn primary" data-act="called" data-id="${m.id}">Called ✓</button></div></div>`).join('')}
+    <label class="check cc-auto"><input type="checkbox" id="autoRead" ${autoOn()?'checked':''}> Read new calls out loud on this device</label></div>`}
+// ---------- 4. quick check-in search ----------
+function ciFilter(){const q=(($('#ciSearch')||{}).value||'').trim().toLowerCase(),list=document.querySelectorAll('.ci-list li[data-s]');if(!list.length&&!q)return;
+  let n=0;list.forEach(li=>{const ok=!q||li.dataset.s.includes(q);li.hidden=!ok;if(ok)n++});
+  const e=$('#ciNone');if(e){e.hidden=!(q&&!n);const b=e.querySelector('b');if(b)b.textContent=q}}
 function opAlerts(){if(!me)return[];const m=S.matches.find(x=>x.status==='assigned'&&[...x.a,...x.b].includes(me));if(!m)return[];
   const mine=m.a.includes(me)?m.a:m.b,opp=m.a.includes(me)?m.b:m.a,mate=mine.find(x=>x!==me);
   return[{key:'op:'+S.id+':'+m.id+':'+m.court,title:"You're up",big:'Court '+m.court,sub:(mate?'With '+short(mate)+' ':'')+'vs '+opp.map(short).join(' & ')}]}
@@ -4073,8 +4110,8 @@ function notices(){const out=[],t=now();if(!S.session)return out;
   return out}
 function calls(){return S.matches.filter(m=>m.status==='assigned').map(m=>({key:S.id+':'+m.id+':'+m.court+':'+m.assignedAt,court:m.court,line:m.a.map(short).join(' & ')+'  vs  '+m.b.map(short).join(' & '),sub:S.session.name}))}
 function tvPages(){const rows=App.clubBoard().rows.filter(r=>r.g>=5);return rows.length>=3?[{k:'courts',label:'Courts',sec:40},{k:'board',label:'Club leaderboard',sec:15}]:[{k:'courts',label:'Courts',sec:40}]}
-function tvBoard(head){const rows=App.clubBoard().rows.filter(r=>r.g>=5).sort((a,b)=>b.rating-a.rating).slice(0,10);
-  return `<section class="tv kpage">${head}<section class="panel kboard"><h2>Club leaderboard <small>club rating · at least 5 games</small></h2><ol class="kb">${rows.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="kb-n">${esc(r.name)}</span><span class="kb-wl num">${r.w}–${r.g-r.w}</span><span class="kb-r num">${r.rating}</span></li>`).join('')}</ol></section></section>`}
+function tvBoard(head){const rows=App.clubBoard().rows.filter(r=>r.g>=3).sort((a,b)=>b.w-a.w||b.diff-a.diff||a.g-b.g).slice(0,10);
+  return `<section class="tv kpage">${head}<section class="panel kboard"><h2>Club leaderboard <small>most wins · at least 3 games</small></h2><ol class="kb">${rows.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="kb-n">${esc(r.name)}</span><span class="kb-wl num">${r.w}–${r.g-r.w}</span><span class="kb-r num">${r.diff>0?'+':''}${r.diff}</span></li>`).join('')}</ol></section></section>`}
 function nav(){const it=(k,l,b)=>`<button class="side-item sub" data-act="opSub" data-s="${k}" ${opSub===k?'aria-current="page"':''}>${App.icon(k==='live'?'live':'list')}${l}${b!=null?`<span class="badge">${b}</span>`:''}</button>`;
   return it('live','Live',S.courts.filter(c=>c.state==='play'||c.state==='assigned').length+'/'+S.courts.length)+it('log','Match log',S.matches.filter(m=>m.status==='done').length)}
 function commit(){autoFill();save();render()}
@@ -4176,6 +4213,11 @@ document.addEventListener('click',e=>{
     case 'endModal': openModal({type:'end'});return;
     case 'endSession': S.courts.forEach(c=>{if(c.match)cancel(c)});S.session.open=false;closeModal();toast('Session ended.');break;
     case 'reopen': S.session.open=true;break;
+    case 'startPlay': S.session.started=true;S.session.startedAt=now();toast('Play started. Courts are being called from the line.');break;
+    case 'pausePlay': S.session.started=false;toast('Calling paused. Games on court carry on; check-in stays open.');break;
+    case 'called':{const m=M(id);if(m)m.called=now();break}
+    case 'sayCall':{const m=M(id);if(m)say(callText(m));return}
+    case 'ciAdd':{const n=($('#ciSearch')||{}).value||'';const f=$('#newName');if(f){f.value=n.trim();f.focus()}return}
     case 'closeModal': closeModal();return;
     case 'fixOpen': openModal({type:'fix',id:t.dataset.id});return;
     case 'fixSave':{const m=M(modal.id),sa=parseInt($('#fa').value,10),sb=parseInt($('#fb').value,10);if(!m){closeModal();return}
@@ -4245,17 +4287,21 @@ document.addEventListener('change',e=>{
   if(t.dataset.level){const ct=CT(t.dataset.level);ct.level=t.value;commit();return}
   const pubSet=(k,v)=>{const o={...(S.session.pub||{})};if(v===''||v==null)delete o[k];else o[k]=v;S.session.pub=o};
   if(t.id==='opLink'&&t.value.trim()&&!/^https?:\/\/\S+$/i.test(t.value.trim())){toast('Paste the full link, starting with https://');return}
-  const map={opWhen:v=>pubSet('when',v.trim()),opFee:v=>pubSet('fee',Math.max(0,Math.round(+v)||0)||''),opLink:v=>pubSet('link',v.trim()),opAbout:v=>pubSet('about',v.trim()),setRule:v=>S.session.rule=v,setTeams:v=>S.session.teams=v,setTo:v=>S.session.gameTo=+v,setNoShow:v=>S.session.noShow=+v,setMode:v=>S.session.mode=v,setChCourt:v=>S.session.chCourt=+v,setWin:v=>{if(v==='w2')S.session.win2=true;else delete S.session.win2}};
+  const map={opWhen:v=>pubSet('when',v.trim()),opFee:v=>pubSet('fee',Math.max(0,Math.round(+v)||0)||''),opLink:v=>pubSet('link',v.trim()),opAbout:v=>pubSet('about',v.trim()),setRule:v=>S.session.rule=v,setTeams:v=>S.session.teams=v,setTo:v=>S.session.gameTo=+v,setNoShow:v=>S.session.noShow=+v,setMode:v=>S.session.mode=v,setPhones:v=>S.session.phones=v,setChCourt:v=>S.session.chCourt=+v,setWin:v=>{if(v==='w2')S.session.win2=true;else delete S.session.win2}};
   if(map[t.id]){map[t.id](t.value);commit()}
   if(t.id==='setAuto'){S.session.autoFill=t.checked;commit()}
+  if(t.id==='autoRead'){try{localStorage.setItem(ARK,t.checked?'1':'0')}catch(_){}if(t.checked)say('Calls will be read out on this device.');return}
 });
+document.addEventListener('input',e=>{if(!App.isActive('openplay'))return;if(e.target.id==='ciSearch')ciFilter()});
+document.addEventListener('keydown',e=>{if(!App.isActive('openplay')||e.target.id!=='ciSearch'||e.key!=='Enter')return;e.preventDefault();
+  const vis=[...document.querySelectorAll('.ci-list li[data-s]')].filter(li=>!li.hidden);if(vis.length===1){const b=vis[0].querySelector('[data-act=checkin]');if(b)b.click()}});
 document.addEventListener('toggle',e=>{if(!App.isActive('openplay'))return;if(e.target.id==='setPanel'||e.target.id==='demoPanel'){S.ui=S.ui||{};S.ui[e.target.id==='setPanel'?'settings':'demo']=e.target.open;save()}},true);
 document.addEventListener('submit',e=>{
   if(!App.isActive('openplay'))return;
   e.preventDefault();
-  if(e.target.id==='newForm'){const n=$('#newName').value.trim();if(!n)return;{const dup=S.players.find(p=>p.club&&p.name.trim().toLowerCase()===n.toLowerCase());if(dup){toast(dup.name+' is already a club member. Use Check in on their name instead.');return}}const pv=$('#newPin').value.trim();
+  if(e.target.id==='newForm'){const n=$('#newName').value.trim();if(!n)return;{const dup=S.players.find(p=>p.club&&p.name.trim().toLowerCase()===n.toLowerCase());if(dup){toast(dup.name+' is already a club member. Use Check in on their name instead.');return}}const pv=(($('#newPin')||{}).value||'').trim();
     if(pv&&!/^\d{6}$/.test(pv)){toast('A PIN is exactly 6 digits.');return}
-    const id=App.addPlayer({name:n,skill:+$('#newSkill').value,pin:pv||App.newPin(),club:true});checkIn(id);$('#newName').value='';$('#newPin').value='';toast(n+' checked in. PIN: '+PL(id).pin);commit()}
+    const id=App.addPlayer({name:n,skill:+$('#newSkill').value,pin:pv||App.newPin(),club:true});checkIn(id);$('#newName').value='';const cs=$('#ciSearch');if(cs)cs.value='';toast(n+' checked in.');commit()}
   if(e.target.id==='regForm'){const n=$('#regName').value.trim(),pv=$('#regPin').value.trim();
     if(!n){$('#regErr').textContent='Enter your name.';return}
     if(S.players.some(p=>p.club&&p.name.trim().toLowerCase()===n.toLowerCase())){$('#regErr').textContent=n+' is already registered. Sign in with your PIN above, or ask the desk if you forgot it.';return}
@@ -4282,7 +4328,7 @@ return{
   selfIn(id){if(!S||!S.session.open||!PL(id))return false;const c=C(id);if(c&&c.status!=='left')return false;checkIn(id);return true},
   setMe(id){if(S===undefined||!S||S.players&&S.players.some(p=>p.id===id)||App.db().players.some(p=>p.id===id))me=id},
   create(f){return{type:'openplay',id:f.id,offset:0,seq:0,
-    session:{name:f.name,venue:f.venue,date:f.date,rule:f.rule,teams:f.teams,autoFill:true,noShow:f.noShow,gameTo:f.gameTo,open:true,openedAt:Date.now()},
+    session:{name:f.name,venue:f.venue,date:f.date,rule:f.rule,teams:f.teams,autoFill:true,noShow:f.noShow,gameTo:f.gameTo,open:true,started:false,openedAt:Date.now()},
     checkins:{},courts:Array.from({length:f.courts},(_,i)=>({no:i+1,level:'all',state:'free',match:null})),matches:[]}},
   summary(ev){const v=Object.values(ev.checkins);return (ev.session.open?'Session open':'Session closed')+' · '+v.filter(c=>c.status!=='left').length+' here · '+ev.matches.filter(m=>m.status==='done').length+' games'}
 };

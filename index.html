@@ -1748,6 +1748,18 @@ a.btn{text-decoration:none}
 .au-pick{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent)}
 .au-pick span{display:grid}.au-pick small{color:var(--muted);font-size:12.5px}
 .au-qr{margin:4px 0 0;font-size:13.5px;color:var(--muted)}
+/* v58: scenarios, set courts, challenge court */
+.pill.p-ch{background:#fff1c2;color:#7a4b00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.p-ch{background:#4a3a10;color:#ffd970}}
+:root[data-theme="dark"] .pill.p-ch{background:#4a3a10;color:#ffd970}
+.scen{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin:0 0 12px}
+.scen.warn{border-color:#e0b400;background:color-mix(in srgb,#ffd400 10%,var(--surface))}
+.setc{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px}.setc .eyebrow{grid-column:1/-1;margin-top:4px}.setc select{width:100%;min-width:0}
+.qgrp .qname{white-space:normal}
+.chbox{display:grid;gap:8px}.chcard{display:grid;gap:6px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.chcard.in{border-color:#e0b400;background:color-mix(in srgb,#ffd400 12%,var(--surface))}.chcard span{color:var(--muted);font-size:14px}
+.chnew summary{cursor:pointer;font-weight:700;padding:6px 0}
+.hero.h-ch{background:linear-gradient(135deg,#3b2a00,#7a5600);color:#fff}
 /* v57: correct a finished open play game */
 .fixteams{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0 4px}.fixteams>div{display:grid;gap:6px}.fixteams select{width:100%}
 @media (max-width:480px){.fixteams{grid-template-columns:1fr}}
@@ -1994,7 +2006,7 @@ const App=(()=>{
      Every save pushes changed docs with the rev this device last saw; a conflict pulls the newer copy,
      merges it with this device's edits (by id, field by field) and pushes again. */
   const CFG=(window.NP_CLOUD&&window.supabase&&window.supabase.createClient)?window.NP_CLOUD:null,CLOUD_WANTED=!!window.NP_CLOUD;
-  const BUILD='2026-11-18a';
+  const BUILD='2026-11-20a';
   const CL={on:!!CFG,sb:null,base:{},revs:{},tok:{staff:null,player:null},staffRole:null,pins:null,ready:false,live:false,offline:false,busy:false,again:false,dirty:false,fail:0,pushT:null,pullQ:new Set(),lastPull:{},pullT:null,rT:null,pollT:null,warned:0};
   const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
   const stable=v=>JSON.stringify(v,(k,x)=>isObj(x)?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x);
@@ -3608,14 +3620,59 @@ const waitingIds=()=>Object.keys(S.checkins).filter(id=>C(id).status==='waiting'
 const ukey=u=>{const b=u.map(i=>C(i).bump).filter(Boolean);if(b.length)return[-1,Math.min(...b)];return[Math.max(...u.map(i=>C(i).games)),Math.max(...u.map(i=>C(i).since))]};
 const cmpU=(a,b)=>{const x=ukey(a),y=ukey(b);return x[0]-y[0]||x[1]-y[1]};
 
+/* v58: set courts (4 players the desk puts in the line together) and the challenge court */
+const groups=()=>S.groups||[];
+const chAll=()=>S.challenges||[];
+const chOpen=()=>chAll().filter(c=>c.status==='open');
+const chOk=()=>chOpen().filter(c=>c.ok).sort((a,b)=>(a.okAt||0)-(b.okAt||0));
+const isCh=()=>S.session.mode==='challenge';
+const chCourt=()=>isCh()?(CT(S.session.chCourt||1)||S.courts[0]):null;
+const chNeed=c=>c.need||c.to;
+const chAccepted=c=>chNeed(c).every(id=>c.acc&&c.acc[id]);
+const teamStr=t=>t.map(x=>short(x)).join(' & ');
+const andList=a=>a.length<3?a.join(' & '):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const avgSk=t=>t.reduce((a,id)=>a+PL(id).skill,0)/t.length;
+// players kept out of regular picks: in a set court, or in an approved challenge (they wait for the challenge court)
+function reserved(){const r=new Map();groups().forEach(g=>[...g.a,...g.b].forEach(id=>r.set(id,'g')));if(isCh())chOk().forEach(c=>[...c.from,...c.to].forEach(id=>r.set(id,'c')));return r}
+const busyIn=id=>groups().some(g=>[...g.a,...g.b].includes(id))||chOpen().some(c=>[...c.from,...c.to].includes(id));
+const groupReady=g=>[...g.a,...g.b].every(id=>C(id)&&C(id).status==='waiting');
+const gkey=g=>g.bump?[-1,g.bump]:[g.games||0,g.at];
+// how often two players have already shared a court tonight (as partners / as opponents)
+function meetMap(){const mp=new Map(),k=(x,y)=>x<y?x+'|'+y:y+'|'+x;
+  S.matches.forEach(m=>{if(!['done','play','assigned'].includes(m.status))return;const all=[...m.a,...m.b];
+    for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){const key=k(all[i],all[j]),o=mp.get(key)||{p:0,o:0};if(m.a.includes(all[i])===m.a.includes(all[j]))o.p++;else o.o++;mp.set(key,o)}});
+  return (x,y)=>mp.get(k(x,y))||{p:0,o:0}}
+// the next 4: whoever has played least and waited longest anchors the game; the other three are the mix of
+// nearby players they've met least tonight (partners count more than opponents), with a small nudge for waiting time
+function pickVaried(lvl,exclude){
+  const us=units(lvl,exclude||new Set());if(us.reduce((a,u)=>a+u.length,0)<4)return null;
+  const gm=u=>Math.max(...u.map(i=>C(i).games)),g0=gm(us[0]),cand=[];let n=0;
+  for(const u of us){if(cand.length&&n>=4&&(n>=11||gm(u)>g0+1))break;cand.push(u);n+=u.length}
+  const met=meetMap(),anchor=cand[0],rest=cand.slice(1);let best=null,bs=Infinity;
+  const go=(i,sel,cnt,pen)=>{if(cnt===4){const ids=sel.flat();let x=0;for(let a=0;a<4;a++)for(let b=a+1;b<4;b++){const v=met(ids[a],ids[b]);x+=v.p*1.5+v.o}
+      const sc=x*10+pen;if(sc<bs){bs=sc;best=sel.slice()}return}
+    for(let j=i;j<rest.length;j++){const u=rest[j];if(cnt+u.length>4)continue;sel.push(u);go(j+1,sel,cnt+u.length,pen+j*.6+Math.max(0,gm(u)-g0)*25);sel.pop()}};
+  go(0,[anchor],anchor.length,0);
+  return best}
+// what goes on a free court next: a set court whose turn it is, else a varied pick
+function nextGame(lvl){
+  const q=queueOrder().filter(x=>!x.held);
+  if(q.length&&q[0].group)return{group:q[0].group};
+  const us=pickVaried(lvl);if(us)return{units:us};
+  const g=q.find(x=>x.group);return g?{group:g.group}:null}
+const nextCh=()=>chOk().find(c=>[...c.from,...c.to].every(id=>C(id)&&C(id).status==='waiting'));
+function tidy(){ // drop set courts / challenges whose players have gone home
+  if(S.groups&&S.groups.some(g=>[...g.a,...g.b].some(id=>!C(id)||C(id).status==='left')))S.groups=S.groups.filter(g=>![...g.a,...g.b].some(id=>!C(id)||C(id).status==='left'));
+  chOpen().forEach(c=>{if([...c.from,...c.to].some(id=>!C(id)||C(id).status==='left'))c.status='cancelled'})}
+
 // units ready to be called (singles + pairs whose partner is also waiting)
 function units(lvl='all',exclude=new Set()){
-  const seen=new Set(),out=[];
+  const seen=new Set(),out=[],rs=reserved();
   for(const id of waitingIds()){
-    if(seen.has(id)||exclude.has(id)||!fits(id,lvl))continue;
+    if(seen.has(id)||exclude.has(id)||rs.has(id)||!fits(id,lvl))continue;
     const p=C(id).pairWith;
     if(p){const pc=C(p);
-      if(pc&&pc.status==='waiting'&&!exclude.has(p)&&fits(p,lvl)){seen.add(id);seen.add(p);out.push([id,p])}
+      if(pc&&pc.status==='waiting'&&!exclude.has(p)&&!rs.has(p)&&fits(p,lvl)){seen.add(id);seen.add(p);out.push([id,p])}
       continue}
     seen.add(id);out.push([id]);
   }
@@ -3623,9 +3680,11 @@ function units(lvl='all',exclude=new Set()){
 }
 // display order of everyone waiting, with players held for a busy partner at the end
 function queueOrder(){
-  const us=units('all'),inU=new Set(us.flat());
-  const held=waitingIds().filter(id=>!inU.has(id)).sort((a,b)=>C(a).since-C(b).since).map(id=>({ids:[id],held:true}));
-  return us.map(u=>({ids:u,held:false})).concat(held);
+  const us=units('all'),inU=new Set(us.flat()),rs=reserved();
+  const gs=groups().map(g=>({ids:[...g.a,...g.b],group:g,held:!groupReady(g),k:gkey(g)}));
+  const ready=us.map(u=>({ids:u,held:false,k:ukey(u)})).concat(gs.filter(x=>!x.held)).sort((x,y)=>x.k[0]-y.k[0]||x.k[1]-y.k[1]);
+  const held=waitingIds().filter(id=>!inU.has(id)&&!rs.has(id)).sort((a,b)=>C(a).since-C(b).since).map(id=>({ids:[id],held:true}));
+  return ready.concat(gs.filter(x=>x.held),held);
 }
 function pick(lvl,n,exclude){
   const sel=[];let c=0;
@@ -3633,7 +3692,7 @@ function pick(lvl,n,exclude){
   return c===n?sel:null;
 }
 const rep=t=>(C(t[0]).lastPartner===t[1]||C(t[1]).lastPartner===t[0])?2:0;
-function makeTeams(us){
+function makeTeams(us){const met=meetMap(),seen=(t,o)=>met(t[0],t[1]).p*1.2+[0,1].reduce((x,i)=>x+met(t[i],o[0]).o*.4+met(t[i],o[1]).o*.4,0);
   const pairs=us.filter(u=>u.length===2),singles=us.filter(u=>u.length===1).map(u=>u[0]);
   if(pairs.length===2)return[pairs[0],pairs[1]];
   if(pairs.length===1)return[pairs[0],singles];
@@ -3641,7 +3700,7 @@ function makeTeams(us){
   if(S.session.teams==='random')shuffle(p);else p.sort((a,b)=>PL(b).skill-PL(a).skill);
   const opts=[[[p[0],p[3]],[p[1],p[2]]],[[p[0],p[2]],[p[1],p[3]]],[[p[0],p[1]],[p[2],p[3]]]];
   let best=opts[0],bs=1e9;
-  opts.forEach((o,i)=>{let sc=S.session.teams==='balanced'?Math.abs(sum(o[0])-sum(o[1])):i*.01;sc+=rep(o[0])+rep(o[1]);if(sc<bs){bs=sc;best=o}});
+  opts.forEach((o,i)=>{let sc=S.session.teams==='balanced'?Math.abs(sum(o[0])-sum(o[1])):i*.01;sc+=rep(o[0])+rep(o[1])+seen(o[0],o[1])+seen(o[1],o[0]);if(sc<bs){bs=sc;best=o}});
   return best;
 }
 function createMatch(ct,teams,manual){
@@ -3662,8 +3721,14 @@ function swap(ct,outId,inId,outTo){
   if(m.status==='assigned'&&[...m.a,...m.b].every(p=>m.confirmed[p]))startMatch(ct);
 }
 function bump(id){const c=C(id);if(c.status==='resting')c.status='waiting';c.bump=now()}
-function assign(ct){const us=pick(ct.level,4);if(!us)return false;createMatch(ct,makeTeams(us));return true}
+function assign(ct){
+  const cc=chCourt();
+  if(cc&&cc.no===ct.no){const ch=nextCh();if(ch){const m=createMatch(ct,[ch.from.slice(),ch.to.slice()],true);m.challenge=ch.id;ch.status='done';ch.match=m.id;return true}}
+  const nx=nextGame(ct.level);if(!nx)return false;
+  if(nx.group){const g=nx.group,m=createMatch(ct,[g.a.slice(),g.b.slice()],true);m.set=true;S.groups=groups().filter(x=>x.id!==g.id);return true}
+  createMatch(ct,makeTeams(nx.units));return true}
 function autoFill(){
+  tidy();
   if(!S.session.open||!S.session.autoFill)return false;
   let ch=false;for(const ct of S.courts)if(ct.state==='free'&&!ct.hold&&assign(ct))ch=true;return ch;
 }
@@ -3684,7 +3749,7 @@ function finish(ct,sa,sb){
   ct.match=null;ct.state='free';
   L.forEach(id=>{C(id).streak=0;backToQueue(id)});
   let stay=false;
-  if(S.session.rule==='winners'&&S.session.open&&!W.some(id=>C(id).leaveAfter||C(id).restAfter)){
+  if(S.session.rule==='winners'&&S.session.open&&!m.challenge&&!m.set&&!W.some(id=>C(id).leaveAfter||C(id).restAfter)){
     const st=(C(W[0]).streak||0)+1;
     if(st<2){const us=pick(ct.level,2,new Set(all));
       if(us){W.forEach(id=>C(id).streak=st);const nm=createMatch(ct,[W,us.flat()]);W.forEach(id=>nm.confirmed[id]=true);stay=true}}
@@ -3754,8 +3819,11 @@ function courtTile(ct,mode){
     board=`<div class="ct2-board">${row(m.a,'a')}${row(m.b,'b')}</div>`;
   }else{
     const msg=ct.state==='blocked'?'Court not in use':ct.hold?'Held for admin pick':(S.session.open?(units(ct.level).flat().length<4?'Waiting for 4 players':'Ready for the next 4'):'Session closed');
-    const nx=S.session.open&&ct.state!=='blocked'?queueOrder().filter(u=>!u.held).flatMap(u=>u.ids).filter(id=>fits(id,ct.level)).slice(0,4):[];
-    board=`<div class="ct2-empty"><span class="ct2-empty-t">${msg}</span>${nx.length?`<span class="ct2-next">Next up: ${nx.map(id=>esc(short(id))).join(', ')}</span>`:''}</div>`;
+    let nxt='';
+    if(S.session.open&&ct.state!=='blocked'){const cc=chCourt(),ch=cc&&cc.no===ct.no?nextCh():null;
+      if(ch)nxt=`Next challenge: ${esc(teamStr(ch.from))} vs ${esc(teamStr(ch.to))}`;
+      else{const g=nextGame(ct.level);if(g)nxt=(g.group?'Set court next: ':'Next up: ')+(g.group?[...g.group.a,...g.group.b]:g.units.flat()).map(id=>esc(short(id))).join(', ')}}
+    board=`<div class="ct2-empty"><span class="ct2-empty-t">${msg}</span>${nxt?`<span class="ct2-next">${nxt}</span>`:''}</div>`;
   }
   const lvl=mode==='admin'?`<label class="ct2-lvl">Level <select data-level="${ct.no}" aria-label="Court ${ct.no} level">${Object.entries(LEVELS).map(([k,v])=>`<option value="${k}" ${ct.level===k?'selected':''}>${v}</option>`).join('')}</select></label>`:`<span>${LEVELS[ct.level]}</span>`;
   let acts='';
@@ -3766,7 +3834,7 @@ function courtTile(ct,mode){
     if(ct.state==='play')acts=`<button class="btn sm primary" data-act="score" data-c="${ct.no}">Enter score</button><button class="btn sm" data-act="swapModal" data-c="${ct.no}">Swap player</button><button class="btn sm danger" data-act="cancel" data-c="${ct.no}">Stop game</button>`;
     acts=`<div class="ct2-acts">${acts}</div>`;
   }
-  return `<article class="ct2 s-${st} ${big?'big':''}"><header class="ct2-h"><div class="ct2-id"><span class="ct2-no">Court ${ct.no}</span>${pill}${m&&m.manual?'<span class="pill p-resting">Admin pick</span>':''}</div>${clock}</header>${board}<div class="ct2-meta">${lvl}</div>${acts}</article>`;
+  return `<article class="ct2 s-${st} ${big?'big':''}"><header class="ct2-h"><div class="ct2-id"><span class="ct2-no">Court ${ct.no}</span>${pill}${chCourt()&&chCourt().no===ct.no?'<span class="pill p-ch">Challenge court</span>':''}${m&&m.challenge?'<span class="pill p-ch">Challenge</span>':m&&m.set?'<span class="pill p-resting">Set court</span>':m&&m.manual?'<span class="pill p-resting">Admin pick</span>':''}</div>${clock}</header>${board}<div class="ct2-meta">${lvl}</div>${acts}</article>`;
 }
 
 function counts(){const v=Object.values(S.checkins);return{here:v.filter(c=>c.status!=='left').length,waiting:v.filter(c=>c.status==='waiting').length,playing:v.filter(c=>c.status==='playing').length,resting:v.filter(c=>c.status==='resting').length,games:S.matches.filter(m=>m.status==='done').length}}
@@ -3783,6 +3851,7 @@ function renderTV(){
       ${(()=>{const L=App.sessionLeaders(S.id,5);return L.length?`<div><h3>Tonight's leaders</h3><ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(short(r.id))}</span><span class="lead-s num">${r.w}–${r.g-r.w}</span></li>`).join('')}</ol></div>`:''})()}</div>`:''}
     <div class="tv-body"><div class="courts big" data-n="${S.courts.length}">${S.courts.map(c=>courtTile(c,'tv')).join('')}</div>
     <aside class="upnext"><h2>Up next</h2>${rows.join('')||'<span class="muted">Nobody waiting. Check in to play.</span>'}
+    ${isCh()&&chOk().length?`<h2 class="tl-lead">Challenge court · Court ${chCourt().no}</h2>${chOk().slice(0,4).map((c,i)=>`<div class="un ${i===0?'first':''}"><span class="qpos">${i+1}</span><span>${esc(teamStr(c.from))} <small>vs</small> ${esc(teamStr(c.to))}</span></div>`).join('')}`:''}
     ${pos>10?`<span class="muted">+ ${pos-10} more in line</span>`:''}
     ${(()=>{const L=App.sessionLeaders(S.id,5);return L.length?`<h2 class="tl-lead">Tonight's leaders</h2><ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(short(r.id))}</span><span class="lead-s num">${r.w}–${r.g-r.w}</span></li>`).join('')}</ol>`:''})()}</aside></div>
     <div class="tv-foot">
@@ -3791,13 +3860,54 @@ function renderTV(){
   </section>`;
 }
 
+function suggestMode(){const sk=Object.keys(S.checkins).filter(id=>C(id).status!=='left'&&PL(id)).map(id=>PL(id).skill),lo=Math.min(...sk),hi=Math.max(...sk);
+  return{n:sk.length,lo:sk.length?lo:0,hi:sk.length?hi:0,mode:sk.length>=4&&hi-lo>1?'challenge':'rotation'}}
+function freeOpts(ids,sel){return ids.filter(id=>!busyIn(id)).map(id=>`<option value="${id}" ${id===sel?'selected':''}>${esc(PL(id).name)} · ${PL(id).skill.toFixed(1)}</option>`).join('')}
+function setCourtPanel(here){const ids=here.filter(id=>!busyIn(id)),o=i=>`<option value="">Player ${i}</option>`+freeOpts(ids);
+  return `<section class="panel"><h2>Set a full court <small>${groups().length?groups().length+' in line':''}</small></h2>
+    <p class="muted" style="margin:0 0 10px">Pick 4 players and their teams. They join the line together and take the next court when their turn comes.</p>
+    <div class="setc"><span class="eyebrow">Team A</span><select id="gA1" aria-label="Team A player 1">${o(1)}</select><select id="gA2" aria-label="Team A player 2">${o(2)}</select>
+    <span class="eyebrow">Team B</span><select id="gB1" aria-label="Team B player 1">${o(3)}</select><select id="gB2" aria-label="Team B player 2">${o(4)}</select></div>
+    <div class="err" id="grpErr"></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="grpAdd" ${ids.length>=4?'':'disabled'}>Add to line</button></div></section>`}
+function chState(c){if(c.status!=='open')return '';if(c.ok){const n=chOk().indexOf(c)+1;return `<span class="pill p-ch">Approved · #${n}</span>`}
+  const wait=chNeed(c).filter(id=>!(c.acc&&c.acc[id]));return wait.length?`<span class="pill p-resting">Waiting for ${esc(andList(wait.map(short)))}</span>`:'<span class="pill p-waiting">Accepted · needs your OK</span>'}
+function challengePanel(here){const open=chOpen().sort((a,b)=>(b.ok-a.ok)||((a.okAt||a.at)-(b.okAt||b.at))),ids=here.filter(id=>!busyIn(id)),o=i=>`<option value="">Player ${i}</option>`+freeOpts(ids);
+  const rows=open.map(c=>`<li><div style="min-width:0"><div class="qname">${esc(teamStr(c.from))} <span class="skill">${avgSk(c.from).toFixed(1)}</span> <span class="muted">challenge</span> ${esc(teamStr(c.to))} <span class="skill">${avgSk(c.to).toFixed(1)}</span></div><div class="qmeta">${chState(c)}</div></div>
+    <div class="qacts">${c.ok?'':chAccepted(c)?`<button class="btn sm primary" data-act="chOk" data-id="${c.id}">Approve</button>`:`<button class="btn sm" data-act="chAccAll" data-id="${c.id}" title="The players said yes in person">Mark accepted</button>`}<button class="btn sm danger" data-act="chNo" data-id="${c.id}">${c.ok?'Remove':'Decline'}</button></div></li>`).join('');
+  return `<section class="panel"><h2>Challenge court <small>Court ${chCourt().no}</small></h2>
+    <ul class="qlist">${rows||'<li><span></span><span class="muted">No challenges yet. Players send them from their phones, or add one below.</span></li>'}</ul>
+    <details class="chnew"><summary>Add a challenge for players</summary><p class="muted" style="margin:8px 0">For players without phones. Ask both pairs first: it's approved straight away.</p>
+    <div class="setc"><span class="eyebrow">Challengers</span><select id="cA1" aria-label="Challenger 1">${o(1)}</select><select id="cA2" aria-label="Challenger 2">${o(2)}</select>
+    <span class="eyebrow">Challenged</span><select id="cB1" aria-label="Challenged 1">${o(3)}</select><select id="cB2" aria-label="Challenged 2">${o(4)}</select></div>
+    <div class="err" id="chErr"></div><div class="row" style="margin-top:8px"><button class="btn primary" data-act="chNew">Add challenge</button></div></details></section>`}
+function playerChallenge(c){
+  const mineCh=chOpen().filter(x=>[...x.from,...x.to].includes(me)),here=Object.keys(S.checkins).filter(id=>id!==me&&C(id).status!=='left'&&PL(id));
+  const inc=mineCh.filter(x=>chNeed(x).includes(me)&&!(x.acc&&x.acc[me])&&!x.ok);
+  let h='';
+  inc.forEach(x=>{const asMate=x.from.includes(me);h+=`<div class="chcard in"><b>${asMate?esc(short(x.by))+' wants you as their partner':esc(teamStr(x.from))+' challenge you'}</b><span>${esc(teamStr(x.from))} <small>${avgSk(x.from).toFixed(1)}</small> vs ${esc(teamStr(x.to))} <small>${avgSk(x.to).toFixed(1)}</small> on the challenge court</span>
+    <div class="row"><button class="btn primary" data-act="chAcc" data-id="${x.id}">Accept</button><button class="btn" data-act="chDec" data-id="${x.id}">Decline</button></div></div>`});
+  mineCh.filter(x=>!inc.includes(x)).forEach(x=>{const wait=chNeed(x).filter(id=>!(x.acc&&x.acc[id]));
+    h+=`<div class="chcard"><b>${esc(teamStr(x.from))} vs ${esc(teamStr(x.to))}</b><span>${x.ok?'Approved. You\'ll be called to Court '+chCourt().no+' when it\'s free.':wait.length?'Waiting for '+esc(andList(wait.map(short)))+' to accept.':'Accepted. Waiting for the desk to approve.'}</span>${x.by===me&&!x.ok?`<div class="row"><button class="btn sm" data-act="chCancel" data-id="${x.id}">Cancel challenge</button></div>`:''}</div>`});
+  if(!mineCh.length&&!busyIn(me)){
+    const free=here.filter(id=>!busyIn(id)),mate=c.pairWith&&free.includes(c.pairWith)?c.pairWith:'';
+    const myLvl=mate?avgSk([me,mate]):PL(me).skill,opp=free.filter(id=>id!==mate&&PL(id).skill>Math.min(myLvl,PL(me).skill)).sort((a,b)=>PL(b).skill-PL(a).skill);
+    if(opp.length>=2&&free.length>=3)h+=`<details class="chnew"><summary>Challenge a higher-level pair</summary>
+      <div class="setc"><span class="eyebrow">Your partner</span><select id="chMate" aria-label="Your partner">${free.map(id=>`<option value="${id}" ${id===mate?'selected':''}>${esc(PL(id).name)} · ${PL(id).skill.toFixed(1)}</option>`).join('')}</select>
+      <span class="eyebrow">Challenge</span><select id="chO1" aria-label="Opponent 1">${opp.map(id=>`<option value="${id}">${esc(PL(id).name)} · ${PL(id).skill.toFixed(1)}</option>`).join('')}</select><select id="chO2" aria-label="Opponent 2">${opp.map((id,i)=>`<option value="${id}" ${i===1?'selected':''}>${esc(PL(id).name)} · ${PL(id).skill.toFixed(1)}</option>`).join('')}</select></div>
+      <p class="muted" style="margin:6px 0 0;font-size:13px">Their pair must have a higher average level than yours. They accept on their phones, then the desk approves it.</p>
+      <div class="err" id="chErr"></div><div class="row" style="margin-top:6px"><button class="btn primary" data-act="chSend">Send challenge</button></div></details>`}
+  return h?`<div class="chbox"><span class="eyebrow">Challenge court · Court ${chCourt().no}</span>${h}</div>`:''}
 function renderAdmin(){
   const k=counts();
   const q=queueOrder();let pos=0;
-  const qrows=q.map(u=>u.ids.map(id=>{const c=C(id),p=PL(id);const li=`<li class="${!u.held&&pos<4?'next':''}"><span class="qpos">${u.held?'–':pos+1}</span>
+  const qrows=q.map(u=>{if(u.group){const g=u.group,li=`<li class="qgrp ${!u.held&&pos<4?'next':''}"><span class="qpos">${u.held?'–':pos+1}</span>
+    <div style="min-width:0"><div class="qname"><span class="pill p-resting">Set court</span> ${esc(teamStr(g.a))} <span class="muted">vs</span> ${esc(teamStr(g.b))}</div>
+    <div class="qmeta">${u.held?'Waiting for '+[...g.a,...g.b].filter(id=>!C(id)||C(id).status!=='waiting').map(short).join(', ')+' to be free':'Takes the next court when it\'s their turn'}${g.bump?' · <span class="pairtag">sent to front</span>':''}</div></div>
+    <div class="qacts">${g.bump?`<button class="btn sm" data-act="grpUnfront" data-id="${g.id}">Undo front</button>`:`<button class="btn sm" data-act="grpFront" data-id="${g.id}">To front</button>`}<button class="btn sm danger" data-act="grpDel" data-id="${g.id}">Remove</button></div></li>`;if(!u.held)pos+=4;return li}
+    return u.ids.map(id=>{const c=C(id),p=PL(id);const li=`<li class="${!u.held&&pos<4?'next':''}"><span class="qpos">${u.held?'–':pos+1}</span>
     <div style="min-width:0"><div class="qname">${esc(p.name)} <span class="skill">${p.skill.toFixed(1)}</span></div>
     <div class="qmeta">${c.games} game${c.games===1?'':'s'} · waiting <span data-since="${c.since}" data-fmt="dur">${dur(now()-c.since)}</span>${c.pairWith?` · <span class="pairtag">with ${esc(short(c.pairWith))}</span>`:''}${u.held?' · held for partner':''}${c.bump?' · <span class="pairtag">sent to front</span>':''}</div></div>
-    <div class="qacts">${c.bump?`<button class="btn sm" data-act="unbump" data-id="${id}">Undo front</button>`:`<button class="btn sm" data-act="bump" data-id="${id}" title="Override the queue order">To front</button>`}<button class="btn sm" data-act="rest" data-id="${id}">Break</button><button class="btn sm danger" data-act="leave" data-id="${id}">Leave</button></div></li>`;if(!u.held)pos++;return li}).join('')).join('');
+    <div class="qacts">${c.bump?`<button class="btn sm" data-act="unbump" data-id="${id}">Undo front</button>`:`<button class="btn sm" data-act="bump" data-id="${id}" title="Override the queue order">To front</button>`}<button class="btn sm" data-act="rest" data-id="${id}">Break</button><button class="btn sm danger" data-act="leave" data-id="${id}">Leave</button></div></li>`;if(!u.held)pos++;return li}).join('')}).join('');
   const resting=Object.keys(S.checkins).filter(id=>C(id).status==='resting');
   const playing=Object.keys(S.checkins).filter(id=>C(id).status==='playing'&&(C(id).restAfter||C(id).leaveAfter));
   const notHere=S.players.filter(p=>(p.club||C(p.id))&&(!C(p.id)||C(p.id).status==='left'));
@@ -3810,9 +3920,12 @@ function renderAdmin(){
   <div class="admin">
     <div class="stack">
       <h2 class="sec-h">Courts</h2>
+      ${(()=>{const sg=suggestMode(),cur=isCh()?'challenge':'rotation';return `<div class="scen ${sg.mode!==cur&&sg.n>=4?'warn':''}"><span><b>${cur==='challenge'?'Challenge court':'Balanced rotation'}</b>${cur==='challenge'?` on Court ${chCourt().no}`:''}</span><span class="muted">${sg.n>=4?`Players here range ${sg.lo.toFixed(1)}–${sg.hi.toFixed(1)}. ${sg.mode===cur?'Good fit.':'Suggested: '+(sg.mode==='challenge'?'Challenge court':'Balanced rotation')+'.'}`:'Suggestion appears once 4 players are here.'}</span>${sg.mode!==cur&&sg.n>=4?`<button class="btn sm" data-act="setMode" data-m="${sg.mode}">Switch</button>`:''}</div>`})()}
       <div class="courts">${S.courts.map(c=>courtTile(c,'admin')).join('')}</div>
       <details class="panel" ${S.ui&&S.ui.settings?'open':''} id="setPanel"><summary>Session settings</summary>
         <div class="settings">
+          <label class="f">Scenario<select id="setMode"><option value="rotation" ${isCh()?'':'selected'}>Balanced rotation (similar levels)</option><option value="challenge" ${isCh()?'selected':''}>Challenge court (mixed levels)</option></select></label>
+          ${isCh()?`<label class="f">Challenge court<select id="setChCourt">${S.courts.map(c=>`<option value="${c.no}" ${chCourt().no===c.no?'selected':''}>Court ${c.no}</option>`).join('')}</select></label>`:''}
           <label class="f">After each game<select id="setRule"><option value="off" ${S.session.rule==='off'?'selected':''}>Everyone rotates off</option><option value="winners" ${S.session.rule==='winners'?'selected':''}>Winners stay (max 2 games)</option></select></label>
           <label class="f">Teams<select id="setTeams"><option value="balanced" ${S.session.teams==='balanced'?'selected':''}>Balanced by skill</option><option value="random" ${S.session.teams==='random'?'selected':''}>Random</option></select></label>
           <label class="f">Game to<select id="setTo">${[11,15,21].map(n=>`<option ${S.session.gameTo===n?'selected':''}>${n}</option>`).join('')}</select></label>
@@ -3828,7 +3941,7 @@ function renderAdmin(){
           <label class="f" style="grid-column:1/-1">Join link (Reclub meet, form or group chat)<input type="url" id="opLink" value="${esc((S.session.pub||{}).link||'')}" placeholder="Blank = the club's Reclub page"></label>
           <label class="f" style="grid-column:1/-1">Note for players<input type="text" id="opAbout" maxlength="160" value="${esc((S.session.pub||{}).about||'')}" placeholder="All levels welcome. Paddles to borrow at the desk."></label>
         </div>
-        <p class="muted" style="margin:12px 0 0">Overrides: <b>To front</b> on anyone in line, <b>Swap player</b> or <b>Reassign court</b> on a called court, or <b>Hold court</b> to stop auto-calling so you can choose players yourself. Who plays next by default: fewest games played first. Ties go to whoever has waited longest. Set a court's level from the menu on its card to split players by skill.</p>
+        <p class="muted" style="margin:12px 0 0">Overrides: <b>To front</b> on anyone in line, <b>Swap player</b> or <b>Reassign court</b> on a called court, or <b>Hold court</b> to stop auto-calling so you can choose players yourself. Who plays next: the player with the fewest games who has waited longest anchors the game, and the other three are chosen from those next in line to mix in people they haven't played with or against tonight. <b>Challenge court</b>: lower-level pairs challenge a higher-level pair; the challenged pair accepts on their phones and you approve it here. When no approved challenge is waiting, that court plays normal games. Set a court's level from the menu on its card to split players by skill.</p>
       </details>
       ${App.tools()?`<details class="panel" id="demoPanel" ${S.ui&&S.ui.demo?'open':''}><summary>Testing tools</summary>
         <div class="row"><button class="btn" data-act="skip" data-m="1">Skip 1 min</button><button class="btn" data-act="skip" data-m="5">Skip 5 min</button><button class="btn" data-act="arriveAll">Mark all called players here</button><button class="btn" data-act="finishAll">Finish all games (random scores)</button></div>
@@ -3838,6 +3951,8 @@ function renderAdmin(){
     <div class="stack">
       ${(()=>{const L=App.sessionLeaders(S.id,5);return `<section class="panel"><h2>Top players tonight <small><button class="btn sm" data-app="homeSec" data-s="board">Club leaderboard</button></small></h2>${L.length?`<ol class="lead-l">${L.map((r,i)=>`<li><span class="qpos">${i+1}</span><span class="lead-n">${esc(PL(r.id).name)}</span><span class="lead-s num">${r.w}–${r.g-r.w} · ${r.diff>0?'+':''}${r.diff}</span></li>`).join('')}</ol>`:'<p class="muted" style="margin:0">Leaders show here once games are scored.</p>'}</section>`})()}
       <section class="panel"><h2>Line <small>${k.waiting} waiting</small></h2><ul class="qlist">${qrows||'<li><span></span><span class="muted">Nobody in line.</span></li>'}</ul></section>
+      ${isCh()?challengePanel(here):''}
+      ${setCourtPanel(here)}
       <section class="panel"><h2>On break <small>${resting.length+playing.length}</small></h2>
         <ul class="qlist">${resting.map(id=>`<li><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(PL(id).name)}</div><div class="qmeta">${C(id).games} games · keeps their place</div></div><div class="qacts"><button class="btn sm primary" data-act="back" data-id="${id}">Back in line</button><button class="btn sm" data-act="bump" data-id="${id}">Play next</button><button class="btn sm danger" data-act="leave" data-id="${id}">Leave</button></div></li>`).join('')}
         ${playing.map(id=>`<li><span class="qpos">–</span><div style="min-width:0"><div class="qname">${esc(PL(id).name)}</div><div class="qmeta">${C(id).leaveAfter?'Leaving':'Break'} after this game</div></div><div class="qacts"><button class="btn sm" data-act="back" data-id="${id}">Undo</button></div></li>`).join('')}
@@ -3880,8 +3995,13 @@ function renderPlayer(){
       hero=`<div class="hero"><div class="eyebrow">${c?'You checked out':'Not checked in'}</div><div class="big">Hi, ${esc(p.name.split(' ')[0])}</div><div class="sub">Check in to join the line for ${esc(S.session.name)}.</div></div>`;
       acts=`<button class="btn primary full" data-act="pcheckin" ${S.session.open?'':'disabled'}>Check in</button>`;
     }else if(c.status==='waiting'){
-      const ps=positionOf(me);
-      if(ps.held){hero=`<div class="hero"><div class="eyebrow">In line</div><div class="big">Waiting</div><div class="sub">You'll be called together with ${esc(short(c.pairWith))} once they're free.</div></div>`}
+      const ps=positionOf(me),rsv=reserved().get(me);
+      if(rsv==='c'){const ch=chOk().find(x=>[...x.from,...x.to].includes(me)),n=chOk().indexOf(ch)+1;
+        hero=`<div class="hero h-ch"><div class="eyebrow">Challenge approved</div><div class="big">${n===1?'Next up':'#'+n}</div><div class="sub">${esc(teamStr(ch.from))} vs ${esc(teamStr(ch.to))} on Court ${chCourt().no} as soon as it's free.</div></div>`}
+      else if(rsv==='g'&&ps){const g=groups().find(x=>[...x.a,...x.b].includes(me)),mt=(g.a.includes(me)?g.a:g.b).find(x=>x!==me),op=g.a.includes(me)?g.b:g.a;
+        hero=`<div class="hero"><div class="eyebrow">Your court is set</div><div class="big">${ps.held?'Waiting':'#'+(ps.pos+1)}</div><div class="sub">With ${esc(short(mt))} vs ${esc(teamStr(op))}. ${ps.held?'Waiting for the others to finish their game.':ps.pos<4?'You\'re next. Stay close to the courts.':`About ${mins(estWait(ps.pos))} min wait.`}</div></div>`}
+      else if(!ps){hero=`<div class="hero"><div class="eyebrow">In line</div><div class="big">Waiting</div><div class="sub">You'll be called soon.</div></div>`}
+      else if(ps.held){hero=`<div class="hero"><div class="eyebrow">In line</div><div class="big">Waiting</div><div class="sub">You'll be called together with ${esc(short(c.pairWith))} once they're free.</div></div>`}
       else hero=`<div class="hero"><div class="eyebrow">You're in line</div><div class="big">#${ps.pos+1}</div><div class="sub">${ps.pos<4?'You\'re in the next group. Stay close to the courts.':`About ${mins(estWait(ps.pos))} min wait · ${ps.pos} player${ps.pos===1?'':'s'} ahead of you`}</div></div>`;
       acts=`<button class="btn" data-act="prest">Take a break</button><button class="btn danger" data-act="pleave">Leave for today</button>`;
     }else if(c.status==='resting'){
@@ -3905,11 +4025,12 @@ function renderPlayer(){
     const others=Object.keys(S.checkins).filter(id=>id!==me&&C(id).status!=='left'&&!C(id).pairWith).sort((a,b)=>PL(a).name.localeCompare(PL(b).name));
     const pairBox=c&&c.status!=='left'?(c.pairWith?`<div style="display:grid;gap:8px"><div class="row"><span>Playing as a pair with <b>${esc(PL(c.pairWith).name)}</b></span><button class="btn sm" data-act="punpair">Unpair</button></div>${others.length?`<div style="display:grid;gap:6px"><span class="eyebrow">Change partner</span><div class="row"><select id="ppair2" aria-label="New partner" style="flex:1">${others.map(id=>`<option value="${id}">${esc(PL(id).name)}</option>`).join('')}</select><button class="btn" data-act="pswitch">Switch</button></div>${c.status==='playing'?'<p class="muted" style="margin:0;font-size:13px">Takes effect from your next game.</p>':''}</div>`:''}</div>`
       :`<div style="display:grid;gap:6px"><span class="eyebrow">Play with a partner</span><div class="row"><select id="ppair" aria-label="Partner" style="flex:1">${others.map(id=>`<option value="${id}">${esc(PL(id).name)}</option>`).join('')}</select><button class="btn" data-act="ppairgo" ${others.length?'':'disabled'}>Pair</button></div></div>`):'';
+    const chBox=isCh()&&c&&c.status!=='left'?playerChallenge(c):'';
     const mine=S.matches.filter(x=>x.status==='done'&&[...x.a,...x.b].includes(me)).reverse();
     const hist=mine.length?`<table class="mini-table"><thead><tr><th>Court</th><th>Partner</th><th>Score</th><th></th></tr></thead><tbody>${mine.map(x=>{const inA=x.a.includes(me),my=inA?x.sa:x.sb,th=inA?x.sb:x.sa,mt=(inA?x.a:x.b).find(i=>i!==me);return `<tr><td>${x.court}</td><td>${esc(short(mt))}</td><td class="num">${my}–${th}</td><td><span class="pill ${my>th?'p-waiting':'p-left'}">${my>th?'Won':'Lost'}</span></td></tr>`}).join('')}</tbody></table>`:'<span class="muted">No games yet today.</span>';
     const rk=App.playerRank(me);
     const rankCard=rk?`<div class="rankcard"><div><span class="eyebrow">Club leaderboard</span><div class="rk-big">${rk.rank?'#'+rk.rank+' <small>of '+rk.of+'</small>':'Not ranked yet'}</div><div class="li-m">${rk.rank?'':'Play '+Math.max(0,5-rk.g)+' more game'+(5-rk.g===1?'':'s')+' to get a rank · '}${rk.g} game${rk.g===1?'':'s'} · ${Math.round(rk.wp*100)}% wins</div></div><div class="rk-r"><span class="eyebrow">Rating</span><b class="num">${rk.rating}</b></div></div>`:'';
-    body=`${App.acctOn()?App.pBrowser():App.pSaveCard()}${App.pushCard(me)}${hero}<div class="pacts">${acts}</div>${pairBox}${rankCard}<div style="display:grid;gap:6px"><span class="eyebrow">Today · ${c?c.games:0} game${c&&c.games===1?'':'s'}, ${c?c.wins:0} win${c&&c.wins===1?'':'s'}</span>${hist}</div>`;
+    body=`${App.acctOn()?App.pBrowser():App.pSaveCard()}${App.pushCard(me)}${hero}<div class="pacts">${acts}</div>${chBox}${pairBox}${rankCard}<div style="display:grid;gap:6px"><span class="eyebrow">Today · ${c?c.games:0} game${c&&c.games===1?'':'s'}, ${c?c.wins:0} win${c&&c.wins===1?'':'s'}</span>${hist}</div>`;
   }
   return `<div class="phone-wrap"><div class="phone"><div class="phone-top"><img class="logo-sm" src="${LOGO_TILE}" alt=""><b>Next Point</b>${me?`<span class="muted" style="margin-left:auto">${esc(PL(me).name)}</span>${App.acctOn()?'<button class="btn sm" data-app="myGames">My games</button>':'<button class="btn sm" data-act="logout">Switch</button>'}`:''}</div>${body}</div>
   <div class="guide panel"><h2>What players see</h2>
@@ -4074,6 +4195,36 @@ document.addEventListener('click',e=>{
       if(pc.match){const om=M(pc.match);om.status='void';om.end=now();[...om.a,...om.b].filter(x=>!set.has(x)).forEach(x=>backToQueue(x));pc.match=null;pc.state='free'}
       sel.forEach(x=>{if(C(x).pairWith&&!set.has(C(x).pairWith))unpair(x)});
       createMatch(pc,makeTeams(us),true);pc.hold=false;closeModal();toast('Court '+pc.no+' assigned by admin.');break}
+    case 'setMode':{S.session.mode=t.dataset.m;toast(t.dataset.m==='challenge'?'Challenge court on Court '+chCourt().no+'.':'Balanced rotation on all courts.');break}
+    case 'grpAdd':{const ids=['gA1','gA2','gB1','gB2'].map(k=>$('#'+k).value),er=$('#grpErr');
+      if(ids.some(x=>!x)){er.textContent='Pick all 4 players.';return}if(new Set(ids).size<4){er.textContent='Each player can only be picked once.';return}
+      if(ids.some(busyIn)){er.textContent='Someone is already in a set court or a challenge.';return}
+      const ks=units('all').map(ukey).filter(k=>k[0]>=0);
+      ids.forEach(x=>{const c=C(x);if(c.pairWith&&!ids.includes(c.pairWith))unpair(x);if(c.status==='resting')c.status='waiting';c.bump=null});
+      S.groups=groups().concat([{id:'g'+(++S.seq),a:[ids[0],ids[1]],b:[ids[2],ids[3]],at:now(),games:ks.length?Math.max(...ks.map(k=>k[0])):0}]);
+      toast('Set court added to the line.');break}
+    case 'grpFront':{const g=groups().find(x=>x.id===id);if(g)g.bump=now();break}
+    case 'grpUnfront':{const g=groups().find(x=>x.id===id);if(g)g.bump=null;break}
+    case 'grpDel': S.groups=groups().filter(x=>x.id!==id);toast('Set court removed. Those players are back in the normal line.');break;
+    case 'chNew':{const ids=['cA1','cA2','cB1','cB2'].map(k=>$('#'+k).value),er=$('#chErr');
+      if(ids.some(x=>!x)){er.textContent='Pick all 4 players.';return}if(new Set(ids).size<4){er.textContent='Each player can only be picked once.';return}
+      if(ids.some(busyIn)){er.textContent='Someone is already in a set court or a challenge.';return}
+      const acc={};ids.forEach(x=>acc[x]=true);
+      S.challenges=chAll().concat([{id:'ch'+(++S.seq),from:[ids[0],ids[1]],to:[ids[2],ids[3]],need:[ids[2],ids[3]],acc,by:'desk',at:now(),ok:true,okAt:now(),status:'open'}]);
+      toast('Challenge added to the challenge court line.');break}
+    case 'chAccAll':{const c=chAll().find(x=>x.id===id);if(c){c.acc=c.acc||{};chNeed(c).forEach(x=>c.acc[x]=true)}break}
+    case 'chOk':{const c=chAll().find(x=>x.id===id);if(c&&chAccepted(c)){c.ok=true;c.okAt=now();toast('Challenge approved.')}break}
+    case 'chNo':{const c=chAll().find(x=>x.id===id);if(c){c.status='declined';c.decBy='desk'}break}
+    case 'chSend':{const mate=$('#chMate').value,o1=$('#chO1').value,o2=$('#chO2').value,er=$('#chErr');
+      const ids=[me,mate,o1,o2];if(new Set(ids).size<4){er.textContent='Pick 4 different players.';return}
+      if(ids.some(busyIn)){er.textContent='Someone is already in a set court or a challenge.';return}
+      if(!(avgSk([me,mate])<avgSk([o1,o2]))){er.textContent='Challenges go up: their pair\'s level ('+avgSk([o1,o2]).toFixed(1)+') must be higher than yours ('+avgSk([me,mate]).toFixed(1)+').';return}
+      const need=[o1,o2].concat(C(me).pairWith===mate?[]:[mate]),acc={};acc[me]=true;
+      S.challenges=chAll().concat([{id:'ch'+(++S.seq),from:[me,mate],to:[o1,o2],need,acc,by:me,at:now(),ok:false,status:'open'}]);
+      toast('Challenge sent. Waiting for '+andList(need.map(short))+' to accept.');break}
+    case 'chAcc':{const c=chAll().find(x=>x.id===id);if(c&&c.status==='open'){c.acc=c.acc||{};c.acc[me]=true;toast(chAccepted(c)?'Accepted. The desk will approve it.':'Accepted.')}break}
+    case 'chDec':{const c=chAll().find(x=>x.id===id);if(c&&c.status==='open'){c.status='declined';c.decBy=me;toast('Challenge declined.')}break}
+    case 'chCancel':{const c=chAll().find(x=>x.id===id);if(c&&c.by===me&&!c.ok){c.status='cancelled';toast('Challenge cancelled.')}break}
     case 'logout': me=null;App.forgetMe();break;
     case 'pcheckin': checkIn(me);toast('You\'re checked in.');break;
     case 'prest': rest(me);break;
@@ -4094,7 +4245,7 @@ document.addEventListener('change',e=>{
   if(t.dataset.level){const ct=CT(t.dataset.level);ct.level=t.value;commit();return}
   const pubSet=(k,v)=>{const o={...(S.session.pub||{})};if(v===''||v==null)delete o[k];else o[k]=v;S.session.pub=o};
   if(t.id==='opLink'&&t.value.trim()&&!/^https?:\/\/\S+$/i.test(t.value.trim())){toast('Paste the full link, starting with https://');return}
-  const map={opWhen:v=>pubSet('when',v.trim()),opFee:v=>pubSet('fee',Math.max(0,Math.round(+v)||0)||''),opLink:v=>pubSet('link',v.trim()),opAbout:v=>pubSet('about',v.trim()),setRule:v=>S.session.rule=v,setTeams:v=>S.session.teams=v,setTo:v=>S.session.gameTo=+v,setNoShow:v=>S.session.noShow=+v,setWin:v=>{if(v==='w2')S.session.win2=true;else delete S.session.win2}};
+  const map={opWhen:v=>pubSet('when',v.trim()),opFee:v=>pubSet('fee',Math.max(0,Math.round(+v)||0)||''),opLink:v=>pubSet('link',v.trim()),opAbout:v=>pubSet('about',v.trim()),setRule:v=>S.session.rule=v,setTeams:v=>S.session.teams=v,setTo:v=>S.session.gameTo=+v,setNoShow:v=>S.session.noShow=+v,setMode:v=>S.session.mode=v,setChCourt:v=>S.session.chCourt=+v,setWin:v=>{if(v==='w2')S.session.win2=true;else delete S.session.win2}};
   if(map[t.id]){map[t.id](t.value);commit()}
   if(t.id==='setAuto'){S.session.autoFill=t.checked;commit()}
 });
